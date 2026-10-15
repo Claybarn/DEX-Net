@@ -162,39 +162,25 @@ Learning only the stochastic part, combined with exact mechanics, gives a faithf
 5. **Seeds:** at least 2 more reference-model seeds (about 18 GPU-hours), or state single-seed plainly.
 6. **Figures 1–7.**
 
-## Public repo plan (proposed)
+## Repository status
 
-```
-amm-flow-sim/            (name TBD)
-  README.md              quickstart: collect → prepare → train → sample → evaluate
-  pyproject.toml         numpy, torch, pyarrow, pandas only
-  ammsim/
-    data/                collect.py (logs, headers), decode + reconcile (pooled_data), context (pooled_mechanics)
-    model/               pooled_model, joint_events base, flow, tick_mechanics, vendored helpers
-    train/               pooled_training, pooled_coverage, train script
-    sample/              pooled_rollout (sampler, failure handling)
-    evaluate/            likelihood, rollout scores (pooled_diagnostics, energy_surrogate vendored),
-                         stylized facts (new), JIT analyses, baselines (new)
-    economics/           fee_lvr, ceiling, L2 collection + verification
-  configs/               reference model and data configs (replace hard-coded paths)
-  tests/                 the pooled/tick/raw-trace/JIT/fee-LVR tests
-  paper/                 LaTeX source, figure scripts, this outline
-```
+The code lives in this repository: `dexnet/` (library) and `scripts/` (stages). The event model, data pipeline, direct baseline and economics scripts were extracted from the research codebase without behavioural changes. With this package:
 
-- **Take:** the core and pulled-in modules from the pipeline map, the prepare/verify/context scripts, the training and sampling drivers, and the JIT scripts with their direct-model import removed.
-- **Vendor small helpers** to cut the legacy chain: `energy_surrogate`, `history_query_mask`/`_head`, `mint_brier`/`mint_exceedance`, `dump`, `atomic_save`.
-- **Drop:** the legacy single-pool model, the direct forecaster (except as a baseline), all LP gym/RL/selective-LP code, the memory/LP-tuned experiments, viewers, queues and the 600+ report folders.
-- **Clean up:**
-  - replace `/home/clayton/...` paths with config;
-  - move RPC endpoints to environment variables;
-  - document every entry point;
-  - keep the history new: fresh repo, cite the old one privately.
-- **Data release:** the decoded and reconciled per-pool Parquet files (size TBD), or scripts plus checksums if too large. Checkpoint: the reference model.
+- the reference event model reproduces its original per-pool test and held-out NLL exactly;
+- the direct baseline reproduces its original per-pool objectives exactly;
+- the fee/LVR, L2 and timing-ceiling outputs match the original runs exactly.
 
-## Decisions for you
+Decided:
 
-- Title and author list; license (MIT or Apache-2.0 for code, CC-BY for data?).
-- Whether to release the dataset files or only the scripts to rebuild them.
-- Whether to include the direct model as a baseline (it gives the "static cone" contrast cheaply).
-- Whether to run extra seeds or state single-seed.
-- How much of §6 to include. It could be a short section, or the paper's second pillar.
+- Title "DEX-Net"; author Clayton Barnes.
+- Apache-2.0 for code; CC BY 4.0 for released data.
+- Dataset released.
+- Direct model included as a baseline.
+- Two extra seeds of the reference model (260931, 260932) trained.
+
+Still to add, as the paper experiments are run:
+
+- stylized-facts and asymmetry analyses;
+- point-process and volatility baselines;
+- the JIT analyses;
+- figure scripts.
