@@ -185,7 +185,7 @@ dexnet/     the library: v3 tick math, event dataset, model, sampler, scores, LV
 scripts/    one command per pipeline stage (python -m scripts.<name>)
 tests/      unit tests, including exact-mechanics and synthetic LVR checks
 paper/      paper source and outline
-assets/     logo (light and dark variants)
+assets/     logo (light and dark variants) and social preview image
 ```
 
 ## Data
