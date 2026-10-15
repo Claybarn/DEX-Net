@@ -71,3 +71,33 @@ class RotatingRPC:
                     self.active = (i+1) % len(self.urls)
                     print(f"RPC provider {i} failed ({exc}); rotating", flush=True)
             raise RuntimeError(f'All RPC providers exhausted: {error}')
+
+
+def jsonrpc(url, method, params, attempts=8):
+    """Call with retries on rate limits and transient errors.
+
+    Request errors (e.g. a block range the provider rejects) raise ValueError
+    carrying the provider's error object, so callers can adapt; URLs are never
+    included in messages.
+    """
+    body = json.dumps(dict(jsonrpc='2.0', id=1, method=method, params=params)).encode()
+    err = None
+    for k in range(attempts):
+        try:
+            request = urllib.request.Request(url, body, {'Content-Type': 'application/json', 'User-Agent': 'dexnet/0.1'})
+            r = json.loads(urllib.request.urlopen(request, timeout=120).read())
+            if 'result' in r:
+                return r['result']
+            err = r.get('error')
+            if err and err.get('code') in (-32602, -32600, 35):
+                raise ValueError(f'{method}: {err}')
+        except urllib.error.HTTPError as e:
+            err = f'HTTP {e.code}'
+            try: err = json.loads(e.read()).get('error', err)
+            except Exception: pass
+            if e.code not in (429, 500, 502, 503, 504):
+                raise ValueError(f'{method}: {err}') from None
+        except (urllib.error.URLError, TimeoutError) as e:
+            err = type(e).__name__
+        time.sleep(min(30, 2**k))
+    raise RuntimeError(f'{method} failed after retries: {err}')
