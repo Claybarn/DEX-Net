@@ -75,7 +75,8 @@ We release code and a reconciled dataset.
   - an unconditional per-pool model (marks from empirical marginals, renewal clock);
   - a neural Hawkes or Transformer Hawkes model on the same event space;
   - ablations: no history (metadata only), and no mechanics-relative coordinates (raw sizes). **[run]**
-- **Missing statistics:** seeds (≥3) and bootstrap intervals over days. **[run]**
+- **Seeds:** three seeds of the reference model give seen macro NLL 5.529 ± 0.009 and held-out 7.640 ± 0.016. All three beat the 64×2 model on all 10 pools; the pool-ID embedding effect is within seed noise. **[have]** `paper/results/seed-summary.json`
+- **Missing statistics:** bootstrap intervals over days. **[run]**
 - **Table 2:** NLL by pool and head with baselines.
 
 ### 5.2 Rollout fidelity
