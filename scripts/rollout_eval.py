@@ -4,7 +4,7 @@ For every anchor (scripts.prepare_anchors) and model, draws --paths independent
 paths through exact pool mechanics. Each path stores its endpoint at every horizon
 and a compact per-event trace (kind, block gap, cumulative return in bp, base volume)
 for stylized-fact analysis. Invalid sampled events end the path and are recorded,
-never repaired. Scores: unbiased ensemble energy and CRPS, bias, 90% coverage.
+never repaired. History-only baselines stored with the anchors are scored alongside. Scores: unbiased ensemble energy and CRPS, bias, 90% coverage.
 
   python -m scripts.rollout_eval --anchors eval/anchors-test --out eval/rollouts-test \
       --model ref=runs/ref/training/best.pt --paths 32 --workers 8
@@ -70,7 +70,7 @@ def run_anchor(task):
            history_mask=torch.tensor(np.asarray(arrays['feature_mask'][row-64:row]),device=device)[None],
            history_kind=torch.tensor(np.asarray(arrays['kind'][row-64:row]),device=device,dtype=torch.long)[None],
            metadata=torch.tensor(meta['metadata_features'],device=device,dtype=torch.float32)[None])
-    record=dict(pool=pool,row=row,split=r['split'],actual=r['actual'],paths={})
+    record=dict(pool=pool,row=row,split=r['split'],actual=r['actual'],actual_trace=r.get('actual_trace'),paths={})
     for no,(label,checkpoint) in enumerate(models.items()):
         model=load_model(checkpoint,device)
         sampled=[trajectory(model,b,initial,inv,book,meta,mean,std,horizons,
@@ -78,6 +78,14 @@ def run_anchor(task):
         if not traces:
             for s in sampled:s.pop('trace')
         record['paths'][label]=sampled
+    # History-only baselines from prepare_anchors, subsampled to the same ensemble size.
+    rng=np.random.default_rng(zlib.crc32(f'{pool}-{row}'.encode()))
+    for name,by_h in (r.get('baselines') or {}).items():
+        draws=[dict(values={},failure=None) for _ in range(paths)]
+        for h,samples in by_h.items():
+            if len(samples)<2:continue
+            for j,k in enumerate(rng.choice(len(samples),paths,replace=len(samples)<paths)):draws[j]['values'][str(h)]=samples[k]
+        record['paths']['baseline:'+name]=draws
     dump(dest,record);return str(dest)
 
 
@@ -128,7 +136,8 @@ def main():
             if done%10==0 or done==len(tasks):
                 el=time.monotonic()-began;print(json.dumps(dict(anchors_complete=done,anchors_total=len(tasks),seconds=round(el),eta_seconds=round(el/done*(len(tasks)-done)))),flush=True)
     records=[json.loads(f.read_text()) for f in sorted((a.out/'anchors').glob('*.json'))]
-    dump(a.out/'summary.json',summarize(records,list(models),horizons))
+    labels=list(models)+sorted({l for r in records for l in r['paths'] if l.startswith('baseline:')})
+    dump(a.out/'summary.json',summarize(records,labels,horizons))
     dump(a.out/'COMPLETE.json',dict(anchors=len(records),models=list(models)))
 
 
