@@ -13,7 +13,9 @@ from dexnet.evaluation import load_sets,device_batch,evaluate
 
 
 def attach_ids(sets,plan):
-    for name,ds in sets.items():ds.pool_id=plan['pool_ids'].get(name,0)
+    for name,ds in sets.items():
+        ds.pool_id=plan['pool_ids'].get(name,0)
+        if plan.get('visible_history') is not None:ds.visible_history=plan['visible_history']
     return sets
 
 

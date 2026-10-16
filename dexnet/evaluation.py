@@ -15,6 +15,12 @@ def load_sets(plan,split):
 def device_batch(ds,indices,device):
     b={k:v.to(device) for k,v in pooled_collate([ds[int(i)] for i in indices]).items()}
     if hasattr(ds,'pool_id'):b['pool_id']=torch.full((len(indices),),ds.pool_id,dtype=torch.long,device=device)
+    visible=getattr(ds,'visible_history',None)
+    if visible is not None:
+        # History ablation: hide all but the last `visible` events (features, masks and kinds).
+        hidden=b['x'].shape[1]-int(visible)
+        if hidden>0:
+            b['x'][:,:hidden]=0;b['history_mask'][:,:hidden]=0;b['history_kind'][:,:hidden]=0
     return b
 
 
