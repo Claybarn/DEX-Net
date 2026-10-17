@@ -12,9 +12,10 @@ def load_sets(plan,split):
             for name,m in manifest['pools'].items() if m['held_out']==split.startswith('heldout')}
 
 
-def device_batch(ds,indices,device):
-    b={k:v.to(device) for k,v in pooled_collate([ds[int(i)] for i in indices]).items()}
-    if hasattr(ds,'pool_id'):b['pool_id']=torch.full((len(indices),),ds.pool_id,dtype=torch.long,device=device)
+def host_batch(ds,indices):
+    """One batch from one pool, built on the CPU (safe to run in loader worker processes)."""
+    b=pooled_collate([ds[int(i)] for i in indices])
+    if hasattr(ds,'pool_id'):b['pool_id']=torch.full((len(indices),),ds.pool_id,dtype=torch.long)
     visible=getattr(ds,'visible_history',None)
     if visible is not None:
         # History ablation: hide all but the last `visible` events (features, masks and kinds).
@@ -22,6 +23,30 @@ def device_batch(ds,indices,device):
         if hidden>0:
             b['x'][:,:hidden]=0;b['history_mask'][:,:hidden]=0;b['history_kind'][:,:hidden]=0
     return b
+
+
+def device_batch(ds,indices,device):
+    return {k:v.to(device) for k,v in host_batch(ds,indices).items()}
+
+
+CANDIDATES=(('lower_candidates','lower_mask'),('width_candidates','width_mask'))
+
+
+def merge_batches(batches):
+    """Concatenate batches row-wise (rows keep their order, so burn rows keep their candidates).
+
+    Burn candidate tables are re-padded to a common width with the same filler (1)
+    and a False mask, exactly as pooled_collate pads within a batch.
+    """
+    out={}
+    for key in batches[0]:
+        if key in {c for pair in CANDIDATES for c in pair}:continue
+        out[key]=torch.cat([b[key] for b in batches])
+    for values,mask in CANDIDATES:
+        width=max(b[values].shape[1] for b in batches)
+        pad=lambda t,fill:torch.nn.functional.pad(t,(0,width-t.shape[1]),value=fill)
+        out[values]=torch.cat([pad(b[values],1.) for b in batches]);out[mask]=torch.cat([pad(b[mask].to(torch.uint8),0) for b in batches]).bool()
+    return out
 
 
 @torch.no_grad()

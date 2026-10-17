@@ -1,5 +1,11 @@
 """Train one round (8,192 microbatches) of a run prepared by scripts.prepare_training; resumable.
 
+Default path: four 256-example microbatches per optimizer update, gradients
+accumulated. With "fused": true in the protocol, the same four microbatches are
+merged into one 1,024-example forward/backward (the same mean loss and gradient,
+up to floating-point order and dropout draws), built ahead by loader worker
+processes. That cuts per-step launch and synchronisation overhead about fourfold.
+
   python -m scripts.train_round --out runs/ref/training --round 1
 """
 import argparse,hashlib,json,math,time
@@ -9,7 +15,7 @@ import torch
 from dexnet.model import PooledEventModel
 from dexnet.coverage import CoverageSchedule
 from dexnet.utils import dump,atomic_save
-from dexnet.evaluation import load_sets,device_batch,evaluate
+from dexnet.evaluation import load_sets,device_batch,host_batch,merge_batches,evaluate
 
 
 def attach_ids(sets,plan):
@@ -17,6 +23,16 @@ def attach_ids(sets,plan):
         ds.pool_id=plan['pool_ids'].get(name,0)
         if plan.get('visible_history') is not None:ds.visible_history=plan['visible_history']
     return sets
+
+
+class UpdateBatches(torch.utils.data.Dataset):
+    """Merged CPU batch for each optimizer update, in schedule order (no randomness)."""
+    def __init__(self,sets,schedule,first,count,accum):
+        self.sets,self.schedule,self.first,self.count,self.accum=sets,schedule,first,count,accum
+    def __len__(self):return self.count
+    def __getitem__(self,u):
+        start=(self.first+u)*self.accum;parts=[self.schedule[i] for i in range(start,start+self.accum)]
+        return merge_batches([host_batch(self.sets[name],indices) for name,indices in parts]),[(name,len(indices)) for name,indices in parts]
 
 
 def learning_rate(step,total,peak):
@@ -47,7 +63,27 @@ def main():
     if begin%accum or (end-begin)%accum:raise ValueError('Incomplete optimizer update')
     torch.manual_seed(plan['seed']+a.round*1000);model.train();optimizer.zero_grad(set_to_none=True)
     start=time.monotonic();totals={};counts={};seen={n:0 for n in sets};maxnorm=0.;clipped=0;updates=0
-    for i in range(begin,end):
+    if plan.get('fused'):
+        loader=torch.utils.data.DataLoader(UpdateBatches(sets,schedule,begin//accum,(end-begin)//accum,accum),batch_size=None,shuffle=False,
+                                           num_workers=plan.get('loader_workers',6),pin_memory=True,prefetch_factor=4,persistent_workers=False)
+        for u,(cpu,parts_info) in enumerate(loader):
+            b={k:v.to('cuda',non_blocking=True) for k,v in cpu.items()};loss,parts=model.losses(b)
+            if not torch.isfinite(loss):raise ValueError(f'Nonfinite loss at update {begin//accum+u}')
+            loss.backward()
+            for name,n in parts_info:seen[name]+=n
+            for k,(v,n) in parts.items():totals[k]=totals.get(k,0)+float(v.detach());counts[k]=counts.get(k,0)+int(n)
+            norm=float(torch.nn.utils.clip_grad_norm_(model.parameters(),1.,error_if_nonfinite=True));maxnorm=max(maxnorm,norm);clipped+=norm>1
+            lr=plan['learning_rate'] if a.smoke else learning_rate(begin//accum+u,len(schedule)//accum,plan['learning_rate'])
+            for group in optimizer.param_groups:group['lr']=lr
+            optimizer.step();optimizer.zero_grad(set_to_none=True);updates+=1
+            i=begin+(u+1)*accum-1
+            if u%32==0 or i+1==end:
+                elapsed=time.monotonic()-start;examples=(i-begin+1)*micro
+                progress=dict(round=a.round,rounds=plan['rounds'],batch=i+1,total_batches=len(schedule),examples_completed=(i+1)*micro,
+                    round_examples=examples,optimizer_steps=(i+1)//accum,seconds=elapsed,examples_per_second=examples/elapsed,
+                    joint_nll=totals['joint']/counts['joint'],gradient_norm_max=maxnorm,learning_rate=optimizer.param_groups[0]['lr'])
+                dump(a.out/'progress.json',progress);print(json.dumps(progress),flush=True)
+    for i in (range(0) if plan.get('fused') else range(begin,end)):
         name,indices=schedule[i];b=device_batch(sets[name],indices,'cuda');loss,parts=model.losses(b)
         if not torch.isfinite(loss):raise ValueError(f'Nonfinite loss at batch {i}')
         (loss/accum).backward();seen[name]+=len(indices)
