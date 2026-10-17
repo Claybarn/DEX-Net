@@ -5,7 +5,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from .base_model import JointEventModel,interval_log_prob
-from .flow import rq_spline
+from .flow import rq_spline,rq_spline_static
 from .layers import history_query_mask
 from .tick_mechanics import MIN_TICK,MAX_TICK,Q96,sqrt_at_tick,modify_liquidity
 from .pool_mechanics import swap_economic_base
@@ -26,6 +26,13 @@ def discrete_nll(raw,target,anchor,unit,first,last,candidates=None,mask=None,wid
         low,_=bounds(first,anchor,unit,width);_,high=bounds(last,anchor,unit,width)
         normalizer=interval_log_prob(raw,low,high)
     return normalizer-selected
+
+
+def discrete_nll_static(raw,target,anchor,unit,candidates,mask,width=False):
+    """discrete_nll over a candidate support given as full-row tables, without host checks."""
+    selected=interval_log_prob(raw,*bounds(target,anchor,unit,width))
+    scores=interval_log_prob(raw[:,None,:],*bounds(candidates,anchor[:,None],unit[:,None],width))
+    return torch.logsumexp(scores.masked_fill(~mask,-torch.inf),-1)-selected
 
 
 def native_range(lower,upper,meta):
@@ -122,10 +129,10 @@ class PooledEventModel(JointEventModel):
                            depth=b.get('depth') if self.liquidity_context else None,
                            observed=b.get('observed'),rollout_steps=b.get('rollout_steps'))
 
-    def flow_cdf(self,raw,x,index=0):
+    def flow_cdf(self,raw,x,index=0,static=False):
         shift,scale,w,h,d=self.flow.split(raw)
         z=(x-self.mark_mean[index])/self.mark_std[index]
-        u=rq_spline((z-shift)*torch.exp(-scale),w,h,d,bound=self.flow.bound)[0]
+        u=(rq_spline_static if static else rq_spline)((z-shift)*torch.exp(-scale),w,h,d,bound=self.flow.bound)[0]
         return torch.special.log_ndtr(u)
 
     def amount_nll(self,raw,x,index,cap=None):
@@ -182,6 +189,75 @@ class PooledEventModel(JointEventModel):
             add(label+'_lower',selected,l);add(label+'_width',selected,w);add(label+'_amount',selected,a)
         total=wait+types+mark
         parts.update(wait=(wait.sum(),len(wait)),kind=(types.sum(),len(wait)),joint=(total.sum(),len(wait)))
+        return total.mean(),parts
+
+    def amount_nll_static(self,raw,x,index,cap=None):
+        """amount_nll without host synchronisation; returns (values, outside-support flag)."""
+        value=-self.flow.log_prob(raw,(x-self.mark_mean[index])/self.mark_std[index],static=True)+self.mark_std[index].log()
+        if cap is None:return value,None
+        return value+self.flow_cdf(raw,cap,index,static=True),x>=cap
+
+    def losses_static(self,b):
+        """Same per-row losses and parts as losses(), with no data-dependent shapes.
+
+        Every head is evaluated on every row and masked, so the step never waits on
+        the GPU. Inputs of rows a head does not apply to are replaced by safe values
+        first, keeping all evaluations finite (masked rows then contribute exactly
+        zero, including to gradients). Burn candidates arrive as full-row tables
+        (lower_candidates_full / width_candidates_full, see
+        dexnet.evaluation.expand_candidates); non-burn rows get a placeholder
+        candidate. Physical-support violations, which losses() raises immediately,
+        are returned as parts['violations'] for the caller to check periodically.
+        """
+        x=b['x'];h=self.encode_batch(b);dt=b['dt'].float();kind=b['kind']
+        y=b['targets'].to(x.dtype);valid=b['target_mask'];raw=self.clock(h)
+        rates=(F.softplus(raw[:,4:])+.00001).clamp(max=20.)
+        gap=torch.logsumexp(raw[:,1:4].log_softmax(-1)+torch.log(-torch.expm1(-rates))-(dt[:,None]-1)*rates,-1)
+        wait=torch.where(dt==0,F.softplus(-raw[:,0]),F.softplus(raw[:,0])-gap)
+        types=F.cross_entropy(self.types(self.condition(h,dt)),kind,reduction='none')
+        m=self.condition(h,dt,kind);mark=torch.zeros_like(wait);parts={};violations=torch.zeros((),dtype=torch.long,device=x.device)
+        def add(name,selection,values):
+            nonlocal mark
+            values=torch.where(selection,values,torch.zeros_like(values))
+            mark=mark+values;parts[name]=(values.sum(),selection.sum())
+        # Swaps: one head evaluation for all rows; sells in float32, buys in float64 with the capacity term.
+        raw_size=self.swap_size(m);safe_y0=torch.where(valid[:,0],y[:,0],torch.zeros_like(y[:,0]))
+        sell=(kind==0)&valid[:,0];buy=(kind==1)&valid[:,0]
+        v,_=self.amount_nll_static(raw_size,safe_y0,0);add('swap_sell',sell,v)
+        t0=torch.where(buy,b['targets'][:,0].double(),torch.zeros_like(b['targets'][:,0].double()))
+        cap=torch.where(buy,b['buy_log_cap'].double(),t0+1.)
+        v,outside=self.amount_nll_static(raw_size.double(),t0,0,cap);violations=violations+(outside&buy).sum();add('swap_buy',buy,v.to(x.dtype))
+        # Liquidity events: safe range inputs on rows that are neither mints nor burns.
+        lp=kind>=2;anchor=b['anchor'].to(x.dtype);unit=b['unit'].to(x.dtype)
+        minimum=b['grid_min'].to(x.dtype);maximum=b['grid_max'].to(x.dtype)
+        lower=torch.where(lp,b['lower'].to(x.dtype),anchor.round().clamp(minimum,maximum-2))
+        width=torch.where(lp,b['width'].to(x.dtype),torch.ones_like(anchor))
+        raw_lower=self.lower(m)
+        l_mint=discrete_nll(raw_lower,lower,anchor,unit,minimum,maximum-1)
+        burn=kind==3
+        lc=torch.where(burn[:,None],b['lower_candidates_full'].to(x.dtype),lower[:,None]);lm=b['lower_mask_full']|~burn[:,None]
+        violations=violations+(burn&~b['lower_mask_full'].any(-1)).sum()
+        l_burn=discrete_nll_static(raw_lower,lower,anchor,unit,lc,lm)
+        q=self.range_hidden(m,lower,anchor,unit);raw_width=self.width(q)
+        w_mint=discrete_nll(raw_width,width,anchor,unit,torch.ones_like(width),maximum-lower,width=True)
+        wc=torch.where(burn[:,None],b['width_candidates_full'].to(x.dtype),width[:,None]);wm=b['width_mask_full']|~burn[:,None]
+        violations=violations+(burn&~b['width_mask_full'].any(-1)).sum()
+        w_burn=discrete_nll_static(raw_width,width,anchor,unit,wc,wm,width=True)
+        q=q+self.range_cond(torch.stack([torch.asinh((lower-anchor)*unit/.001),(width*unit).log()],-1))
+        mint=kind==2;good=mint&valid[:,1]
+        a_mint,_=self.amount_nll_static(self.mint_amount(q),torch.where(good,y[:,1],torch.zeros_like(y[:,1])),1)
+        a_mint=torch.where(good,a_mint,torch.zeros_like(a_mint))
+        available=torch.where(valid[:,6],y[:,6],torch.zeros_like(y[:,6]))
+        qb=q+self.available(available[:,None]);full=torch.where(burn,y[:,3],torch.zeros_like(y[:,3]))
+        a_burn=F.binary_cross_entropy_with_logits(self.burn_full(qb).squeeze(-1),full,reduction='none')
+        partial=burn&valid[:,2];z=torch.where(partial,y[:,2],torch.zeros_like(y[:,2]))
+        frac,_=self.amount_nll_static(self.burn_fraction(qb),z,2)
+        a_burn=a_burn+torch.where(partial,frac-F.softplus(z)-F.softplus(-z),torch.zeros_like(frac))
+        for label,selection,l,w,a in (('mint',mint,l_mint,w_mint,a_mint),('burn',burn,l_burn,w_burn,a_burn)):
+            add(label+'_lower',selection,l);add(label+'_width',selection,w);add(label+'_amount',selection,a)
+        total=wait+types+mark
+        parts.update(wait=(wait.sum(),torch.tensor(len(wait),device=x.device)),kind=(types.sum(),torch.tensor(len(wait),device=x.device)),
+                     joint=(total.sum(),torch.tensor(len(wait),device=x.device)),violations=(violations,violations))
         return total.mean(),parts
 
     @torch.no_grad()

@@ -149,6 +149,28 @@ def rq_spline(
     return outputs, logabsdet
 
 
+def rq_spline_static(
+    inputs: torch.Tensor,
+    unnormalized_widths: torch.Tensor,
+    unnormalized_heights: torch.Tensor,
+    unnormalized_derivatives: torch.Tensor,
+    inverse: bool = False,
+    bound: float = 6.0,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """rq_spline without data-dependent shapes (no host synchronisation).
+
+    Every element goes through the spline core with its input clamped into
+    [-bound, bound]; elements outside keep the identity tail via torch.where, so
+    their spline evaluation is finite and receives zero gradient. Values equal
+    rq_spline's.
+    """
+    inside = (inputs >= -bound) & (inputs <= bound)
+    derivs = F.pad(unnormalized_derivatives, (1, 1), value=DERIV_IDENTITY_BIAS)
+    out_in, lad_in = _rq_spline_core(inputs.clamp(-bound, bound), unnormalized_widths, unnormalized_heights, derivs,
+                                     inverse=inverse, bound=bound)
+    return torch.where(inside, out_in, inputs), torch.where(inside, lad_in, torch.zeros_like(lad_in))
+
+
 class ConditionalSizeFlow:
     """Stateless helper: maps raw head outputs to log-prob / samples.
 
@@ -171,11 +193,11 @@ class ConditionalSizeFlow:
         derivs = raw[..., 2 + 2 * k : 2 + 3 * k - 1]
         return shift, log_scale, widths, heights, derivs
 
-    def log_prob(self, raw: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
+    def log_prob(self, raw: torch.Tensor, z: torch.Tensor, static: bool = False) -> torch.Tensor:
         """log density of z (normalized log size) under the conditional flow."""
         shift, log_scale, w, h, d = self.split(raw)
         u1 = (z - shift) * torch.exp(-log_scale)
-        u, lad = rq_spline(u1, w, h, d, inverse=False, bound=self.bound)
+        u, lad = (rq_spline_static if static else rq_spline)(u1, w, h, d, inverse=False, bound=self.bound)
         base = -0.5 * u.pow(2) - 0.5 * math.log(2.0 * math.pi)
         return base + lad - log_scale
 

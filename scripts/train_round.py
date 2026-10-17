@@ -15,7 +15,7 @@ import torch
 from dexnet.model import PooledEventModel
 from dexnet.coverage import CoverageSchedule
 from dexnet.utils import dump,atomic_save
-from dexnet.evaluation import load_sets,device_batch,host_batch,merge_batches,evaluate
+from dexnet.evaluation import load_sets,device_batch,host_batch,merge_batches,expand_candidates,evaluate
 
 
 def attach_ids(sets,plan):
@@ -27,12 +27,13 @@ def attach_ids(sets,plan):
 
 class UpdateBatches(torch.utils.data.Dataset):
     """Merged CPU batch for each optimizer update, in schedule order (no randomness)."""
-    def __init__(self,sets,schedule,first,count,accum):
-        self.sets,self.schedule,self.first,self.count,self.accum=sets,schedule,first,count,accum
+    def __init__(self,sets,schedule,first,count,accum,static=False):
+        self.sets,self.schedule,self.first,self.count,self.accum,self.static=sets,schedule,first,count,accum,static
     def __len__(self):return self.count
     def __getitem__(self,u):
         start=(self.first+u)*self.accum;parts=[self.schedule[i] for i in range(start,start+self.accum)]
-        return merge_batches([host_batch(self.sets[name],indices) for name,indices in parts]),[(name,len(indices)) for name,indices in parts]
+        b=merge_batches([host_batch(self.sets[name],indices) for name,indices in parts])
+        return (expand_candidates(b) if self.static else b),[(name,len(indices)) for name,indices in parts]
 
 
 def learning_rate(step,total,peak):
@@ -63,7 +64,37 @@ def main():
     if begin%accum or (end-begin)%accum:raise ValueError('Incomplete optimizer update')
     torch.manual_seed(plan['seed']+a.round*1000);model.train();optimizer.zero_grad(set_to_none=True)
     start=time.monotonic();totals={};counts={};seen={n:0 for n in sets};maxnorm=0.;clipped=0;updates=0
-    if plan.get('fused'):
+    if plan.get('static'):
+        # Sync-free path: static loss (optionally compiled), statistics kept on the GPU and read every 32 updates.
+        loss_fn=torch.compile(model.losses_static,dynamic=False,mode=plan.get('compile_mode') or 'default') if plan.get('compile') else model.losses_static
+        loader=torch.utils.data.DataLoader(UpdateBatches(sets,schedule,begin//accum,(end-begin)//accum,accum,static=True),batch_size=None,shuffle=False,
+                                           num_workers=plan.get('loader_workers',6),pin_memory=True,prefetch_factor=4,persistent_workers=False)
+        dev=torch.device('cuda');gtot={};gcnt={};gmax=torch.zeros((),device=dev);gclip=torch.zeros((),device=dev);bad=torch.zeros((),dtype=torch.bool,device=dev)
+        def report(i):
+            nonlocal maxnorm,clipped
+            if bool(bad):raise ValueError(f'Nonfinite loss/gradient or physical-support violation before batch {i+1}')
+            for k in gtot:totals[k]=float(gtot[k]);counts[k]=int(gcnt[k])
+            maxnorm=float(gmax);clipped=int(gclip)
+            elapsed=time.monotonic()-start;examples=(i-begin+1)*micro
+            progress=dict(round=a.round,rounds=plan['rounds'],batch=i+1,total_batches=len(schedule),examples_completed=(i+1)*micro,
+                round_examples=examples,optimizer_steps=(i+1)//accum,seconds=elapsed,examples_per_second=examples/elapsed,
+                joint_nll=totals['joint']/counts['joint'],gradient_norm_max=maxnorm,learning_rate=optimizer.param_groups[0]['lr'])
+            dump(a.out/'progress.json',progress);print(json.dumps(progress),flush=True)
+        for u,(cpu,parts_info) in enumerate(loader):
+            b={k:v.to(dev,non_blocking=True) for k,v in cpu.items()};loss,parts=loss_fn(b)
+            loss.backward()
+            for name,n in parts_info:seen[name]+=n
+            for k,(v,n) in parts.items():
+                if k=='violations':bad=bad|(v>0);continue
+                gtot[k]=gtot.get(k,0)+v.detach();gcnt[k]=gcnt.get(k,0)+n
+            norm=torch.nn.utils.clip_grad_norm_(model.parameters(),1.)
+            bad=bad|~torch.isfinite(norm)|~torch.isfinite(loss.detach());gmax=torch.maximum(gmax,norm.detach());gclip=gclip+(norm>1)
+            lr=plan['learning_rate'] if a.smoke else learning_rate(begin//accum+u,len(schedule)//accum,plan['learning_rate'])
+            for group in optimizer.param_groups:group['lr']=lr
+            optimizer.step();optimizer.zero_grad(set_to_none=True);updates+=1
+            i=begin+(u+1)*accum-1
+            if u%32==0 or i+1==end:report(i)
+    elif plan.get('fused'):
         loader=torch.utils.data.DataLoader(UpdateBatches(sets,schedule,begin//accum,(end-begin)//accum,accum),batch_size=None,shuffle=False,
                                            num_workers=plan.get('loader_workers',6),pin_memory=True,prefetch_factor=4,persistent_workers=False)
         for u,(cpu,parts_info) in enumerate(loader):
@@ -83,7 +114,7 @@ def main():
                     round_examples=examples,optimizer_steps=(i+1)//accum,seconds=elapsed,examples_per_second=examples/elapsed,
                     joint_nll=totals['joint']/counts['joint'],gradient_norm_max=maxnorm,learning_rate=optimizer.param_groups[0]['lr'])
                 dump(a.out/'progress.json',progress);print(json.dumps(progress),flush=True)
-    for i in (range(0) if plan.get('fused') else range(begin,end)):
+    for i in (range(0) if plan.get('fused') or plan.get('static') else range(begin,end)):
         name,indices=schedule[i];b=device_batch(sets[name],indices,'cuda');loss,parts=model.losses(b)
         if not torch.isfinite(loss):raise ValueError(f'Nonfinite loss at batch {i}')
         (loss/accum).backward();seen[name]+=len(indices)

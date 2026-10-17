@@ -74,3 +74,23 @@ def evaluate(model,sets,limit,device):
                           type_accuracy=correct/max(len(rows),1),swap_tail_examples=tail_n,
                           virtual_base_ratio_thresholds=[1e-4,1e-3,.01,.1,1.],predicted_exceedance_counts=tail_pred.tolist(),observed_exceedance_counts=tail_actual.tolist())
     return result
+
+
+def expand_candidates(b,lower_width=1280,width_width=128):
+    """Burn candidate tables as fixed-width full-row tables (for losses_static).
+
+    pooled_collate stores one candidate row per burn, in row order. This places
+    each burn's candidates on its own batch row, padded to a fixed width; other
+    rows are empty (losses_static gives them a placeholder). Raises if a burn has
+    more candidates than the fixed width, so callers can fall back to losses().
+    """
+    n=len(b['kind']);burns=torch.nonzero(b['kind']==3).flatten()
+    for compact,mask,full,size in (('lower_candidates','lower_mask','lower_candidates_full',lower_width),
+                                   ('width_candidates','width_mask','width_candidates_full',width_width)):
+        used=int(b[mask].sum(-1).max()) if len(burns) else 0
+        if used>size:raise ValueError(f'{compact}: {used} candidates exceed fixed width {size}')
+        values=torch.ones((n,size),dtype=b[compact].dtype);m=torch.zeros((n,size),dtype=torch.bool)
+        k=min(b[compact].shape[1],size)
+        values[burns,:k]=b[compact][:,:k];m[burns,:k]=b[mask][:,:k]
+        b[full]=values;b[full.replace('candidates','mask')]=m
+    return b
