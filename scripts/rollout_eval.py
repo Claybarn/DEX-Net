@@ -18,6 +18,7 @@ import numpy as np
 import torch
 from dexnet.model import PooledEventModel,apply_pooled_event,native_range
 from dexnet.diagnostics import ENDPOINT_NAMES,ENDPOINT_SCALES,proper_scores,feedback,endpoint
+from dexnet.rollout_context import liquidity_profile
 from dexnet.tick_mechanics import PoolState,TickBook
 from dexnet.utils import dump
 
@@ -42,6 +43,7 @@ def trajectory(model,b,initial,inventory,book,meta,mean,std,horizons,seed,device
     values={};blocks=0;volume=0;trace=dict(kind=[],dt=[],return_bp=[],base_volume=[])
     for step in range(1,max(horizons)+1):
         try:
+            if model.liquidity_context:b['depth']=torch.as_tensor(liquidity_profile(state,book,meta),device=device)[None]
             e=model.sample_event(b,state,inv,meta);previous=deepcopy(state)
             available=inv.get(e.get('lower'),{}).get(e.get('upper'),0)
             apply_pooled_event(state,book,inv,e,meta);blocks+=e['dt'];size=abs(e['base_amount']) if e['kind']<2 else 0;volume+=size

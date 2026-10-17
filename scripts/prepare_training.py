@@ -23,6 +23,7 @@ def main():
     p.add_argument('--embeddings',action='store_true',help='learned pool-ID embeddings (held-out pools use neutral ID 0)')
     p.add_argument('--epochs',type=int,default=3)
     p.add_argument('--visible-history',type=int,help='ablation: events of history the model may see (default all 64)')
+    p.add_argument('--depth',type=Path,help='liquidity-depth profiles from scripts.prepare_depth (depth-aware model)')
     a=p.parse_args()
     data,context=a.data.resolve(),a.context.resolve()
     if not (data/'COMPLETE.json').exists() or not (context/'COMPLETE.json').exists():
@@ -34,7 +35,7 @@ def main():
     plan=dict(data=str(data),context=str(context),schedule=str((a.out/'schedule').resolve()),seed=a.seed,pool_ids=pool_ids,embeddings=a.embeddings,
         epochs=a.epochs,d_model=a.d_model,layers=a.layers,learning_rate=.0001,learning_rate_schedule='1000-update warmup; cosine decay to 10% of peak',
         batches_per_round=8192,rounds=math.ceil(schedule['total_batches']/8192),training_examples=schedule['total_examples'],
-        microbatch=256,effective_batch=1024,initialization=f'Fresh; seed {a.seed}',visible_history=a.visible_history,
+        microbatch=256,effective_batch=1024,initialization=f'Fresh; seed {a.seed}',visible_history=a.visible_history,depth=str(a.depth.resolve()) if a.depth else None,
         sampling=schedule['coverage'],selection='Minimum seen-pool validation macro joint NLL; fixed training budget, no early stopping',
         heldout='Held-out pools use neutral ID 0; no held-out weights/scaler fitting or checkpoint selection',
         validation='8192 fixed examples per seen pool each round',final_evaluation='32768 fixed examples per pool; selected checkpoint only',

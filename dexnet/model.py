@@ -119,6 +119,7 @@ class PooledEventModel(JointEventModel):
 
     def encode_batch(self,b):
         return self.encode(b['x'],b['history_kind'],b['history_mask'],b['metadata'],b.get('pool_id'),
+                           depth=b.get('depth') if self.liquidity_context else None,
                            observed=b.get('observed'),rollout_steps=b.get('rollout_steps'))
 
     def flow_cdf(self,raw,x,index=0):

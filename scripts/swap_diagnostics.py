@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from dexnet.model import apply_pooled_event,log_reserve
 from dexnet.diagnostics import feedback
+from dexnet.rollout_context import liquidity_profile
 from dexnet.tick_mechanics import PoolState
 from scripts.rollout_eval import load_model,make_book
 
@@ -38,6 +39,7 @@ def diag_path(model,b,initial,inventory,book,meta,mean,std,horizon,seed,device):
     rows=[];base0=meta['base_is_token0'];sign=1 if base0 else -1
     for step in range(1,horizon+1):
         try:
+            if model.liquidity_context:b['depth']=torch.as_tensor(liquidity_profile(state,book,meta),device=device)[None]
             e=model.sample_event(b,state,inv,meta);previous=deepcopy(state)
             available=inv.get(e.get('lower'),{}).get(e.get('upper'),0)
             ratio=math.log(abs(e['base_amount']))-log_reserve(previous,base0) if e['kind']<2 else None

@@ -8,7 +8,7 @@ from .training_data import PooledTrainingDataset,pooled_collate
 
 def load_sets(plan,split):
     manifest=json.loads((Path(plan['data'])/'dataset.json').read_text())
-    return {name:PooledTrainingDataset(Path(plan['data']),Path(plan['context']),name,split)
+    return {name:PooledTrainingDataset(Path(plan['data']),Path(plan['context']),name,split,depth=plan.get('depth'))
             for name,m in manifest['pools'].items() if m['held_out']==split.startswith('heldout')}
 
 

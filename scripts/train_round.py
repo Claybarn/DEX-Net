@@ -33,6 +33,7 @@ def main():
     if not torch.cuda.is_available():raise RuntimeError('GPU unavailable')
     scalers=json.loads((Path(plan['data'])/'scalers.json').read_text())['scalers'];torch.manual_seed(plan['seed'])
     config=dict(d_model=plan['d_model'],layers=plan['layers'],pool_count=len(plan['pool_ids']) if plan['embeddings'] else 0,pool_dropout=.1)
+    if plan.get('depth'):config['liquidity_context']=True
     model=PooledEventModel(scalers,**config).cuda();optimizer=torch.optim.AdamW(model.parameters(),lr=plan['learning_rate'],weight_decay=.01)
     best=math.inf
     if a.round>1:
