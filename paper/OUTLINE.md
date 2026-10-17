@@ -179,9 +179,15 @@ Decided:
 - Direct model included as a baseline.
 - Two extra seeds of the reference model (260931, 260932) trained.
 
+Completed experiments (results in `paper/results/`, run on the GPU box under `dexnet-paper-20261016`):
+
+- **Rollout evaluation** (`calibration.json`, `stylized-facts.json`): 610 test anchors × 3 seeds × 32 paths at 32/128/512 events, against two history-only baselines. The model beats both baselines at 32 events in seen pools, ties the recent baseline at 128, and is worse at 512. Rare runaway paths, driven by too-heavy swap-size tails, dominate held-out long-horizon averages.
+- **Conditional skew** (`skew.json`): predicted skew is not reliably directional, even in the most confident 20% or after large trends. The model carries recent momentum into its skew, while realised short-horizon moves revert slightly.
+- **History ablation** (`history-ablation.json`): with no history, NLL is +1.08 nats in seen pools and +4.24 in held-out pools; with only the last 8 events, +0.165 and +0.32. Every pool and every component improves with history.
+- **Path reweighting** (`reweight.json`): fitted on seen-pool validation rollouts only. It improves 512-event energy by 7.5% in seen pools and 51% in held-out pools, mainly by down-weighting runaway paths, but remains worse than the recent baseline at 512 events.
+
 Still to add, as the paper experiments are run:
 
-- stylized-facts and asymmetry analyses;
-- point-process and volatility baselines;
+- a point-process (Hawkes) next-event baseline;
 - the JIT analyses;
 - figure scripts.
