@@ -1,0 +1,383 @@
+{
+ "method": "Point-process baselines for the clock and event-type parts of next-event NLL.\n\nBoth baselines predict exactly what the neural model's clock and type heads predict,\non the same rows (the fixed evaluation rows of dexnet.evaluation.evaluate, 32,768 per\npool), in the same units (nats per event):\n\n  clock  P(next event in the same block) and, otherwise, the block gap d >= 1\n  type   sell / buy / mint / burn, given the gap (the neural type head also sees it)\n\n  unconditional  renewal clock (constant same-block probability, 3-component\n                 geometric mixture over gaps) and constant type frequencies\n  hawkes         4-type discrete-time Hawkes process over the same last 64 events the\n                 neural model sees: type intensities mu_m + sum_j alpha[s, k_j, m]\n                 exp(-beta_s * age_j) with two time scales s; per-block hazard\n                 1 - exp(-lambda(t)) for gaps >= 1 (sums over blocks in closed form),\n                 same-block probability logistic in log lambda at the current block,\n                 type probabilities lambda_m / lambda at the event's block\n\nSeen pools: parameters fitted by maximum likelihood on a sample of that pool's training\nrows. Held-out pools: one parameter set fitted on the pooled seen-pool samples (equal\nrows per pool), mirroring the neural model's use of shared weights. Marks are not\nmodelled; the no-history ablation is the corresponding comparison for marks.\n\n  python -m scripts.hawkes_baseline --data data/prepared --runs runs/final --out results/hawkes.json\n",
+ "train_rows_per_pool": 200000,
+ "steps": 2000,
+ "pools": {
+  "USDC-WETH-500": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 1.4904453754425049,
+    "type": 0.8524140119552612,
+    "clock_plus_type": 2.342859387397766
+   },
+   "hawkes": {
+    "clock": 1.4141467809677124,
+    "type": 0.8082011342048645,
+    "clock_plus_type": 2.222347915172577
+   },
+   "reference": {
+    "clock": 1.377224604288737,
+    "type": 0.7379664580027262,
+    "clock_plus_type": 2.1151910622914634,
+    "clock_plus_type_sd": 0.0005098175560377428
+   },
+   "depth": {
+    "clock": 1.3778378168741863,
+    "type": 0.7388354738553365,
+    "clock_plus_type": 2.1166732907295227,
+    "clock_plus_type_sd": 0.0005791630531416114
+   }
+  },
+  "USDC-WETH-3000": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 3.1497297286987305,
+    "type": 1.0393381118774414,
+    "clock_plus_type": 4.189067840576172
+   },
+   "hawkes": {
+    "clock": 3.0665974617004395,
+    "type": 0.737288773059845,
+    "clock_plus_type": 3.8038862347602844
+   },
+   "reference": {
+    "clock": 2.9697126547495523,
+    "type": 0.688044806321462,
+    "clock_plus_type": 3.6577574610710144,
+    "clock_plus_type_sd": 0.004136974282599811
+   },
+   "depth": {
+    "clock": 2.9731666247049966,
+    "type": 0.6920473972956339,
+    "clock_plus_type": 3.665214022000631,
+    "clock_plus_type_sd": 0.0065291227847528365
+   }
+  },
+  "USDT-WETH-500": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 1.8112488985061646,
+    "type": 0.7928801774978638,
+    "clock_plus_type": 2.6041290760040283
+   },
+   "hawkes": {
+    "clock": 1.7028262615203857,
+    "type": 0.7509106397628784,
+    "clock_plus_type": 2.453736901283264
+   },
+   "reference": {
+    "clock": 1.6350888808568318,
+    "type": 0.6548415621121725,
+    "clock_plus_type": 2.289930442969004,
+    "clock_plus_type_sd": 0.002518819104554495
+   },
+   "depth": {
+    "clock": 1.6345929304758708,
+    "type": 0.6548011104265848,
+    "clock_plus_type": 2.289394040902456,
+    "clock_plus_type_sd": 0.0019808126399713725
+   }
+  },
+  "USDT-WETH-3000": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 2.7276415824890137,
+    "type": 1.291062831878662,
+    "clock_plus_type": 4.018704414367676
+   },
+   "hawkes": {
+    "clock": 2.5770421028137207,
+    "type": 1.0469611883163452,
+    "clock_plus_type": 3.624003291130066
+   },
+   "reference": {
+    "clock": 2.4693427880605063,
+    "type": 0.9582749207814535,
+    "clock_plus_type": 3.4276177088419595,
+    "clock_plus_type_sd": 0.007926966949542301
+   },
+   "depth": {
+    "clock": 2.473247528076172,
+    "type": 0.9648595452308655,
+    "clock_plus_type": 3.4381070733070374,
+    "clock_plus_type_sd": 0.009130166873060706
+   }
+  },
+  "DAI-WETH-500": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 2.6303138732910156,
+    "type": 0.7073418498039246,
+    "clock_plus_type": 3.33765572309494
+   },
+   "hawkes": {
+    "clock": 2.4654531478881836,
+    "type": 0.6823707818984985,
+    "clock_plus_type": 3.147823929786682
+   },
+   "reference": {
+    "clock": 2.399514675140381,
+    "type": 0.6034436623255411,
+    "clock_plus_type": 3.002958337465922,
+    "clock_plus_type_sd": 0.0013205179834891102
+   },
+   "depth": {
+    "clock": 2.4004108905792236,
+    "type": 0.6041989326477051,
+    "clock_plus_type": 3.0046098232269287,
+    "clock_plus_type_sd": 0.001313416893166049
+   }
+  },
+  "DAI-WETH-3000": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 3.822218418121338,
+    "type": 0.798547625541687,
+    "clock_plus_type": 4.620766043663025
+   },
+   "hawkes": {
+    "clock": 3.807415246963501,
+    "type": 0.4291999936103821,
+    "clock_plus_type": 4.236615240573883
+   },
+   "reference": {
+    "clock": 3.654317855834961,
+    "type": 0.3407645920912425,
+    "clock_plus_type": 3.9950824479262033,
+    "clock_plus_type_sd": 0.001994950573839594
+   },
+   "depth": {
+    "clock": 3.6547799110412598,
+    "type": 0.3417747418085734,
+    "clock_plus_type": 3.996554652849833,
+    "clock_plus_type_sd": 0.0003713962645850569
+   }
+  },
+  "WBTC-WETH-500": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 2.4026365280151367,
+    "type": 0.7953585386276245,
+    "clock_plus_type": 3.1979950666427612
+   },
+   "hawkes": {
+    "clock": 2.230349063873291,
+    "type": 0.6298269033432007,
+    "clock_plus_type": 2.8601759672164917
+   },
+   "reference": {
+    "clock": 2.1940592924753823,
+    "type": 0.5688180923461914,
+    "clock_plus_type": 2.7628773848215737,
+    "clock_plus_type_sd": 0.0009840893973853619
+   },
+   "depth": {
+    "clock": 2.193439324696859,
+    "type": 0.5681399504343668,
+    "clock_plus_type": 2.7615792751312256,
+    "clock_plus_type_sd": 0.0006002519392635023
+   }
+  },
+  "USDC-USDT-100": {
+   "group": "seen",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 2.8167014122009277,
+    "type": 0.8944606781005859,
+    "clock_plus_type": 3.7111620903015137
+   },
+   "hawkes": {
+    "clock": 2.697744846343994,
+    "type": 0.8054110407829285,
+    "clock_plus_type": 3.5031558871269226
+   },
+   "reference": {
+    "clock": 2.6696133613586426,
+    "type": 0.7861457665761312,
+    "clock_plus_type": 3.455759127934774,
+    "clock_plus_type_sd": 0.0027055966448800745
+   },
+   "depth": {
+    "clock": 2.669734001159668,
+    "type": 0.7855969071388245,
+    "clock_plus_type": 3.4553309082984924,
+    "clock_plus_type_sd": 0.0017077856376257207
+   }
+  },
+  "WBTC-WETH-3000": {
+   "group": "heldout",
+   "rows": 32768,
+   "unconditional": {
+    "clock": 4.263345718383789,
+    "type": 1.0447442531585693,
+    "clock_plus_type": 5.308089971542358
+   },
+   "hawkes": {
+    "clock": 3.8123555183410645,
+    "type": 0.7580265402793884,
+    "clock_plus_type": 4.570382058620453
+   },
+   "reference": {
+    "clock": 3.6135292847951255,
+    "type": 0.6343004703521729,
+    "clock_plus_type": 4.247829755147298,
+    "clock_plus_type_sd": 0.004457890159100057
+   },
+   "depth": {
+    "clock": 3.612835168838501,
+    "type": 0.6348584493001302,
+    "clock_plus_type": 4.247693618138631,
+    "clock_plus_type_sd": 0.005448318935136395
+   }
+  },
+  "USDC-USDT-500": {
+   "group": "heldout",
+   "rows": 18163,
+   "unconditional": {
+    "clock": 8.3073091506958,
+    "type": 0.883682131767273,
+    "clock_plus_type": 9.190991282463074
+   },
+   "hawkes": {
+    "clock": 5.648481369018555,
+    "type": 0.8102872967720032,
+    "clock_plus_type": 6.458768665790558
+   },
+   "reference": {
+    "clock": 5.288863491943328,
+    "type": 0.7006607519120832,
+    "clock_plus_type": 5.989524243855411,
+    "clock_plus_type_sd": 0.016661289245991424
+   },
+   "depth": {
+    "clock": 5.299023082640534,
+    "type": 0.7017280365647194,
+    "clock_plus_type": 6.000751119205252,
+    "clock_plus_type_sd": 0.042329771642957405
+   }
+  }
+ },
+ "macro": {
+  "seen": {
+   "unconditional": {
+    "clock": 2.606366977095604,
+    "type": 0.8964254781603813,
+    "clock_plus_type": 3.5027924552559853
+   },
+   "hawkes": {
+    "clock": 2.4951968640089035,
+    "type": 0.7362713068723679,
+    "clock_plus_type": 3.2314681708812714
+   },
+   "reference": {
+    "clock": 2.421109264095624,
+    "type": 0.6672874825696151,
+    "clock_plus_type": 3.0883967466652393
+   },
+   "depth": {
+    "clock": 2.4221511284510298,
+    "type": 0.6687817573547363,
+    "clock_plus_type": 3.090932885805766
+   }
+  },
+  "heldout": {
+   "unconditional": {
+    "clock": 6.285327434539795,
+    "type": 0.9642131924629211,
+    "clock_plus_type": 7.249540627002716
+   },
+   "hawkes": {
+    "clock": 4.73041844367981,
+    "type": 0.7841569185256958,
+    "clock_plus_type": 5.514575362205505
+   },
+   "reference": {
+    "clock": 4.451196388369227,
+    "type": 0.6674806111321281,
+    "clock_plus_type": 5.118676999501354
+   },
+   "depth": {
+    "clock": 4.455929125739518,
+    "type": 0.6682932429324249,
+    "clock_plus_type": 5.1242223686719415
+   }
+  }
+ },
+ "pooled_hawkes_parameters": {
+  "mu": [
+   0.003414304694160819,
+   0.003367685480043292,
+   0.00024511251831427217,
+   0.00021053041564300656
+  ],
+  "beta": [
+   0.18263860046863556,
+   0.010379994288086891
+  ],
+  "alpha": [
+   [
+    [
+     0.056480955332517624,
+     3.1464591302210465e-05,
+     3.730271419044584e-05,
+     7.734721293672919e-05
+    ],
+    [
+     4.523319876170717e-05,
+     0.054051779210567474,
+     2.610131195979193e-05,
+     4.004489892395213e-05
+    ],
+    [
+     3.6320012441137806e-05,
+     2.986824983963743e-05,
+     0.0037095006555318832,
+     0.002707867417484522
+    ],
+    [
+     4.085500768269412e-05,
+     3.871322041959502e-05,
+     0.02174512855708599,
+     0.01134039182215929
+    ]
+   ],
+   [
+    [
+     0.005267654545605183,
+     0.0020172330550849438,
+     7.482306682504714e-05,
+     7.034355076029897e-05
+    ],
+    [
+     0.001873393077403307,
+     0.004996579606086016,
+     1.3210734323365614e-05,
+     2.4837496312102303e-05
+    ],
+    [
+     4.638169230020139e-06,
+     2.8099555038352264e-06,
+     0.0056655528023839,
+     0.0019270852208137512
+    ],
+    [
+     1.2534347661130596e-05,
+     7.929445928311907e-06,
+     0.00450848788022995,
+     0.0048475987277925014
+    ]
+   ]
+  ],
+  "c": [
+   -0.12470386177301407,
+   1.0660115480422974
+  ]
+ }
+}

@@ -141,6 +141,31 @@ def fig3():
     fig.tight_layout();save(fig,'fig3_stylized_facts')
 
 
+
+# ---------------------------------------------------------------- Figure 4
+def fig4():
+    d=load(FINAL/'jit.json')['groups'];fams=dict(real=['real'],depth=[f'depth{s}' for s in SEEDS],reference=[f'reference{s}' for s in SEEDS])
+    label=dict(real='Realised',depth=NAME['depth'],reference=NAME['reference'])
+    fig,axes=plt.subplots(1,3,figsize=(7.2,2.4));w=.26
+    def vals(g,f,fn):return np.array([v for v in (fn(d[g][l]['all']) for l in fams[f]) if v is not None])
+    panels=((lambda s:s['pairs_per_1000_events'],'Strict JIT pairs per 1,000 events',False),
+            (lambda s:(s['swap_deposit'] or {}).get('q0.5'),'Median JIT swap / deposit',True),
+            (lambda s:s['removal']['unremoved_after_64'],'Large mints not removed\nafter 64 events',False))
+    for ax,(fn,title,log) in zip(axes,panels):
+        for i,f in enumerate(fams):
+            for j,g in enumerate(('seen','heldout')):
+                v=vals(g,f,fn)
+                if not len(v):continue
+                y=v.mean();x=j+(i-1)*w
+                ax.bar(x,max(y,1e-5) if log else y,w,color=COL[f],label=label[f] if j==0 else None)
+                if len(v)>1:ax.errorbar(x,y,yerr=[[y-v.min()],[v.max()-y]],color='k',lw=.7,capsize=1.5)
+        ax.set_xticks([0,1]);ax.set_xticklabels(['seen','held-out']);ax.set_title(title)
+        if log:ax.set_yscale('log')
+    axes[2].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1,decimals=0));axes[1].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
+    fig.legend(*axes[0].get_legend_handles_labels(),loc='lower center',ncol=3,frameon=False,fontsize=6.5,bbox_to_anchor=(.5,-.08))
+    fig.suptitle('JIT liquidity: the model learns the pattern but makes it too rare, too large relative to the deposit, and too sticky (bars: seed range)',fontsize=7.5,y=1.04)
+    fig.tight_layout();save(fig,'fig4_jit')
+
 # ---------------------------------------------------------------- Figure 5
 def fig5():
     nll=load(FINAL/'nll.json')['families'];summ={(f,s):load(FINAL/'rollout-summaries'/f'{s}-{FAM[f]}.json')['results'] for f in FAM for s in ('test',)}
@@ -209,7 +234,7 @@ def figS1():
 
 def main():
     p=argparse.ArgumentParser(description=__doc__.splitlines()[0]);p.add_argument('--cones',type=Path);a=p.parse_args()
-    fig1();fig3();fig5();fig6();fig7();figS1()
+    fig1();fig3();fig4();fig5();fig6();fig7();figS1()
     if a.cones:fig2(a.cones)
 
 

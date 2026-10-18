@@ -106,7 +106,18 @@ Macro NLL in nats/event, mean ± s.d. over 3 seeds; 32,768 fixed examples per po
   - an 8-event window costs +0.18 / +0.29, far beyond seed noise;
   - without history, seen NLL rises by +1.04 and held-out timing fails;
   - the held-out failure is almost entirely the wait head on USDC/USDT 0.05% (wait NLL 12–47 against about 1–2 normally). Without history the model cannot tell how active an unseen pool is, and validation selects very early checkpoints (rounds 2, 3 and 16).
-- **Missing baselines:** an unconditional per-pool model (empirical marks, renewal clock) and a neural Hawkes / Transformer Hawkes model on the same event space. **[run]**
+- **Point-process baselines** (clock and event-type NLL on the same rows, `hawkes.json`, Table 5) **[have]**:
+
+  | Model | Seen (clock + type) | Held-out (clock + type) |
+  |---|---|---|
+  | Unconditional (renewal clock, type frequencies) | 3.503 | 7.250 |
+  | 4-type Hawkes, two time scales, last 64 events | 3.231 | 5.515 |
+  | Neural, reference / depth-aware | 3.088 / 3.091 | 5.119 / 5.124 |
+
+  - The neural model beats a converged Hawkes fit by 0.14 nats/event on seen pools and 0.39 on held-out pools.
+  - The Hawkes fit is per seen pool (a strong baseline); held-out pools use one pooled fit.
+  - Most of the gain is in event type (0.67 vs 0.74), and on held-out pools in the clock (4.45 vs 4.73).
+  - Marks have no point-process analogue; the no-history ablation is the comparison there.
 - **Table 2:** NLL by pool and head with baselines. **[partial]** Per-pool and per-head numbers are in `nll.json`.
 
 ### 5.2 Rollout fidelity **[have]** `paper/results/final/rollout-summaries/`, `compare-*.json`
@@ -154,12 +165,12 @@ Energy score over four endpoints (return, liquidity change, elapsed blocks, volu
   - More than 500 bp: reference 0.48%, depth 0.066%, real 0.018%.
   - The depth-aware model removes most of the excess but not all of it.
 - **Mint and burn heads:** NLL by head (§5.1).
-- **JIT-like sequences** (earlier model; to re-check on the final depth model):
-  - The association is learned: the swap accompanying a mint is much larger than ordinary swaps (median 58,400 vs 3,599 USDC in USDC/WETH). **[have]**
-  - Failure mode: generated swap size relative to deposited capital is too large (median 1.99% vs 0.11%). **[have]**
-  - Failure mode: large mints stay unremoved after 64 events in 16–34% of generated cases against 0.28% historically. **[have]**
-  - **[run]** Repeat both on the final depth-aware rollouts.
-- **Figure 4:** JIT scatter (deposit vs swap, generated vs historical) and a removal-survival curve. **[partial]**
+- **JIT liquidity on the final models** (`jit.json`, Figure 4; 12 test anchors per pool × 32 paths × 96 events, 3 seeds per model; real = the full test-period event stream; definitions as in the original study) **[have]**:
+  - The pattern is learned: the model generates strict mint → swap → burn pairs (same block, range and amount), and its large-mint share is close to real (seen: 7.5% of mints vs 9.0%).
+  - **Too rare:** 1.8 strict pairs per 1,000 events vs 4.6 real (seen); 1.2 vs 6.4 (held-out).
+  - **Too large relative to the deposit:** median swap/deposit 0.74% vs 0.12% real (seen). This is still a mismatch, but smaller than the earlier model's (1.99% vs 0.11%).
+  - **Too sticky:** 10.5% of large mints are not removed within 64 events, vs 0.5% real (seen). The reference model is at 15.2%, and the earlier model at 16–34%. The liquidity profile helps here.
+- **Figure 4:** JIT pair rate, swap/deposit ratio and unremoved large mints; real vs depth-aware vs reference with seed ranges. **[have]**
 
 ### 5.4 Likelihood is not simulation quality **[have]**
 
@@ -201,7 +212,8 @@ Explanation: the failures that matter for simulation are rare, state-dependent e
 - Ethereum-only training; two held-out pools.
 - Skew is not directionally informative; momentum is extrapolated.
 - Swap-size tails are still heavier than real ones; some spurious liquidity collapse remains (15% vs 5%).
-- JIT size mismatch (to be re-checked on the depth-aware model).
+- JIT: pairs are too rare, too large relative to the deposit, and too often left unremoved.
+- Volatility clustering (|return| autocorrelation) is stronger than real at every lag.
 - On the seen-pool test period, a recent-history baseline beats the model at 512 events.
 
 ## 8. Conclusion
@@ -222,12 +234,10 @@ Learning only the stochastic part, combined with exact mechanics, gives a faithf
 
 ## Work still to run, in priority order
 
-1. **Figures 1–7 and Tables 1–2** from `paper/results/final/` (no new compute).
-2. **JIT analyses on the final depth-aware rollouts** (CPU, from saved traces).
-3. **Next-event baselines:** unconditional per-pool model and a Hawkes / Transformer Hawkes model (one GPU run each).
-4. **Direct forecaster scored on the final anchors** (CPU).
-5. **Fees − LVR distribution test** from rollouts (§6 bridge).
-6. **Optional:** a fresh October 2026 held-out period.
+1. **Write the paper** around Figures 1–7, S1 and Tables 1–5 (`paper/figures/`, `paper/tables/`).
+2. **Direct forecaster scored on the final anchors** (CPU), for the "static cone" contrast.
+3. **Fees − LVR distribution test** from rollouts (§6 bridge).
+4. **Optional:** a fresh October 2026 held-out period.
 
 ## Repository status
 

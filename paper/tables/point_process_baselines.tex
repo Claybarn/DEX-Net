@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Clock and event-type NLL (nats/event, macro over pools) on the same evaluation rows. Point-process baselines are fitted per seen pool; held-out pools use one fit on pooled seen-pool data. Neural rows are 3-seed means.}
+\label{tab:point_process_baselines}
+\begin{tabular}{lrrrrrr}
+\toprule
+Model & Clock (seen) & Type (seen) & Sum (seen) & Clock (held out) & Type (held out) & Sum (held out) \\
+\midrule
+Unconditional (renewal + type frequencies) & 2.606 & 0.896 & 3.503 & 6.285 & 0.964 & 7.250 \\
+4-type Hawkes, 2 time scales & 2.495 & 0.736 & 3.231 & 4.730 & 0.784 & 5.515 \\
+Neural, reference & 2.421 & 0.667 & 3.088 & 4.451 & 0.667 & 5.119 \\
+Neural, depth-aware & 2.422 & 0.669 & 3.091 & 4.456 & 0.668 & 5.124 \\
+\bottomrule
+\end{tabular}
+\end{table}
