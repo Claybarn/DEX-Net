@@ -1,0 +1,12 @@
+{
+ "description": "Final paper runs: identical code, schedule per seed, hardware and static training path for every model.",
+ "seeds": [260930, 260931, 260932],
+ "common": {"static": true, "loader_workers": 3},
+ "families": {
+  "reference":    {"d_model": 128, "layers": 4},
+  "depth":        {"d_model": 128, "layers": 4, "depth": true},
+  "depth-small":  {"d_model": 64,  "layers": 2, "depth": true},
+  "depth-hist0":  {"d_model": 128, "layers": 4, "depth": true, "visible_history": 0},
+  "depth-hist8":  {"d_model": 128, "layers": 4, "depth": true, "visible_history": 8}
+ }
+}
