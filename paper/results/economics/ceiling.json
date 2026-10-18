@@ -1,0 +1,1842 @@
+{
+  "method": "Perfect-foresight ceiling on LP in/out timing, per decision interval.\n\nEvery swap contributes y = fee - LVR for a position of half-width W (log) centred\non the Binance ETHUSDT close 12 s after its block: each swap's price move is\nclipped to that range before applying the scripts/fee_lvr.py terms, so swaps far\noutside the range (e.g. through empty liquidity) earn and lose nothing. y is in\nbp of the position's value at the reference price. Swaps are\nsummed into decision intervals of length D (one block, 1 min, 5 min, 1 h, 1 day).\nA dynamic programme then picks the best in/out schedule knowing every interval's\noutcome in advance, paying an entry cost per cycle (exit free):\n\n  out[k] = max(out[k-1], in[k-1])\n  in[k]  = max(in[k-1], out[k-1] - cost) + Y[k]\n\nNo forecaster can beat this. Block-level timing implies builder/JIT-style access;\nminute-level is reachable for an ordinary LP on an L2, not on mainnet.\n\n  python ceiling.py --out ceiling.json\n",
+  "width": 0.02,
+  "capital": 100000.0,
+  "gas_usd": {
+    "mainnet": 15.0,
+    "base": 0.1,
+    "arbitrum": 0.1
+  },
+  "pools": {
+    "mainnet:USDC-WETH-500": {
+      "swaps": 2131923,
+      "year": {
+        "always": {
+          "bp_per_day": -27.26930159575658
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 32.84623952388539,
+            "intervals_held": 389406,
+            "active_intervals": 1266178,
+            "entries_per_day": 7.18335737005354,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 23.49834528232805,
+            "intervals_held": 337107,
+            "active_intervals": 1266178,
+            "entries_per_day": 2.0678164779948767,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 85.62820677040511
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 21.255651350838498,
+            "intervals_held": 154582,
+            "active_intervals": 487231,
+            "entries_per_day": 4.572903701654912,
+            "share_of_time_in": 0.2827733306016127
+          },
+          "gas+swap": {
+            "bp_per_day": 15.472960586594933,
+            "intervals_held": 135183,
+            "active_intervals": 487231,
+            "entries_per_day": 1.2696656591000388,
+            "share_of_time_in": 0.24728718188869214
+          },
+          "no_cost_bp_per_day": 54.18251193913196
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 16.54789653166423,
+            "intervals_held": 34052,
+            "active_intervals": 109227,
+            "entries_per_day": 2.981870386102166,
+            "share_of_time_in": 0.31145216906149104
+          },
+          "gas+swap": {
+            "bp_per_day": 12.55487743037294,
+            "intervals_held": 30606,
+            "active_intervals": 109227,
+            "entries_per_day": 0.9535663248842615,
+            "share_of_time_in": 0.2799337802859155
+          },
+          "no_cost_bp_per_day": 32.72639596671762
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 11.551558298789498,
+            "intervals_held": 2658,
+            "active_intervals": 9112,
+            "entries_per_day": 1.085274380807502,
+            "share_of_time_in": 0.29170324846356455
+          },
+          "gas+swap": {
+            "bp_per_day": 9.72563284036824,
+            "intervals_held": 2403,
+            "active_intervals": 9112,
+            "entries_per_day": 0.5321005459298918,
+            "share_of_time_in": 0.2637181738366989
+          },
+          "no_cost_bp_per_day": 14.553090390061042
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 6.17546748990736,
+            "intervals_held": 76,
+            "active_intervals": 380,
+            "entries_per_day": 0.08692731690933876,
+            "share_of_time_in": 0.2
+          },
+          "gas+swap": {
+            "bp_per_day": 5.978221710720933,
+            "intervals_held": 75,
+            "active_intervals": 380,
+            "entries_per_day": 0.06848818908008508,
+            "share_of_time_in": 0.19736842105263158
+          },
+          "no_cost_bp_per_day": 6.3196864580537015
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -31.54519470542641
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 14.105434543451704,
+            "intervals_held": 82572,
+            "active_intervals": 351997,
+            "entries_per_day": 4.754889509779019,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 8.72204887814688,
+            "intervals_held": 49543,
+            "active_intervals": 351997,
+            "entries_per_day": 1.003497391610168,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 58.165624235400955
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 7.556221724794021,
+            "intervals_held": 31918,
+            "active_intervals": 136217,
+            "entries_per_day": 3.5075516304878764,
+            "share_of_time_in": 0.20787526702443598
+          },
+          "gas+swap": {
+            "bp_per_day": 3.8198951986456873,
+            "intervals_held": 18627,
+            "active_intervals": 136217,
+            "entries_per_day": 0.6658721009749712,
+            "share_of_time_in": 0.12131376022508206
+          },
+          "no_cost_bp_per_day": 38.53731515272766
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 6.070119787763423,
+            "intervals_held": 6666,
+            "active_intervals": 30678,
+            "entries_per_day": 2.4290263965143315,
+            "share_of_time_in": 0.2170699143573545
+          },
+          "gas+swap": {
+            "bp_per_day": 3.3333012493387573,
+            "intervals_held": 4105,
+            "active_intervals": 30678,
+            "entries_per_day": 0.5439518571344835,
+            "share_of_time_in": 0.13367416718225927
+          },
+          "no_cost_bp_per_day": 22.445258764901666
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 3.2538829155806415,
+            "intervals_held": 475,
+            "active_intervals": 2560,
+            "entries_per_day": 0.9097125886559465,
+            "share_of_time_in": 0.185546875
+          },
+          "gas+swap": {
+            "bp_per_day": 2.052908547489735,
+            "intervals_held": 271,
+            "active_intervals": 2560,
+            "entries_per_day": 0.2813544088626639,
+            "share_of_time_in": 0.105859375
+          },
+          "no_cost_bp_per_day": 6.295964624735578
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 0.0485905697410759,
+            "intervals_held": 3,
+            "active_intervals": 107,
+            "entries_per_day": 0.028135440886266388,
+            "share_of_time_in": 0.028037383177570093
+          },
+          "gas+swap": {
+            "bp_per_day": 0.0,
+            "intervals_held": 0,
+            "active_intervals": 107,
+            "entries_per_day": 0.0,
+            "share_of_time_in": 0.0
+          },
+          "no_cost_bp_per_day": 0.12647399092806294
+        }
+      }
+    },
+    "mainnet:USDC-WETH-3000": {
+      "swaps": 232992,
+      "year": {
+        "always": {
+          "bp_per_day": -11.928243407541855
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 25.714479436414578,
+            "intervals_held": 37733,
+            "active_intervals": 204597,
+            "entries_per_day": 2.2601416613007084,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 15.506917069990473,
+            "intervals_held": 28432,
+            "active_intervals": 204597,
+            "entries_per_day": 0.30556693789147105,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 34.532134883843675
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 19.776968067117693,
+            "intervals_held": 24702,
+            "active_intervals": 133463,
+            "entries_per_day": 1.7991570567230581,
+            "share_of_time_in": 0.045187384411065804
+          },
+          "gas+swap": {
+            "bp_per_day": 12.538290860346175,
+            "intervals_held": 18550,
+            "active_intervals": 133463,
+            "entries_per_day": 0.1975648305332787,
+            "share_of_time_in": 0.03393352687334105
+          },
+          "no_cost_bp_per_day": 26.663025223838243
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 17.053371439706662,
+            "intervals_held": 11943,
+            "active_intervals": 67204,
+            "entries_per_day": 1.4251009775800505,
+            "share_of_time_in": 0.1092350891313693
+          },
+          "gas+swap": {
+            "bp_per_day": 11.378311112095012,
+            "intervals_held": 8451,
+            "active_intervals": 67204,
+            "entries_per_day": 0.15278346894573552,
+            "share_of_time_in": 0.07729596736575417
+          },
+          "no_cost_bp_per_day": 22.04504849374488
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 13.589353884239545,
+            "intervals_held": 1424,
+            "active_intervals": 9087,
+            "entries_per_day": 0.7006965989580285,
+            "share_of_time_in": 0.1562774363476734
+          },
+          "gas+swap": {
+            "bp_per_day": 10.11435101452097,
+            "intervals_held": 1151,
+            "active_intervals": 9087,
+            "entries_per_day": 0.11327050283907979,
+            "share_of_time_in": 0.12631694468832308
+          },
+          "no_cost_bp_per_day": 15.575157937304695
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 8.186684920673201,
+            "intervals_held": 64,
+            "active_intervals": 380,
+            "entries_per_day": 0.08429432769419891,
+            "share_of_time_in": 0.16842105263157894
+          },
+          "gas+swap": {
+            "bp_per_day": 7.450436947124793,
+            "intervals_held": 69,
+            "active_intervals": 380,
+            "entries_per_day": 0.028976175144880878,
+            "share_of_time_in": 0.18157894736842106
+          },
+          "no_cost_bp_per_day": 8.330724763776214
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -19.933453733535085
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 10.706919544918042,
+            "intervals_held": 5398,
+            "active_intervals": 54792,
+            "entries_per_day": 1.087943393596609,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 5.905973847769949,
+            "intervals_held": 791,
+            "active_intervals": 54792,
+            "entries_per_day": 0.1500611577374633,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 16.31124101398941
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 7.690895194812242,
+            "intervals_held": 3643,
+            "active_intervals": 37136,
+            "entries_per_day": 0.9097457687833713,
+            "share_of_time_in": 0.023727025231538773
+          },
+          "gas+swap": {
+            "bp_per_day": 4.252475271061569,
+            "intervals_held": 432,
+            "active_intervals": 37136,
+            "entries_per_day": 0.10316704594450603,
+            "share_of_time_in": 0.0028136357123318004
+          },
+          "no_cost_bp_per_day": 12.180906563736315
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 7.032982331956085,
+            "intervals_held": 1816,
+            "active_intervals": 18752,
+            "entries_per_day": 0.759684611045908,
+            "share_of_time_in": 0.05913575824676805
+          },
+          "gas+swap": {
+            "bp_per_day": 4.000446672866363,
+            "intervals_held": 156,
+            "active_intervals": 18752,
+            "entries_per_day": 0.08440940122732311,
+            "share_of_time_in": 0.005079943990361132
+          },
+          "no_cost_bp_per_day": 10.448649508379036
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 5.369562833063912,
+            "intervals_held": 206,
+            "active_intervals": 2554,
+            "entries_per_day": 0.4689411179295728,
+            "share_of_time_in": 0.08046875
+          },
+          "gas+swap": {
+            "bp_per_day": 3.3970534505198673,
+            "intervals_held": 31,
+            "active_intervals": 2554,
+            "entries_per_day": 0.046894111792957285,
+            "share_of_time_in": 0.012109375
+          },
+          "no_cost_bp_per_day": 6.9981854765435125
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 3.0505055739522353,
+            "intervals_held": 3,
+            "active_intervals": 107,
+            "entries_per_day": 0.018757644717182914,
+            "share_of_time_in": 0.028037383177570093
+          },
+          "gas+swap": {
+            "bp_per_day": 2.7691409031944914,
+            "intervals_held": 3,
+            "active_intervals": 107,
+            "entries_per_day": 0.018757644717182914,
+            "share_of_time_in": 0.028037383177570093
+          },
+          "no_cost_bp_per_day": 3.0820306956423233
+        }
+      }
+    },
+    "mainnet:USDT-WETH-500": {
+      "swaps": 1397062,
+      "year": {
+        "always": {
+          "bp_per_day": -19.989290752793917
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 28.699962532619352,
+            "intervals_held": 263321,
+            "active_intervals": 938944,
+            "entries_per_day": 7.201799132702135,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 19.379324737158864,
+            "intervals_held": 239777,
+            "active_intervals": 938944,
+            "entries_per_day": 1.9861582099697914,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 76.46527728884003
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 19.599506923656165,
+            "intervals_held": 115031,
+            "active_intervals": 418594,
+            "entries_per_day": 4.522856295116886,
+            "share_of_time_in": 0.21042358743213382
+          },
+          "gas+swap": {
+            "bp_per_day": 13.580464883597333,
+            "intervals_held": 105239,
+            "active_intervals": 418594,
+            "entries_per_day": 1.3249835273405903,
+            "share_of_time_in": 0.1925113049331948
+          },
+          "no_cost_bp_per_day": 47.02764431700184
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 15.517182027036828,
+            "intervals_held": 30219,
+            "active_intervals": 108171,
+            "entries_per_day": 2.9976764495300032,
+            "share_of_time_in": 0.27639413534797364
+          },
+          "gas+swap": {
+            "bp_per_day": 11.31088742652497,
+            "intervals_held": 27276,
+            "active_intervals": 108171,
+            "entries_per_day": 0.9878107808205195,
+            "share_of_time_in": 0.24947637035478767
+          },
+          "no_cost_bp_per_day": 29.03536846717179
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 10.544016850796114,
+            "intervals_held": 2575,
+            "active_intervals": 9112,
+            "entries_per_day": 1.1801046128202475,
+            "share_of_time_in": 0.2825943810359965
+          },
+          "gas+swap": {
+            "bp_per_day": 8.650358321778468,
+            "intervals_held": 2227,
+            "active_intervals": 9112,
+            "entries_per_day": 0.505759119780106,
+            "share_of_time_in": 0.24440298507462688
+          },
+          "no_cost_bp_per_day": 13.495490910399402
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 4.445325659076772,
+            "intervals_held": 75,
+            "active_intervals": 380,
+            "entries_per_day": 0.10273232120533403,
+            "share_of_time_in": 0.19736842105263158
+          },
+          "gas+swap": {
+            "bp_per_day": 4.200725844589613,
+            "intervals_held": 71,
+            "active_intervals": 380,
+            "entries_per_day": 0.09219567287658183,
+            "share_of_time_in": 0.1868421052631579
+          },
+          "no_cost_bp_per_day": 4.623832940139872
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -25.16103837077763
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 15.625410260435762,
+            "intervals_held": 49712,
+            "active_intervals": 259455,
+            "entries_per_day": 3.6107149137375196,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 10.82205476651326,
+            "intervals_held": 39835,
+            "active_intervals": 259455,
+            "entries_per_day": 1.0410113127918563,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 46.50753003044062
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 9.872302181085665,
+            "intervals_held": 24128,
+            "active_intervals": 118671,
+            "entries_per_day": 2.46654031769602,
+            "share_of_time_in": 0.1571406241859011
+          },
+          "gas+swap": {
+            "bp_per_day": 6.636170024848169,
+            "intervals_held": 19303,
+            "active_intervals": 118671,
+            "entries_per_day": 0.7033860221566597,
+            "share_of_time_in": 0.12571640702339396
+          },
+          "no_cost_bp_per_day": 28.513204954925925
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 8.729626995602892,
+            "intervals_held": 6877,
+            "active_intervals": 30430,
+            "entries_per_day": 1.7725327758347824,
+            "share_of_time_in": 0.22394086424175325
+          },
+          "gas+swap": {
+            "bp_per_day": 6.125068402764739,
+            "intervals_held": 5351,
+            "active_intervals": 30430,
+            "entries_per_day": 0.6283581797932827,
+            "share_of_time_in": 0.17424859161809242
+          },
+          "no_cost_bp_per_day": 18.27926638818069
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 6.169497694688164,
+            "intervals_held": 590,
+            "active_intervals": 2560,
+            "entries_per_day": 0.9190910689513687,
+            "share_of_time_in": 0.23046875
+          },
+          "gas+swap": {
+            "bp_per_day": 4.752998721779174,
+            "intervals_held": 398,
+            "active_intervals": 2560,
+            "entries_per_day": 0.36576073152146305,
+            "share_of_time_in": 0.15546875
+          },
+          "no_cost_bp_per_day": 8.534160236412728
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 1.77401768342158,
+            "intervals_held": 12,
+            "active_intervals": 107,
+            "entries_per_day": 0.07502784236337703,
+            "share_of_time_in": 0.11214953271028037
+          },
+          "gas+swap": {
+            "bp_per_day": 1.5880199464498894,
+            "intervals_held": 11,
+            "active_intervals": 107,
+            "entries_per_day": 0.06564936206795491,
+            "share_of_time_in": 0.102803738317757
+          },
+          "no_cost_bp_per_day": 1.9179574244283606
+        }
+      }
+    },
+    "mainnet:USDT-WETH-3000": {
+      "swaps": 425599,
+      "year": {
+        "always": {
+          "bp_per_day": -4.8984412260536105
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 29.30658132714614,
+            "intervals_held": 57508,
+            "active_intervals": 350258,
+            "entries_per_day": 2.320701888661773,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 18.423800660124513,
+            "intervals_held": 59289,
+            "active_intervals": 350258,
+            "entries_per_day": 0.31873431160961924,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 38.235076962029055
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 23.652622007555415,
+            "intervals_held": 38088,
+            "active_intervals": 224202,
+            "entries_per_day": 1.7438191263270078,
+            "share_of_time_in": 0.0696736380548894
+          },
+          "gas+swap": {
+            "bp_per_day": 16.082769996961222,
+            "intervals_held": 36318,
+            "active_intervals": 224202,
+            "entries_per_day": 0.20809926129884232,
+            "share_of_time_in": 0.06643581145971102
+          },
+          "no_cost_bp_per_day": 30.38182766671372
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 21.068694098557845,
+            "intervals_held": 15188,
+            "active_intervals": 92700,
+            "entries_per_day": 1.3803039610201693,
+            "share_of_time_in": 0.13891505766785875
+          },
+          "gas+swap": {
+            "bp_per_day": 14.943606887259943,
+            "intervals_held": 14452,
+            "active_intervals": 92700,
+            "entries_per_day": 0.1685867433307077,
+            "share_of_time_in": 0.13218332982722508
+          },
+          "no_cost_bp_per_day": 25.722127068314528
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 18.089128875514128,
+            "intervals_held": 1518,
+            "active_intervals": 9112,
+            "entries_per_day": 0.7454695056654731,
+            "share_of_time_in": 0.16659350307287094
+          },
+          "gas+swap": {
+            "bp_per_day": 13.972416540131528,
+            "intervals_held": 1460,
+            "active_intervals": 9112,
+            "entries_per_day": 0.12644005749803078,
+            "share_of_time_in": 0.16022827041264268
+          },
+          "no_cost_bp_per_day": 19.94176889783101
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 12.318305142085876,
+            "intervals_held": 84,
+            "active_intervals": 380,
+            "entries_per_day": 0.1000983788526077,
+            "share_of_time_in": 0.22105263157894736
+          },
+          "gas+swap": {
+            "bp_per_day": 11.489590864864581,
+            "intervals_held": 75,
+            "active_intervals": 380,
+            "entries_per_day": 0.03687835010359231,
+            "share_of_time_in": 0.19736842105263158
+          },
+          "no_cost_bp_per_day": 12.481355637213218
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -12.124887683509325
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 17.323995691925308,
+            "intervals_held": 4980,
+            "active_intervals": 99838,
+            "entries_per_day": 1.4442972532561167,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 10.749372306941224,
+            "intervals_held": 6623,
+            "active_intervals": 99838,
+            "entries_per_day": 0.24384239340687683,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 22.72461768761318
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 12.61347211602444,
+            "intervals_held": 3081,
+            "active_intervals": 64386,
+            "entries_per_day": 1.0691551095532292,
+            "share_of_time_in": 0.020066040132080264
+          },
+          "gas+swap": {
+            "bp_per_day": 8.437090216309972,
+            "intervals_held": 4084,
+            "active_intervals": 64386,
+            "entries_per_day": 0.11254264311086623,
+            "share_of_time_in": 0.026598412171183316
+          },
+          "no_cost_bp_per_day": 16.721309631975153
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 11.929921143067128,
+            "intervals_held": 1103,
+            "active_intervals": 26208,
+            "entries_per_day": 0.909719698479502,
+            "share_of_time_in": 0.035917809111335436
+          },
+          "gas+swap": {
+            "bp_per_day": 8.278427807377133,
+            "intervals_held": 1325,
+            "active_intervals": 26208,
+            "entries_per_day": 0.10316408951829405,
+            "share_of_time_in": 0.043146960174541664
+          },
+          "no_cost_bp_per_day": 14.903732424537054
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 10.431689819868476,
+            "intervals_held": 123,
+            "active_intervals": 2560,
+            "entries_per_day": 0.5251990011840424,
+            "share_of_time_in": 0.048046875
+          },
+          "gas+swap": {
+            "bp_per_day": 7.985870592422028,
+            "intervals_held": 129,
+            "active_intervals": 2560,
+            "entries_per_day": 0.07502842874057748,
+            "share_of_time_in": 0.050390625
+          },
+          "no_cost_bp_per_day": 11.705741745591649
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 7.266408861811397,
+            "intervals_held": 9,
+            "active_intervals": 107,
+            "entries_per_day": 0.03751421437028874,
+            "share_of_time_in": 0.08411214953271028
+          },
+          "gas+swap": {
+            "bp_per_day": 6.792316399998948,
+            "intervals_held": 8,
+            "active_intervals": 107,
+            "entries_per_day": 0.028135660777716558,
+            "share_of_time_in": 0.07476635514018691
+          },
+          "no_cost_bp_per_day": 7.3244562961148025
+        }
+      }
+    },
+    "base:base-WETH-USDC-100": {
+      "swaps": 21555746,
+      "year": {
+        "always": {
+          "bp_per_day": -23.01080217081566
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 185.7535291973462,
+            "intervals_held": 5761742,
+            "active_intervals": 9277007,
+            "entries_per_day": 2015.9959999978903,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 51.611389374097925,
+            "intervals_held": 5769919,
+            "active_intervals": 9277007,
+            "entries_per_day": 51.987369191650416,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 213.21660663079416
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 57.419360637601194,
+            "intervals_held": 351844,
+            "active_intervals": 568487,
+            "entries_per_day": 272.7773590597885,
+            "share_of_time_in": 0.6185724331926864
+          },
+          "gas+swap": {
+            "bp_per_day": 23.321452067235075,
+            "intervals_held": 355997,
+            "active_intervals": 568487,
+            "entries_per_day": 20.56963110212611,
+            "share_of_time_in": 0.6258737693389592
+          },
+          "no_cost_bp_per_day": 60.40004784205763
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 28.46387357645793,
+            "intervals_held": 66426,
+            "active_intervals": 113742,
+            "entries_per_day": 59.27851227769634,
+            "share_of_time_in": 0.5839135021097046
+          },
+          "gas+swap": {
+            "bp_per_day": 16.450626954352437,
+            "intervals_held": 67952,
+            "active_intervals": 113742,
+            "entries_per_day": 10.359499134756927,
+            "share_of_time_in": 0.5973277074542898
+          },
+          "no_cost_bp_per_day": 29.076185864361804
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 11.06323248862839,
+            "intervals_held": 4965,
+            "active_intervals": 9479,
+            "entries_per_day": 4.0784831637569425,
+            "share_of_time_in": 0.5237341772151899
+          },
+          "gas+swap": {
+            "bp_per_day": 9.52602410234421,
+            "intervals_held": 4999,
+            "active_intervals": 9479,
+            "entries_per_day": 2.359494915345419,
+            "share_of_time_in": 0.5273206751054852
+          },
+          "no_cost_bp_per_day": 11.104343096816162
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 3.686753910189692,
+            "intervals_held": 122,
+            "active_intervals": 395,
+            "entries_per_day": 0.15443046119750062,
+            "share_of_time_in": 0.30886075949367087
+          },
+          "gas+swap": {
+            "bp_per_day": 3.611137319399405,
+            "intervals_held": 124,
+            "active_intervals": 395,
+            "entries_per_day": 0.1493671673877465,
+            "share_of_time_in": 0.3139240506329114
+          },
+          "no_cost_bp_per_day": 3.688298214801665
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -12.479672739023984
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 147.72072653692825,
+            "intervals_held": 1455092,
+            "active_intervals": 2394601,
+            "entries_per_day": 1724.5196655275986,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 33.04250824245229,
+            "intervals_held": 1535304,
+            "active_intervals": 2394601,
+            "entries_per_day": 40.098436738078206,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 170.5566830013835
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 53.40477615277289,
+            "intervals_held": 107569,
+            "active_intervals": 175527,
+            "entries_per_day": 273.7054373585256,
+            "share_of_time_in": 0.6123007741347906
+          },
+          "gas+swap": {
+            "bp_per_day": 19.407338543248013,
+            "intervals_held": 115422,
+            "active_intervals": 175527,
+            "entries_per_day": 19.606594578389835,
+            "share_of_time_in": 0.6570013661202185
+          },
+          "no_cost_bp_per_day": 56.394181686031644
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 27.121160603763858,
+            "intervals_held": 20723,
+            "active_intervals": 35121,
+            "entries_per_day": 61.00011574096035,
+            "share_of_time_in": 0.5897939435336976
+          },
+          "gas+swap": {
+            "bp_per_day": 14.704218062399818,
+            "intervals_held": 22202,
+            "active_intervals": 35121,
+            "entries_per_day": 10.426249290849443,
+            "share_of_time_in": 0.6318875227686703
+          },
+          "no_cost_bp_per_day": 27.75022044034389
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 10.344599342322432,
+            "intervals_held": 1622,
+            "active_intervals": 2927,
+            "entries_per_day": 4.491811801403691,
+            "share_of_time_in": 0.5539617486338798
+          },
+          "gas+swap": {
+            "bp_per_day": 8.696848845359742,
+            "intervals_held": 1689,
+            "active_intervals": 2927,
+            "entries_per_day": 2.426234111707103,
+            "share_of_time_in": 0.576844262295082
+          },
+          "no_cost_bp_per_day": 10.389894733955014
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 3.632932894499634,
+            "intervals_held": 47,
+            "active_intervals": 122,
+            "entries_per_day": 0.17213147414138233,
+            "share_of_time_in": 0.38524590163934425
+          },
+          "gas+swap": {
+            "bp_per_day": 3.552043088489805,
+            "intervals_held": 49,
+            "active_intervals": 122,
+            "entries_per_day": 0.15573800041363162,
+            "share_of_time_in": 0.4016393442622951
+          },
+          "no_cost_bp_per_day": 3.634654209241046
+        }
+      }
+    },
+    "base:base-WETH-USDC-500": {
+      "swaps": 15757125,
+      "year": {
+        "always": {
+          "bp_per_day": 1.4131823986626975
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 102.26014998531824,
+            "intervals_held": 4928953,
+            "active_intervals": 7302351,
+            "entries_per_day": 399.30665672135456,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 28.737652034067075,
+            "intervals_held": 3072689,
+            "active_intervals": 7302351,
+            "entries_per_day": 4.356965599948335,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 107.44840244887179
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 55.991147490578314,
+            "intervals_held": 372764,
+            "active_intervals": 564950,
+            "entries_per_day": 164.74950225580352,
+            "share_of_time_in": 0.6553516174402251
+          },
+          "gas+swap": {
+            "bp_per_day": 18.065721647010232,
+            "intervals_held": 260082,
+            "active_intervals": 564950,
+            "entries_per_day": 2.400001969059281,
+            "share_of_time_in": 0.45724683544303796
+          },
+          "no_cost_bp_per_day": 57.84645967946554
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 34.317199517574196,
+            "intervals_held": 67748,
+            "active_intervals": 113742,
+            "entries_per_day": 57.77473094504414,
+            "share_of_time_in": 0.5955344585091421
+          },
+          "gas+swap": {
+            "bp_per_day": 14.923478466904731,
+            "intervals_held": 50532,
+            "active_intervals": 113742,
+            "entries_per_day": 1.6025329603528742,
+            "share_of_time_in": 0.4441983122362869
+          },
+          "no_cost_bp_per_day": 34.92602475392113
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 16.019462783005213,
+            "intervals_held": 4881,
+            "active_intervals": 9479,
+            "entries_per_day": 5.222789095115291,
+            "share_of_time_in": 0.514873417721519
+          },
+          "gas+swap": {
+            "bp_per_day": 11.625369230731241,
+            "intervals_held": 3851,
+            "active_intervals": 9479,
+            "entries_per_day": 0.6936714551922394,
+            "share_of_time_in": 0.40622362869198314
+          },
+          "no_cost_bp_per_day": 16.072058989677327
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 9.090252229099798,
+            "intervals_held": 145,
+            "active_intervals": 395,
+            "entries_per_day": 0.1620254493879683,
+            "share_of_time_in": 0.3670886075949367
+          },
+          "gas+swap": {
+            "bp_per_day": 8.789056968456746,
+            "intervals_held": 136,
+            "active_intervals": 395,
+            "entries_per_day": 0.1012659058674802,
+            "share_of_time_in": 0.34430379746835443
+          },
+          "no_cost_bp_per_day": 9.091872483593692
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": 9.168798274768726
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 78.8973302566002,
+            "intervals_held": 890827,
+            "active_intervals": 1374362,
+            "entries_per_day": 328.2876950022835,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 20.662624109911818,
+            "intervals_held": 1001656,
+            "active_intervals": 1374362,
+            "entries_per_day": 3.1311552643098124,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 83.09915141513245
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 52.38991262968337,
+            "intervals_held": 113598,
+            "active_intervals": 172342,
+            "entries_per_day": 151.9675879589108,
+            "share_of_time_in": 0.6466188524590164
+          },
+          "gas+swap": {
+            "bp_per_day": 17.3245555971347,
+            "intervals_held": 127490,
+            "active_intervals": 172342,
+            "entries_per_day": 2.188529988405026,
+            "share_of_time_in": 0.7256944444444444
+          },
+          "no_cost_bp_per_day": 54.09639565488231
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 35.00067040118722,
+            "intervals_held": 22186,
+            "active_intervals": 35121,
+            "entries_per_day": 55.90997397344825,
+            "share_of_time_in": 0.6314321493624773
+          },
+          "gas+swap": {
+            "bp_per_day": 15.859126977371739,
+            "intervals_held": 25553,
+            "active_intervals": 35121,
+            "entries_per_day": 1.6393483059213678,
+            "share_of_time_in": 0.7272597905282332
+          },
+          "no_cost_bp_per_day": 35.58746020052828
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 18.487145357942786,
+            "intervals_held": 1877,
+            "active_intervals": 2927,
+            "entries_per_day": 5.049192782237813,
+            "share_of_time_in": 0.641051912568306
+          },
+          "gas+swap": {
+            "bp_per_day": 13.888405067288371,
+            "intervals_held": 2101,
+            "active_intervals": 2927,
+            "entries_per_day": 0.7868871868422566,
+            "share_of_time_in": 0.7175546448087432
+          },
+          "no_cost_bp_per_day": 18.537908303929157
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 11.794942700620975,
+            "intervals_held": 84,
+            "active_intervals": 122,
+            "entries_per_day": 0.2295087628289915,
+            "share_of_time_in": 0.6885245901639344
+          },
+          "gas+swap": {
+            "bp_per_day": 11.32094602805534,
+            "intervals_held": 87,
+            "active_intervals": 122,
+            "entries_per_day": 0.1639348305921368,
+            "share_of_time_in": 0.7131147540983607
+          },
+          "no_cost_bp_per_day": 11.797237788249266
+        }
+      }
+    },
+    "base:base-WETH-USDC-3000": {
+      "swaps": 2520419,
+      "year": {
+        "always": {
+          "bp_per_day": 4.320871007720312
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 35.83584694228162,
+            "intervals_held": 1085314,
+            "active_intervals": 1352141,
+            "entries_per_day": 46.309023590097006,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 14.70969941449861,
+            "intervals_held": 216706,
+            "active_intervals": 1352141,
+            "entries_per_day": 0.26076041054996674,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 36.403991560911855
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 26.011150445644557,
+            "intervals_held": 292174,
+            "active_intervals": 353757,
+            "entries_per_day": 24.238059908790113,
+            "share_of_time_in": 0.5136682729751635
+          },
+          "gas+swap": {
+            "bp_per_day": 12.247309178707964,
+            "intervals_held": 46662,
+            "active_intervals": 353757,
+            "entries_per_day": 0.11392445121115052,
+            "share_of_time_in": 0.08203600920536076
+          },
+          "no_cost_bp_per_day": 26.29171245866944
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 22.503151552225344,
+            "intervals_held": 80192,
+            "active_intervals": 102524,
+            "entries_per_day": 15.400054149276192,
+            "share_of_time_in": 0.7049226441631505
+          },
+          "gas+swap": {
+            "bp_per_day": 11.630431612993032,
+            "intervals_held": 13960,
+            "active_intervals": 102524,
+            "entries_per_day": 0.09620286991163822,
+            "share_of_time_in": 0.12271448663853728
+          },
+          "no_cost_bp_per_day": 22.674946086028342
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 16.078704072972645,
+            "intervals_held": 5579,
+            "active_intervals": 9476,
+            "entries_per_day": 4.72153558908435,
+            "share_of_time_in": 0.5885021097046413
+          },
+          "gas+swap": {
+            "bp_per_day": 10.632460166980604,
+            "intervals_held": 1060,
+            "active_intervals": 9476,
+            "entries_per_day": 0.058228052841254714,
+            "share_of_time_in": 0.11181434599156118
+          },
+          "no_cost_bp_per_day": 16.12766479955736
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 10.859542621292512,
+            "intervals_held": 113,
+            "active_intervals": 395,
+            "entries_per_day": 0.18481077640919974,
+            "share_of_time_in": 0.28607594936708863
+          },
+          "gas+swap": {
+            "bp_per_day": 9.888906486285807,
+            "intervals_held": 41,
+            "active_intervals": 395,
+            "entries_per_day": 0.03291150812766571,
+            "share_of_time_in": 0.10379746835443038
+          },
+          "no_cost_bp_per_day": 10.861422582081907
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -3.1132204402009704
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 15.542669690586088,
+            "intervals_held": 508681,
+            "active_intervals": 596115,
+            "entries_per_day": 33.327925764900556,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 2.6813543838024327,
+            "intervals_held": 113312,
+            "active_intervals": 596115,
+            "entries_per_day": 0.057377147160428896,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 15.965764250926442
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 12.74449680335366,
+            "intervals_held": 112685,
+            "active_intervals": 132050,
+            "entries_per_day": 18.721343444917085,
+            "share_of_time_in": 0.6414219034608379
+          },
+          "gas+swap": {
+            "bp_per_day": 2.6235729979362485,
+            "intervals_held": 17041,
+            "active_intervals": 132050,
+            "entries_per_day": 0.0409836765431635,
+            "share_of_time_in": 0.09700022768670309
+          },
+          "no_cost_bp_per_day": 12.967147347643577
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 11.360063862763896,
+            "intervals_held": 28075,
+            "active_intervals": 34334,
+            "entries_per_day": 12.66395605183752,
+            "share_of_time_in": 0.7990380236794171
+          },
+          "gas+swap": {
+            "bp_per_day": 2.611402887489016,
+            "intervals_held": 3834,
+            "active_intervals": 34334,
+            "entries_per_day": 0.0409836765431635,
+            "share_of_time_in": 0.1091188524590164
+          },
+          "no_cost_bp_per_day": 11.504440220349977
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 7.698749742063993,
+            "intervals_held": 1854,
+            "active_intervals": 2927,
+            "entries_per_day": 4.426237066661658,
+            "share_of_time_in": 0.6331967213114754
+          },
+          "gas+swap": {
+            "bp_per_day": 2.5781083532307028,
+            "intervals_held": 329,
+            "active_intervals": 2927,
+            "entries_per_day": 0.0409836765431635,
+            "share_of_time_in": 0.11236338797814208
+          },
+          "no_cost_bp_per_day": 7.7447531949589195
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 3.0976061957751937,
+            "intervals_held": 42,
+            "active_intervals": 122,
+            "entries_per_day": 0.19672164740718479,
+            "share_of_time_in": 0.3442622950819672
+          },
+          "gas+swap": {
+            "bp_per_day": 2.1378549433442084,
+            "intervals_held": 10,
+            "active_intervals": 122,
+            "entries_per_day": 0.024590205925898098,
+            "share_of_time_in": 0.08196721311475409
+          },
+          "no_cost_bp_per_day": 3.099676542759395
+        }
+      }
+    },
+    "arbitrum:arbitrum-WETH-USDC-100": {
+      "swaps": 7082440,
+      "year": {
+        "always": {
+          "bp_per_day": -68.32058785490074
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 197.35961432764194,
+            "intervals_held": 2823855,
+            "active_intervals": 5452586,
+            "entries_per_day": 1677.5988447247905,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 62.58343750015825,
+            "intervals_held": 1798799,
+            "active_intervals": 5452586,
+            "entries_per_day": 55.46839993891228,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 217.8062996141791
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 34.87780640026749,
+            "intervals_held": 245822,
+            "active_intervals": 510166,
+            "entries_per_day": 247.66602598009632,
+            "share_of_time_in": 0.43217651195499296
+          },
+          "gas+swap": {
+            "bp_per_day": 8.264583376552148,
+            "intervals_held": 124589,
+            "active_intervals": 510166,
+            "entries_per_day": 11.670895651227093,
+            "share_of_time_in": 0.21903832630098452
+          },
+          "no_cost_bp_per_day": 37.61265482082775
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 13.999114326202813,
+            "intervals_held": 43199,
+            "active_intervals": 113471,
+            "entries_per_day": 55.08612114426254,
+            "share_of_time_in": 0.37973804500703234
+          },
+          "gas+swap": {
+            "bp_per_day": 5.220698768294395,
+            "intervals_held": 24519,
+            "active_intervals": 113471,
+            "entries_per_day": 5.544308346244541,
+            "share_of_time_in": 0.21553270042194092
+          },
+          "no_cost_bp_per_day": 14.57522667830388
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 3.1158185480148473,
+            "intervals_held": 1871,
+            "active_intervals": 9480,
+            "entries_per_day": 2.559495770800562,
+            "share_of_time_in": 0.19736286919831222
+          },
+          "gas+swap": {
+            "bp_per_day": 2.302712829701228,
+            "intervals_held": 1436,
+            "active_intervals": 9480,
+            "entries_per_day": 0.9696210486811229,
+            "share_of_time_in": 0.15147679324894514
+          },
+          "no_cost_bp_per_day": 3.141849165181799
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 0.42745299169493967,
+            "intervals_held": 26,
+            "active_intervals": 395,
+            "entries_per_day": 0.05569624822711411,
+            "share_of_time_in": 0.06582278481012659
+          },
+          "gas+swap": {
+            "bp_per_day": 0.399851713592007,
+            "intervals_held": 25,
+            "active_intervals": 395,
+            "entries_per_day": 0.0531646005804271,
+            "share_of_time_in": 0.06329113924050633
+          },
+          "no_cost_bp_per_day": 0.4280099541772106
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -57.499353592281146
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 155.49627275039086,
+            "intervals_held": 314372,
+            "active_intervals": 635211,
+            "entries_per_day": 861.4267771578207,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 69.38630126428168,
+            "intervals_held": 151055,
+            "active_intervals": 635211,
+            "entries_per_day": 45.869318079940285,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 165.60711065102691
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 30.59278550167632,
+            "intervals_held": 67082,
+            "active_intervals": 138424,
+            "entries_per_day": 217.54319189449876,
+            "share_of_time_in": 0.3818441589489922
+          },
+          "gas+swap": {
+            "bp_per_day": 7.049886735306591,
+            "intervals_held": 30969,
+            "active_intervals": 138424,
+            "entries_per_day": 9.180421059602057,
+            "share_of_time_in": 0.17628174113012937
+          },
+          "no_cost_bp_per_day": 33.00352222773639
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 13.908543791856156,
+            "intervals_held": 13728,
+            "active_intervals": 34865,
+            "entries_per_day": 56.69729684756021,
+            "share_of_time_in": 0.3907103825136612
+          },
+          "gas+swap": {
+            "bp_per_day": 5.243331491312845,
+            "intervals_held": 7088,
+            "active_intervals": 34865,
+            "entries_per_day": 4.885295492431095,
+            "share_of_time_in": 0.2017304189435337
+          },
+          "no_cost_bp_per_day": 14.502880823019643
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 3.557941116152942,
+            "intervals_held": 533,
+            "active_intervals": 2928,
+            "entries_per_day": 2.6393710546355917,
+            "share_of_time_in": 0.18203551912568305
+          },
+          "gas+swap": {
+            "bp_per_day": 2.7800194859355485,
+            "intervals_held": 370,
+            "active_intervals": 2928,
+            "entries_per_day": 0.7868932336801764,
+            "share_of_time_in": 0.12636612021857924
+          },
+          "no_cost_bp_per_day": 3.5847160475851756
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 0.1862972340202808,
+            "intervals_held": 7,
+            "active_intervals": 122,
+            "entries_per_day": 0.049180827105011024,
+            "share_of_time_in": 0.05737704918032787
+          },
+          "gas+swap": {
+            "bp_per_day": 0.16170682046777532,
+            "intervals_held": 7,
+            "active_intervals": 122,
+            "entries_per_day": 0.049180827105011024,
+            "share_of_time_in": 0.05737704918032787
+          },
+          "no_cost_bp_per_day": 0.18678904229133095
+        }
+      }
+    },
+    "arbitrum:arbitrum-WETH-USDC-500": {
+      "swaps": 12983825,
+      "year": {
+        "always": {
+          "bp_per_day": -9.864688050272038
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 105.24465638563082,
+            "intervals_held": 2933774,
+            "active_intervals": 5389544,
+            "entries_per_day": 422.5855598093457,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 24.735542644720482,
+            "intervals_held": 1786846,
+            "active_intervals": 5389544,
+            "entries_per_day": 4.726618980134486,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 110.4390442103912
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 45.7344817492147,
+            "intervals_held": 299840,
+            "active_intervals": 495100,
+            "entries_per_day": 164.02659010332798,
+            "share_of_time_in": 0.5271485734780132
+          },
+          "gas+swap": {
+            "bp_per_day": 8.944511437506147,
+            "intervals_held": 163118,
+            "active_intervals": 495100,
+            "entries_per_day": 2.1291304565040723,
+            "share_of_time_in": 0.28677768479384524
+          },
+          "no_cost_bp_per_day": 47.551146749817974
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 25.67237940593855,
+            "intervals_held": 62614,
+            "active_intervals": 113380,
+            "entries_per_day": 58.491593421010805,
+            "share_of_time_in": 0.5504043600562588
+          },
+          "gas+swap": {
+            "bp_per_day": 6.860748990994822,
+            "intervals_held": 36115,
+            "active_intervals": 113380,
+            "entries_per_day": 1.4962141495765835,
+            "share_of_time_in": 0.31746659634317864
+          },
+          "no_cost_bp_per_day": 26.290528497354554
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 8.463119695501321,
+            "intervals_held": 4192,
+            "active_intervals": 9480,
+            "entries_per_day": 5.455738565714953,
+            "share_of_time_in": 0.4421940928270042
+          },
+          "gas+swap": {
+            "bp_per_day": 4.281757013052103,
+            "intervals_held": 2482,
+            "active_intervals": 9480,
+            "entries_per_day": 0.617726315561229,
+            "share_of_time_in": 0.26181434599156117
+          },
+          "no_cost_bp_per_day": 8.518293179881955
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 2.234573482216851,
+            "intervals_held": 89,
+            "active_intervals": 395,
+            "entries_per_day": 0.1291149266132077,
+            "share_of_time_in": 0.22531645569620254
+          },
+          "gas+swap": {
+            "bp_per_day": 1.975753995838762,
+            "intervals_held": 68,
+            "active_intervals": 395,
+            "entries_per_day": 0.0784816220590086,
+            "share_of_time_in": 0.17215189873417722
+          },
+          "no_cost_bp_per_day": 2.2358646314829804
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": -1.70115805216985
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 83.02494898227194,
+            "intervals_held": 654111,
+            "active_intervals": 1191541,
+            "entries_per_day": 341.3121508357363,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 18.27938844840931,
+            "intervals_held": 687545,
+            "active_intervals": 1191541,
+            "entries_per_day": 3.5820603260216806,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 87.20918532297578
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 43.83613703431072,
+            "intervals_held": 88245,
+            "active_intervals": 145062,
+            "entries_per_day": 152.61872130480018,
+            "share_of_time_in": 0.5023167649536647
+          },
+          "gas+swap": {
+            "bp_per_day": 9.090487132252198,
+            "intervals_held": 85073,
+            "active_intervals": 145062,
+            "entries_per_day": 2.041036661737754,
+            "share_of_time_in": 0.48426079828775703
+          },
+          "no_cost_bp_per_day": 45.521799531060296
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 26.752842399405715,
+            "intervals_held": 20470,
+            "active_intervals": 34938,
+            "entries_per_day": 57.337556019500354,
+            "share_of_time_in": 0.5825933515482696
+          },
+          "gas+swap": {
+            "bp_per_day": 7.650443078610667,
+            "intervals_held": 19576,
+            "active_intervals": 34938,
+            "entries_per_day": 1.5820083362063715,
+            "share_of_time_in": 0.5571493624772313
+          },
+          "no_cost_bp_per_day": 27.357858704888827
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 10.460817303945145,
+            "intervals_held": 1630,
+            "active_intervals": 2928,
+            "entries_per_day": 5.81982341298717,
+            "share_of_time_in": 0.5566939890710383
+          },
+          "gas+swap": {
+            "bp_per_day": 5.6717491267134195,
+            "intervals_held": 1449,
+            "active_intervals": 2928,
+            "entries_per_day": 0.8032995696799192,
+            "share_of_time_in": 0.4948770491803279
+          },
+          "no_cost_bp_per_day": 10.519445576462688
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 4.103701557446723,
+            "intervals_held": 57,
+            "active_intervals": 122,
+            "entries_per_day": 0.2541049659191581,
+            "share_of_time_in": 0.4672131147540984
+          },
+          "gas+swap": {
+            "bp_per_day": 3.548701645105863,
+            "intervals_held": 47,
+            "active_intervals": 122,
+            "entries_per_day": 0.18852949084324636,
+            "share_of_time_in": 0.38524590163934425
+          },
+          "no_cost_bp_per_day": 4.106242607105913
+        }
+      }
+    },
+    "arbitrum:arbitrum-WETH-USDC-3000": {
+      "swaps": 1097060,
+      "year": {
+        "always": {
+          "bp_per_day": 2.5695982765370946
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 31.44874762025172,
+            "intervals_held": 251415,
+            "active_intervals": 461850,
+            "entries_per_day": 46.01109888789292,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 9.367579765205296,
+            "intervals_held": 133382,
+            "active_intervals": 461850,
+            "entries_per_day": 0.25571567642531146,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 32.000830631581955
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 21.197201456716055,
+            "intervals_held": 61089,
+            "active_intervals": 91487,
+            "entries_per_day": 21.654813667977116,
+            "share_of_time_in": 0.10740771997932337
+          },
+          "gas+swap": {
+            "bp_per_day": 7.023940645374268,
+            "intervals_held": 28041,
+            "active_intervals": 91487,
+            "entries_per_day": 0.10380537359839376,
+            "share_of_time_in": 0.04930216366187377
+          },
+          "no_cost_bp_per_day": 21.434733775306235
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 18.34214913494436,
+            "intervals_held": 30257,
+            "active_intervals": 46024,
+            "entries_per_day": 14.064362203392129,
+            "share_of_time_in": 0.26598858931193026
+          },
+          "gas+swap": {
+            "bp_per_day": 6.706975450866516,
+            "intervals_held": 12948,
+            "active_intervals": 46024,
+            "entries_per_day": 0.09620985845704787,
+            "share_of_time_in": 0.11382556943553138
+          },
+          "no_cost_bp_per_day": 18.49133079547666
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 12.265618042646016,
+            "intervals_held": 5014,
+            "active_intervals": 8666,
+            "entries_per_day": 4.547181731285736,
+            "share_of_time_in": 0.5289029535864979
+          },
+          "gas+swap": {
+            "bp_per_day": 6.130300713486852,
+            "intervals_held": 2197,
+            "active_intervals": 8666,
+            "entries_per_day": 0.07342331303301022,
+            "share_of_time_in": 0.23175105485232067
+          },
+          "no_cost_bp_per_day": 12.312112044660601
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 6.805551979937896,
+            "intervals_held": 162,
+            "active_intervals": 395,
+            "entries_per_day": 0.21773810071858202,
+            "share_of_time_in": 0.41012658227848103
+          },
+          "gas+swap": {
+            "bp_per_day": 5.50532999187021,
+            "intervals_held": 88,
+            "active_intervals": 395,
+            "entries_per_day": 0.03544573732628079,
+            "share_of_time_in": 0.22278481012658227
+          },
+          "no_cost_bp_per_day": 6.807729360945092
+        }
+      },
+      "test_jun_sep_2026": {
+        "always": {
+          "bp_per_day": 5.331419005546431
+        },
+        "block": {
+          "gas": {
+            "bp_per_day": 26.633630095474732,
+            "intervals_held": 54281,
+            "active_intervals": 99326,
+            "entries_per_day": 31.671431031840513,
+            "share_of_time_in": null
+          },
+          "gas+swap": {
+            "bp_per_day": 9.69553411677352,
+            "intervals_held": 52566,
+            "active_intervals": 99326,
+            "entries_per_day": 0.22956253401282276,
+            "share_of_time_in": null
+          },
+          "no_cost_bp_per_day": 27.016648426855774
+        },
+        "1min": {
+          "gas": {
+            "bp_per_day": 18.85217636646495,
+            "intervals_held": 14527,
+            "active_intervals": 22561,
+            "entries_per_day": 15.487272383936507,
+            "share_of_time_in": 0.0827094210283593
+          },
+          "gas+swap": {
+            "bp_per_day": 7.932552147709366,
+            "intervals_held": 12014,
+            "active_intervals": 22561,
+            "entries_per_day": 0.09018528121932323,
+            "share_of_time_in": 0.06840166477832373
+          },
+          "no_cost_bp_per_day": 19.02265052078472
+        },
+        "5min": {
+          "gas": {
+            "bp_per_day": 17.51940292533347,
+            "intervals_held": 7395,
+            "active_intervals": 11607,
+            "entries_per_day": 10.7976377605317,
+            "share_of_time_in": 0.210509835178912
+          },
+          "gas+swap": {
+            "bp_per_day": 7.872620356247533,
+            "intervals_held": 5550,
+            "active_intervals": 11607,
+            "entries_per_day": 0.07378795736126446,
+            "share_of_time_in": 0.15798912579350394
+          },
+          "no_cost_bp_per_day": 17.63418820550744
+        },
+        "1h": {
+          "gas": {
+            "bp_per_day": 13.720226338353497,
+            "intervals_held": 1483,
+            "active_intervals": 2525,
+            "entries_per_day": 4.181317583804986,
+            "share_of_time_in": 0.5064890710382514
+          },
+          "gas+swap": {
+            "bp_per_day": 7.785876929532348,
+            "intervals_held": 1019,
+            "active_intervals": 2525,
+            "entries_per_day": 0.07378795736126446,
+            "share_of_time_in": 0.3480191256830601
+          },
+          "no_cost_bp_per_day": 13.762919250674035
+        },
+        "1d": {
+          "gas": {
+            "bp_per_day": 9.093493256227013,
+            "intervals_held": 62,
+            "active_intervals": 122,
+            "entries_per_day": 0.23776119594185213,
+            "share_of_time_in": 0.5081967213114754
+          },
+          "gas+swap": {
+            "bp_per_day": 7.338356465909348,
+            "intervals_held": 36,
+            "active_intervals": 122,
+            "entries_per_day": 0.049191971574176305,
+            "share_of_time_in": 0.29508196721311475
+          },
+          "no_cost_bp_per_day": 9.09587086818643
+        }
+      }
+    }
+  }
+}

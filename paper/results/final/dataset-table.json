@@ -1,0 +1,282 @@
+{
+ "USDC-WETH-500": {
+  "held_out": false,
+  "fee_tier": 500,
+  "tick_spacing": 10,
+  "events": 12064159,
+  "sell": 6129639,
+  "buy": 5522551,
+  "mint": 219779,
+  "burn": 192190,
+  "first": "2021-05-05",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 8416528,
+    "first": "2021-05-06",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 1833866,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 1813701,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "USDC-WETH-3000": {
+  "held_out": false,
+  "fee_tier": 3000,
+  "tick_spacing": 60,
+  "events": 1177154,
+  "sell": 461956,
+  "buy": 522075,
+  "mint": 110214,
+  "burn": 82909,
+  "first": "2021-05-04",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 795457,
+    "first": "2021-05-05",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 183125,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 198508,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "USDT-WETH-500": {
+  "held_out": false,
+  "fee_tier": 500,
+  "tick_spacing": 10,
+  "events": 7064516,
+  "sell": 3389808,
+  "buy": 3575478,
+  "mint": 52348,
+  "burn": 46882,
+  "first": "2021-05-05",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 4746323,
+    "first": "2021-05-06",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 1139022,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 1179107,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "USDT-WETH-3000": {
+  "held_out": false,
+  "fee_tier": 3000,
+  "tick_spacing": 60,
+  "events": 1539097,
+  "sell": 614712,
+  "buy": 719231,
+  "mint": 115486,
+  "burn": 89668,
+  "first": "2021-05-05",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 796809,
+    "first": "2021-05-05",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 311711,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 430513,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "DAI-WETH-500": {
+  "held_out": false,
+  "fee_tier": 500,
+  "tick_spacing": 10,
+  "events": 1985785,
+  "sell": 978893,
+  "buy": 997109,
+  "mint": 5231,
+  "burn": 4552,
+  "first": "2021-05-05",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 1160931,
+    "first": "2021-05-05",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 376088,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 448702,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "DAI-WETH-3000": {
+  "held_out": false,
+  "fee_tier": 3000,
+  "tick_spacing": 60,
+  "events": 414307,
+  "sell": 194381,
+  "buy": 198463,
+  "mint": 12347,
+  "burn": 9116,
+  "first": "2021-05-04",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 275445,
+    "first": "2021-05-05",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 69620,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 69178,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "WBTC-WETH-500": {
+  "held_out": false,
+  "fee_tier": 500,
+  "tick_spacing": 10,
+  "events": 2390754,
+  "sell": 1113251,
+  "buy": 1216750,
+  "mint": 33297,
+  "burn": 27456,
+  "first": "2021-05-05",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 1298702,
+    "first": "2021-05-07",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 538585,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 553403,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "WBTC-WETH-3000": {
+  "held_out": true,
+  "fee_tier": 3000,
+  "tick_spacing": 60,
+  "events": 479419,
+  "sell": 206345,
+  "buy": 198211,
+  "mint": 42471,
+  "burn": 32392,
+  "first": "2021-05-04",
+  "last": "2026-09-15",
+  "splits": {
+   "val": {
+    "rows": 88503,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 66414,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "USDC-USDT-100": {
+  "held_out": false,
+  "fee_tier": 100,
+  "tick_spacing": 1,
+  "events": 1960944,
+  "sell": 943220,
+  "buy": 965001,
+  "mint": 27508,
+  "burn": 25215,
+  "first": "2021-11-13",
+  "last": "2026-09-15",
+  "splits": {
+   "train": {
+    "rows": 1089657,
+    "first": "2021-11-14",
+    "last": "2025-02-02"
+   },
+   "val": {
+    "rows": 482479,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 388744,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ },
+ "USDC-USDT-500": {
+  "held_out": true,
+  "fee_tier": 500,
+  "tick_spacing": 10,
+  "events": 305855,
+  "sell": 135561,
+  "buy": 157414,
+  "mint": 6845,
+  "burn": 6035,
+  "first": "2021-05-04",
+  "last": "2026-09-15",
+  "splits": {
+   "val": {
+    "rows": 16849,
+    "first": "2025-02-02",
+    "last": "2025-11-14"
+   },
+   "test": {
+    "rows": 18163,
+    "first": "2025-11-14",
+    "last": "2026-09-15"
+   }
+  }
+ }
+}

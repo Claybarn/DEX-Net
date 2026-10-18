@@ -22,7 +22,7 @@ We present a pooled neural event model for Uniswap v3. It learns only the stocha
 
 The model is trained on 29.4 million events from ten Ethereum pools, with active liquidity reconciled exactly at all 28.2 million swaps. On pools held out from training, its 512-event rollouts:
 - halve the energy score of an otherwise identical model without the liquidity profile;
-- beat history-based baselines at every horizon;
+- match or beat history-based baselines (best at every horizon in the test period, up to 6.5% behind the recent baseline in the validation period);
 - cut spurious liquidity collapse from 24% to 15% of paths (real: 5%);
 - get the width of the price distribution right (1.01× realised, against 1.78× without the profile).
 
@@ -127,6 +127,7 @@ Energy score over four endpoints (return, liquidity change, elapsed blocks, volu
   - held-out 128 events: −2.6 [−4.4, −1.2];
   - seen pools: tie or small gain, e.g. −1.34 [−2.59, −0.17] at 512 on validation.
 - **Validation anchors (seen pools):** the depth-aware model beats both baselines at every horizon (512 events: 37.95 vs recent 44.16).
+- **Validation anchors (held-out pools):** the recent baseline is slightly ahead at 128 and 512 events (11.09 vs 11.81; 31.47 vs 33.03), with the 64×2 depth model in between. On held-out pools, then, the model matches the strongest simple baseline rather than clearly beating it. Say so.
   - On the seen-pool *test* period, the recent baseline still wins at 512 events. This is a period effect, and it should be stated.
 - **Liquidity collapse** (share of paths losing more than 63% of active liquidity), held-out, 512 events: reference 24.2%, depth 15.2%, real 5.1%.
 - **Price-spread ratio** (5–95% width, simulated over realised), held-out, 512 events: reference 1.78×, depth 1.01×.
