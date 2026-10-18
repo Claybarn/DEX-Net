@@ -1,0 +1,418 @@
+{
+  "USDC-WETH-500": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 2.3037681728021644,
+      "swap_buy": 2.5655040844832318,
+      "mint_lower": 5.091345871730549,
+      "mint_width": 3.9061281299445687,
+      "mint_amount": 3.0109510848798404,
+      "burn_lower": 4.363958583572264,
+      "burn_width": 0.8640654148968091,
+      "burn_amount": -0.3465349738962276,
+      "wait": 1.3778437790460885,
+      "kind": 0.7393293902277946,
+      "joint": 4.786152992397547
+    },
+    "counts": {
+      "swap_sell": 15420,
+      "swap_buy": 16160,
+      "mint_lower": 656,
+      "mint_width": 656,
+      "mint_amount": 656,
+      "burn_lower": 532,
+      "burn_width": 532,
+      "burn_amount": 532,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768
+    },
+    "type_accuracy": 0.643035888671875,
+    "swap_tail_examples": 31580,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      2559.695302666132,
+      46.9690774477047,
+      0.31690664630878723,
+      0.023240483873228236,
+      0.01011259123607425
+    ],
+    "observed_exceedance_counts": [
+      6361.0,
+      299.0,
+      3.0,
+      0.0,
+      0.0
+    ]
+  },
+  "USDC-WETH-3000": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 1.9875585926007613,
+      "swap_buy": 2.5281371821928516,
+      "mint_lower": 4.68136170423209,
+      "mint_width": 4.107801893765931,
+      "mint_amount": 2.7123857204444692,
+      "burn_lower": 4.798451853461937,
+      "burn_width": 1.853139379594333,
+      "burn_amount": -0.2975534282165888,
+      "wait": 2.9698515692725778,
+      "kind": 0.6959884047973901,
+      "joint": 6.596168581396341
+    },
+    "counts": {
+      "swap_sell": 10821,
+      "swap_buy": 19044,
+      "mint_lower": 1539,
+      "mint_width": 1539,
+      "mint_amount": 1539,
+      "burn_lower": 1364,
+      "burn_width": 1364,
+      "burn_amount": 1364,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768
+    },
+    "type_accuracy": 0.75323486328125,
+    "swap_tail_examples": 29865,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      5557.012627528333,
+      153.21404309710456,
+      2.538325689686603,
+      0.07325783615399234,
+      0.013400090784615234
+    ],
+    "observed_exceedance_counts": [
+      9321.0,
+      663.0,
+      12.0,
+      0.0,
+      0.0
+    ]
+  },
+  "USDT-WETH-500": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 1.9453032742265812,
+      "swap_buy": 2.2399165939766457,
+      "mint_lower": 3.948993520063046,
+      "mint_width": 2.555420280163308,
+      "mint_amount": 2.032265908500164,
+      "wait": 1.634833856485784,
+      "kind": 0.6544316597282887,
+      "joint": 4.4607953149825335,
+      "burn_lower": 1.9164194766478655,
+      "burn_width": 0.17634598586870276,
+      "burn_amount": -0.12812097822450966
+    },
+    "counts": {
+      "swap_sell": 15064,
+      "swap_buy": 17067,
+      "mint_lower": 361,
+      "mint_width": 361,
+      "mint_amount": 361,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768,
+      "burn_lower": 276,
+      "burn_width": 276,
+      "burn_amount": 276
+    },
+    "type_accuracy": 0.67254638671875,
+    "swap_tail_examples": 32131,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      6296.947427734627,
+      132.23345762374674,
+      2.1045686985171908,
+      0.04818528705505546,
+      0.013795563800339949
+    ],
+    "observed_exceedance_counts": [
+      11758.0,
+      562.0,
+      8.0,
+      1.0,
+      0.0
+    ]
+  },
+  "USDT-WETH-3000": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 2.3373395988657926,
+      "swap_buy": 2.8992900405853543,
+      "mint_lower": 4.134219926916143,
+      "mint_width": 3.635266245821471,
+      "mint_amount": 2.4191482505490702,
+      "burn_lower": 3.882003863787384,
+      "burn_width": 2.014084537999283,
+      "burn_amount": -0.27339587520655023,
+      "wait": 2.468227269127965,
+      "kind": 0.9648642935790122,
+      "joint": 7.251401897519827
+    },
+    "counts": {
+      "swap_sell": 8947,
+      "swap_buy": 17154,
+      "mint_lower": 3720,
+      "mint_width": 3720,
+      "mint_amount": 3720,
+      "burn_lower": 2947,
+      "burn_width": 2947,
+      "burn_amount": 2947,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768
+    },
+    "type_accuracy": 0.622222900390625,
+    "swap_tail_examples": 26101,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      1954.9236634966655,
+      65.10962422671182,
+      1.0690713853965808,
+      0.04838462672074256,
+      0.01776941580386803
+    ],
+    "observed_exceedance_counts": [
+      4410.0,
+      328.0,
+      5.0,
+      0.0,
+      0.0
+    ]
+  },
+  "DAI-WETH-500": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 1.6141108076010067,
+      "swap_buy": 1.7916956782038371,
+      "burn_lower": 0.6451221477417719,
+      "burn_width": 4.087175641741071e-07,
+      "burn_amount": 0.03751339000605401,
+      "wait": 2.4000388737767935,
+      "kind": 0.6037080185487866,
+      "joint": 4.713999580591917,
+      "mint_lower": 1.3092880868911743,
+      "mint_width": 0.6850793170928955,
+      "mint_amount": 3.301196141242981
+    },
+    "counts": {
+      "swap_sell": 15390,
+      "swap_buy": 17332,
+      "burn_lower": 21,
+      "burn_width": 21,
+      "burn_amount": 21,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768,
+      "mint_lower": 25,
+      "mint_width": 25,
+      "mint_amount": 25
+    },
+    "type_accuracy": 0.66546630859375,
+    "swap_tail_examples": 32722,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      13266.73217066742,
+      284.9996882559608,
+      3.924086708923596,
+      0.3710388128464032,
+      0.06836539923028187
+    ],
+    "observed_exceedance_counts": [
+      18903.0,
+      932.0,
+      13.0,
+      2.0,
+      0.0
+    ]
+  },
+  "DAI-WETH-3000": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 1.3528563158080698,
+      "swap_buy": 1.6608842852140437,
+      "mint_lower": 4.480433483608067,
+      "mint_width": 4.425873317755759,
+      "mint_amount": 2.2444259668700397,
+      "burn_lower": 4.77669644859937,
+      "burn_width": 0.7383505858522553,
+      "burn_amount": -0.5076469934685937,
+      "wait": 3.653324883431196,
+      "kind": 0.3411782768089324,
+      "joint": 5.600167095661163
+    },
+    "counts": {
+      "swap_sell": 15706,
+      "swap_buy": 16627,
+      "mint_lower": 256,
+      "mint_width": 256,
+      "mint_amount": 256,
+      "burn_lower": 179,
+      "burn_width": 179,
+      "burn_amount": 179,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768
+    },
+    "type_accuracy": 0.854949951171875,
+    "swap_tail_examples": 32333,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      17911.740423550207,
+      468.5370474857581,
+      11.537754084775978,
+      0.49749506818384337,
+      0.056710201025783134
+    ],
+    "observed_exceedance_counts": [
+      24777.0,
+      1809.0,
+      36.0,
+      0.0,
+      0.0
+    ]
+  },
+  "WBTC-WETH-500": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 2.14986259644707,
+      "swap_buy": 2.0251428527408097,
+      "mint_lower": 5.69745274069448,
+      "mint_width": 4.848383132742827,
+      "mint_amount": 2.4167759973536094,
+      "wait": 2.1967159090563655,
+      "kind": 0.5676705503137782,
+      "joint": 5.001418007537723,
+      "burn_lower": 4.582061303736132,
+      "burn_width": 0.44145618472637993,
+      "burn_amount": 0.2406496746800684
+    },
+    "counts": {
+      "swap_sell": 16314,
+      "swap_buy": 15837,
+      "mint_lower": 378,
+      "mint_width": 378,
+      "mint_amount": 378,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768,
+      "burn_lower": 239,
+      "burn_width": 239,
+      "burn_amount": 239
+    },
+    "type_accuracy": 0.750640869140625,
+    "swap_tail_examples": 32151,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      2357.2160324941583,
+      29.787566936054766,
+      0.2909124063586813,
+      0.030777024735428947,
+      0.014579688796964108
+    ],
+    "observed_exceedance_counts": [
+      5655.0,
+      160.0,
+      4.0,
+      0.0,
+      0.0
+    ]
+  },
+  "USDC-USDT-100": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 2.349108087357564,
+      "swap_buy": 2.3875966578927508,
+      "mint_lower": 3.5760786477705184,
+      "mint_width": 1.5049398963222926,
+      "mint_amount": 2.125292294734233,
+      "burn_lower": 2.681619676122236,
+      "burn_width": 0.9221163491272504,
+      "burn_amount": -2.622163499361171,
+      "wait": 2.673271229490638,
+      "kind": 0.7825917536392808,
+      "joint": 5.913946561515331
+    },
+    "counts": {
+      "swap_sell": 15124,
+      "swap_buy": 16097,
+      "mint_lower": 814,
+      "mint_width": 814,
+      "mint_amount": 814,
+      "burn_lower": 733,
+      "burn_width": 733,
+      "burn_amount": 733,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768
+    },
+    "type_accuracy": 0.593231201171875,
+    "swap_tail_examples": 31221,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      33.49892944158216,
+      14.926408444493513,
+      5.401738980450673,
+      0.931034804368676,
+      0.11978262158698938
+    ],
+    "observed_exceedance_counts": [
+      52.0,
+      20.0,
+      13.0,
+      3.0,
+      2.0
+    ]
+  }
+}

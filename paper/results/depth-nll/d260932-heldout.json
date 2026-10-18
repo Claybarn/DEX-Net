@@ -1,0 +1,106 @@
+{
+  "WBTC-WETH-3000": {
+    "examples": 32768,
+    "loss": {
+      "swap_sell": 2.416366019475517,
+      "swap_buy": 1.8297437598675208,
+      "mint_lower": 4.076214164522149,
+      "mint_width": 3.305677095052912,
+      "mint_amount": 2.315867286125463,
+      "burn_lower": 4.23516029422566,
+      "burn_width": 1.0424314419933631,
+      "burn_amount": 0.13608430237588237,
+      "wait": 3.6151979342103004,
+      "kind": 0.6400390944909304,
+      "joint": 7.094656988978386
+    },
+    "counts": {
+      "swap_sell": 17785,
+      "swap_buy": 11333,
+      "mint_lower": 2234,
+      "mint_width": 2234,
+      "mint_amount": 2234,
+      "burn_lower": 1416,
+      "burn_width": 1416,
+      "burn_amount": 1416,
+      "wait": 32768,
+      "kind": 32768,
+      "joint": 32768
+    },
+    "type_accuracy": 0.7677001953125,
+    "swap_tail_examples": 29118,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      2263.6973977290545,
+      50.75399893221281,
+      0.99175324255316,
+      0.04234882770187622,
+      0.020089840009507108
+    ],
+    "observed_exceedance_counts": [
+      7934.0,
+      377.0,
+      4.0,
+      0.0,
+      0.0
+    ]
+  },
+  "USDC-USDT-500": {
+    "examples": 18163,
+    "loss": {
+      "swap_sell": 2.2376058081542345,
+      "swap_buy": 2.2530665389924067,
+      "mint_lower": 3.030818853606569,
+      "mint_width": 0.5468880987547814,
+      "mint_amount": 1.9946884988470281,
+      "burn_lower": 0.8319007689639965,
+      "burn_width": 0.24761162026558514,
+      "burn_amount": -1.3975066412915838,
+      "wait": 5.262166934818553,
+      "kind": 0.6964719100571581,
+      "joint": 8.220431838969935
+    },
+    "counts": {
+      "swap_sell": 6283,
+      "swap_buy": 11118,
+      "mint_lower": 376,
+      "mint_width": 376,
+      "mint_amount": 376,
+      "burn_lower": 386,
+      "burn_width": 386,
+      "burn_amount": 386,
+      "wait": 18163,
+      "kind": 18163,
+      "joint": 18163
+    },
+    "type_accuracy": 0.6906898640092496,
+    "swap_tail_examples": 17401,
+    "virtual_base_ratio_thresholds": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "predicted_exceedance_counts": [
+      137.3683950422044,
+      14.194799640426092,
+      6.133081783699184,
+      2.6959597410429237,
+      1.384007094711454
+    ],
+    "observed_exceedance_counts": [
+      295.0,
+      31.0,
+      5.0,
+      4.0,
+      4.0
+    ]
+  }
+}
