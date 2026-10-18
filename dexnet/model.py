@@ -12,6 +12,9 @@ from .pool_mechanics import swap_economic_base
 
 
 def bounds(grid,anchor,unit,width=False):
+    # Float64: far from the anchor, asinh edges of one tick differ by less than a
+    # float32 ulp, which would zero (or quantize) the interval mass.
+    grid,anchor,unit=grid.double(),torch.as_tensor(anchor,dtype=torch.float64,device=grid.device),torch.as_tensor(unit,dtype=torch.float64,device=grid.device)
     if width:return ((grid-.5).clamp(min=.5)*unit).log(),((grid+.5)*unit).log()
     return torch.asinh((grid-anchor-.5)*unit/.001),torch.asinh((grid-anchor+.5)*unit/.001)
 
@@ -25,14 +28,14 @@ def discrete_nll(raw,target,anchor,unit,first,last,candidates=None,mask=None,wid
     else:
         low,_=bounds(first,anchor,unit,width);_,high=bounds(last,anchor,unit,width)
         normalizer=interval_log_prob(raw,low,high)
-    return normalizer-selected
+    return (normalizer-selected).to(raw.dtype)
 
 
 def discrete_nll_static(raw,target,anchor,unit,candidates,mask,width=False):
     """discrete_nll over a candidate support given as full-row tables, without host checks."""
     selected=interval_log_prob(raw,*bounds(target,anchor,unit,width))
     scores=interval_log_prob(raw[:,None,:],*bounds(candidates,anchor[:,None],unit[:,None],width))
-    return torch.logsumexp(scores.masked_fill(~mask,-torch.inf),-1)-selected
+    return (torch.logsumexp(scores.masked_fill(~mask,-torch.inf),-1)-selected).to(raw.dtype)
 
 
 def native_range(lower,upper,meta):

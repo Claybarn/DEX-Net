@@ -59,7 +59,7 @@ def evaluate(model,sets,limit,device):
             b=device_batch(ds,rows[start:start+256],device);loss,parts=model.losses(b)
             if not torch.isfinite(loss):raise ValueError('Nonfinite evaluation loss')
             for key,(v,n) in parts.items():totals[key]=totals.get(key,0)+float(v);counts[key]=counts.get(key,0)+int(n)
-            h=model.encode(b['x'],b['history_kind'],b['history_mask'],b['metadata'],b.get('pool_id'));q=model.condition(h,b['dt'].float())
+            h=model.encode_batch(b);q=model.condition(h,b['dt'].float())
             correct+=int((model.types(q).argmax(-1)==b['kind']).sum())
             swap=(b['kind']<2)&b['target_mask'][:,0]
             if swap.any():
@@ -94,3 +94,53 @@ def expand_candidates(b,lower_width=1280,width_width=128):
         values[burns,:k]=b[compact][:,:k];m[burns,:k]=b[mask][:,:k]
         b[full]=values;b[full.replace('candidates','mask')]=m
     return b
+
+
+class _EvalChunks(torch.utils.data.Dataset):
+    """Fixed evaluation rows of one pool in chunks, built on the CPU (worker-safe)."""
+    def __init__(self,ds,rows,size):
+        self.ds,self.rows,self.size=ds,rows,size
+    def __len__(self):return (len(self.rows)+self.size-1)//self.size
+    def __getitem__(self,i):
+        return expand_candidates(host_batch(self.ds,self.rows[i*self.size:(i+1)*self.size]))
+
+
+@torch.no_grad()
+def evaluate_fast(model,sets,limit,device,batch=1024,workers=4):
+    """evaluate() with the same rows, outputs and formulas, without per-batch synchronisation.
+
+    Batches are built by loader workers and scored with losses_static; type accuracy
+    and swap-size tail counts are masked sums kept on the device and read once per pool.
+    """
+    model.eval();result={}
+    thresholds=[1e-4,1e-3,.01,.1,1.]
+    for no,(name,ds) in enumerate(sets.items()):
+        rows=np.sort(np.random.default_rng(74401+no).choice(len(ds),min(limit,len(ds)),replace=False))
+        loader=torch.utils.data.DataLoader(_EvalChunks(ds,rows,batch),batch_size=None,num_workers=workers,pin_memory=True)
+        totals={};counts={};correct=0;tail_n=0;tail_pred=torch.zeros(5,dtype=torch.float64,device=device);tail_actual=torch.zeros(5,dtype=torch.float64,device=device)
+        bad=torch.zeros((),dtype=torch.bool,device=device)
+        for cpu in loader:
+            b={k:v.to(device,non_blocking=True) for k,v in cpu.items()};loss,parts=model.losses_static(b)
+            bad=bad|~torch.isfinite(loss)|(parts['violations'][0]>0)
+            for key,(v,n) in parts.items():
+                if key=='violations':continue
+                totals[key]=totals.get(key,0)+v;counts[key]=counts.get(key,0)+n
+            h=model.encode_batch(b);q=model.condition(h,b['dt'].float())
+            correct=correct+(model.types(q).argmax(-1)==b['kind']).sum()
+            swap=(b['kind']<2)&b['target_mask'][:,0];buy=swap&(b['kind']==1)
+            q=model.condition(h,b['dt'].float(),b['kind']);raw=model.swap_size(q).double()
+            actual=b['targets'][:,0];cap=torch.where(buy,b['buy_log_cap'].double(),torch.zeros_like(b['buy_log_cap'].double()))
+            capcdf=model.flow_cdf(raw,cap,static=True)
+            for j,threshold in enumerate(thresholds):
+                logcdf=model.flow_cdf(raw,raw.new_full((len(raw),),math.log(threshold)),static=True)
+                logcdf=torch.where(buy,logcdf-capcdf,logcdf)
+                probability=-torch.expm1(logcdf.clamp(max=0))
+                tail_pred[j]+=torch.where(swap,probability,torch.zeros_like(probability)).sum()
+                tail_actual[j]+=(swap&(actual>math.log(threshold))).sum()
+            tail_n=tail_n+swap.sum()
+        if bool(bad):raise ValueError('Nonfinite evaluation loss or physical-support violation')
+        counts={k:int(v) for k,v in counts.items()}
+        result[name]=dict(examples=len(rows),loss={k:float(totals[k])/max(counts[k],1) for k in totals},counts=counts,
+                          type_accuracy=int(correct)/max(len(rows),1),swap_tail_examples=int(tail_n),
+                          virtual_base_ratio_thresholds=thresholds,predicted_exceedance_counts=tail_pred.tolist(),observed_exceedance_counts=tail_actual.tolist())
+    return result

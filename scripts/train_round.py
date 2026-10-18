@@ -15,7 +15,7 @@ import torch
 from dexnet.model import PooledEventModel
 from dexnet.coverage import CoverageSchedule
 from dexnet.utils import dump,atomic_save
-from dexnet.evaluation import load_sets,device_batch,host_batch,merge_batches,expand_candidates,evaluate
+from dexnet.evaluation import load_sets,device_batch,host_batch,merge_batches,expand_candidates,evaluate,evaluate_fast
 
 
 def attach_ids(sets,plan):
@@ -134,7 +134,8 @@ def main():
     elapsed=time.monotonic()-start
     result=dict(round=a.round,training_examples=seen,training_seconds=elapsed,examples_per_second=(end-begin)*micro/elapsed,
         loss={k:totals[k]/max(counts[k],1) for k in totals},gradient_norm_max=maxnorm,clipped_step_fraction=clipped/max(updates,1))
-    result['validation']=evaluate(model,attach_ids(load_sets(plan,'val'),plan),256 if a.smoke else 8192,'cuda')
+    score_sets=(lambda m,sets,limit,device:evaluate_fast(m,sets,limit,device,workers=plan.get('loader_workers',6))) if plan.get('static') else evaluate
+    result['validation']=score_sets(model,attach_ids(load_sets(plan,'val'),plan),256 if a.smoke else 8192,'cuda')
     score=float(np.mean([v['loss']['joint'] for v in result['validation'].values()]));result['validation_macro_joint']=score
     improved=score<best;best=min(best,score)
     checkpoint=dict(model=model.state_dict(),optimizer=optimizer.state_dict(),model_config=config,round=a.round,
@@ -150,7 +151,7 @@ def main():
     elif end==len(schedule):
         chosen=torch.load(a.out/'best.pt',map_location='cpu',weights_only=False);model.load_state_dict(chosen['model'])
         for split in ['test','heldout_val','heldout_test']:
-            dump(a.out/(split+'.json'),evaluate(model,attach_ids(load_sets(plan,split),plan),32768,'cuda'))
+            dump(a.out/(split+'.json'),score_sets(model,attach_ids(load_sets(plan,split),plan),32768,'cuda'))
         dump(a.out/'COMPLETE.json',dict(selected_round=chosen['round'],selection='Seen-pool validation macro joint NLL',epochs=plan['epochs'],examples=len(schedule)*micro))
 
 
