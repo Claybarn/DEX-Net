@@ -1,0 +1,935 @@
+{
+ "method": "Does predicted skew get the direction right where it matters?\n\nUses rollout_eval output plus the anchors (for full baseline samples). Skew is the\nquantile skew (q90 + q10 - 2 q50) / (q90 - q10) of the forecast price return.\nSkew and the q10/q90 tail thresholds always come from disjoint draws:\n\n  model      skew from two seeds (64 paths), thresholds from the third (32 paths);\n             all three rotations are averaged\n  baselines  skew from 128 history windows, thresholds from the other 128\n\nTwo conditional views, per horizon and pool group:\n\n  confident  anchors in the top or bottom 20% of predicted skew for that forecaster:\n             do realised breakouts land on the predicted long side?\n  trend      anchors after the largest prior moves, the top/bottom 20% of the real\n             return over the h events before the anchor, scaled by that anchor's\n             typical h-event move: does predicted skew match what followed?\n\nReported: realised share above q90 and below q10, breakout direction share\nup/(up+down), P(return > 0), mean predicted skew, and the correlation between\npredicted skew and realised tail asymmetry (above - below) with a bootstrap CI.\n\n  python -m scripts.skew_analysis --rollouts eval/rollouts-test --anchors eval/anchors-test --out results/skew.json\n",
+ "cells": {
+  "heldout:32": {
+   "model (3 seeds)": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": 0.02526264129753468,
+     "realised_above_q90": 0.17346938775510204,
+     "realised_below_q10": 0.11224489795918367,
+     "breakout_up_share": 0.6071428571428571,
+     "p_return_positive": 0.5510204081632653
+    },
+    "skew_tail_correlation": {
+     "r": -0.11678162566997746,
+     "ci95": [
+      -0.29174738612096024,
+      0.06343741432822088
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.3362754891986766,
+     "realised_above_q90": 0.08771929824561403,
+     "realised_below_q10": 0.03508771929824561,
+     "breakout_up_share": 0.7142857142857143,
+     "p_return_positive": 0.5789473684210527
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.2474645936018188,
+     "realised_above_q90": 0.3157894736842105,
+     "realised_below_q10": 0.05263157894736842,
+     "breakout_up_share": 0.8571428571428571,
+     "p_return_positive": 0.631578947368421
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.12335215384709211,
+     "realised_above_q90": 0.14035087719298245,
+     "realised_below_q10": 0.08771929824561403,
+     "breakout_up_share": 0.6153846153846154,
+     "p_return_positive": 0.631578947368421
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.025633661802832323,
+     "realised_above_q90": 0.08771929824561403,
+     "realised_below_q10": 0.07017543859649122,
+     "breakout_up_share": 0.5555555555555555,
+     "p_return_positive": 0.42105263157894735
+    },
+    "trend_skew_correlation": 0.09752220970989321
+   },
+   "baseline:recent": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": -0.058178730084797695,
+     "realised_above_q90": 0.14285714285714285,
+     "realised_below_q10": 0.14285714285714285,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.5510204081632653
+    },
+    "skew_tail_correlation": {
+     "r": -0.20347079455300984,
+     "ci95": [
+      -0.3816050966647596,
+      -0.0036946525832608984
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.23344828359797126,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.21052631578947367,
+     "breakout_up_share": 0.3333333333333333,
+     "p_return_positive": 0.5263157894736842
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.3466011317046796,
+     "realised_above_q90": 0.2631578947368421,
+     "realised_below_q10": 0.05263157894736842,
+     "breakout_up_share": 0.8333333333333334,
+     "p_return_positive": 0.5789473684210527
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.12208949727246728,
+     "realised_above_q90": 0.21052631578947367,
+     "realised_below_q10": 0.05263157894736842,
+     "breakout_up_share": 0.8,
+     "p_return_positive": 0.631578947368421
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 9.490312634408722e-05,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.21052631578947367,
+     "breakout_up_share": 0.3333333333333333,
+     "p_return_positive": 0.42105263157894735
+    },
+    "trend_skew_correlation": -0.21432873910887698
+   },
+   "baseline:expanding": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": -0.0007163615270099165,
+     "realised_above_q90": 0.10204081632653061,
+     "realised_below_q10": 0.11224489795918367,
+     "breakout_up_share": 0.47619047619047616,
+     "p_return_positive": 0.5510204081632653
+    },
+    "skew_tail_correlation": {
+     "r": -0.08239140662908138,
+     "ci95": [
+      -0.31793767683042323,
+      0.16161699283187686
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.33707854283995514,
+     "realised_above_q90": 0.21052631578947367,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.5714285714285714,
+     "p_return_positive": 0.5263157894736842
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.3178372796061559,
+     "realised_above_q90": 0.15789473684210525,
+     "realised_below_q10": 0.05263157894736842,
+     "breakout_up_share": 0.75,
+     "p_return_positive": 0.5263157894736842
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.03900380758719393,
+     "realised_above_q90": 0.21052631578947367,
+     "realised_below_q10": 0.0,
+     "breakout_up_share": 1.0,
+     "p_return_positive": 0.631578947368421
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.023440408862902516,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.2631578947368421,
+     "breakout_up_share": 0.2857142857142857,
+     "p_return_positive": 0.42105263157894735
+    },
+    "trend_skew_correlation": 0.002354333697210249
+   }
+  },
+  "heldout:128": {
+   "model (3 seeds)": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": 0.015277528059882382,
+     "realised_above_q90": 0.13265306122448978,
+     "realised_below_q10": 0.07823129251700679,
+     "breakout_up_share": 0.6290322580645161,
+     "p_return_positive": 0.5204081632653061
+    },
+    "skew_tail_correlation": {
+     "r": -0.05191594181551359,
+     "ci95": [
+      -0.22764436732415422,
+      0.12782533882419553
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.34765845157796127,
+     "realised_above_q90": 0.017543859649122806,
+     "realised_below_q10": 0.07017543859649122,
+     "breakout_up_share": 0.2,
+     "p_return_positive": 0.42105263157894735
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.19252412829445809,
+     "realised_above_q90": 0.2982456140350877,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.6538461538461539,
+     "p_return_positive": 0.47368421052631576
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.1039406176039106,
+     "realised_above_q90": 0.12280701754385963,
+     "realised_below_q10": 0.03508771929824561,
+     "breakout_up_share": 0.7777777777777778,
+     "p_return_positive": 0.3684210526315789
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.019383202251130518,
+     "realised_above_q90": 0.17543859649122806,
+     "realised_below_q10": 0.15789473684210523,
+     "breakout_up_share": 0.5263157894736843,
+     "p_return_positive": 0.5263157894736842
+    },
+    "trend_skew_correlation": 0.18893626555850418
+   },
+   "baseline:recent": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": -0.05508642898603855,
+     "realised_above_q90": 0.09183673469387756,
+     "realised_below_q10": 0.10204081632653061,
+     "breakout_up_share": 0.47368421052631576,
+     "p_return_positive": 0.5204081632653061
+    },
+    "skew_tail_correlation": {
+     "r": -0.05178814656574222,
+     "ci95": [
+      -0.2785383532027911,
+      0.16473084053808856
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.13979432313685158,
+     "realised_above_q90": 0.05263157894736842,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.25,
+     "p_return_positive": 0.47368421052631576
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.2780933507540539,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.10526315789473684,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.42105263157894735
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.10561603786384327,
+     "realised_above_q90": 0.15789473684210525,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.3684210526315789
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.06745915145652548,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.21052631578947367,
+     "breakout_up_share": 0.3333333333333333,
+     "p_return_positive": 0.5263157894736842
+    },
+    "trend_skew_correlation": -0.17378624274169127
+   },
+   "baseline:expanding": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": -0.07375074499422278,
+     "realised_above_q90": 0.061224489795918366,
+     "realised_below_q10": 0.1326530612244898,
+     "breakout_up_share": 0.3157894736842105,
+     "p_return_positive": 0.5204081632653061
+    },
+    "skew_tail_correlation": {
+     "r": 0.2142602860198128,
+     "ci95": [
+      -0.03305450385151948,
+      0.4424664122287434
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.1887478498746886,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.10526315789473684,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.631578947368421
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.3406845554515903,
+     "realised_above_q90": 0.05263157894736842,
+     "realised_below_q10": 0.3157894736842105,
+     "breakout_up_share": 0.14285714285714285,
+     "p_return_positive": 0.42105263157894735
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.11887956843240806,
+     "realised_above_q90": 0.05263157894736842,
+     "realised_below_q10": 0.10526315789473684,
+     "breakout_up_share": 0.3333333333333333,
+     "p_return_positive": 0.3684210526315789
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.056978873050438666,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.21052631578947367,
+     "breakout_up_share": 0.3333333333333333,
+     "p_return_positive": 0.5263157894736842
+    },
+    "trend_skew_correlation": -0.08301206354815616
+   }
+  },
+  "heldout:512": {
+   "model (3 seeds)": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": 0.032241908405098864,
+     "realised_above_q90": 0.11224489795918366,
+     "realised_below_q10": 0.10204081632653061,
+     "breakout_up_share": 0.5238095238095237,
+     "p_return_positive": 0.5102040816326531
+    },
+    "skew_tail_correlation": {
+     "r": -0.08300192949272478,
+     "ci95": [
+      -0.20001515935966963,
+      0.03340275528200284
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.41939875309954305,
+     "realised_above_q90": 0.03508771929824561,
+     "realised_below_q10": 0.07017543859649122,
+     "breakout_up_share": 0.3333333333333333,
+     "p_return_positive": 0.3684210526315789
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.23810588977490663,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.017543859649122806,
+     "breakout_up_share": 0.8571428571428571,
+     "p_return_positive": 0.5789473684210527
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.05519028627902909,
+     "realised_above_q90": 0.12280701754385963,
+     "realised_below_q10": 0.07017543859649122,
+     "breakout_up_share": 0.6363636363636364,
+     "p_return_positive": 0.3684210526315789
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.023408127058519898,
+     "realised_above_q90": 0.17543859649122806,
+     "realised_below_q10": 0.03508771929824561,
+     "breakout_up_share": 0.8333333333333334,
+     "p_return_positive": 0.631578947368421
+    },
+    "trend_skew_correlation": 0.07790726280431558
+   },
+   "baseline:recent": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": -0.03075055754910623,
+     "realised_above_q90": 0.11224489795918367,
+     "realised_below_q10": 0.11224489795918367,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.5102040816326531
+    },
+    "skew_tail_correlation": {
+     "r": -0.07888879686185907,
+     "ci95": [
+      -0.30475635372386606,
+      0.15365896211152646
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.17486850775637688,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.2631578947368421,
+     "breakout_up_share": 0.2857142857142857,
+     "p_return_positive": 0.5789473684210527
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.22399991924575532,
+     "realised_above_q90": 0.15789473684210525,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.42105263157894735
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.042039501084161296,
+     "realised_above_q90": 0.15789473684210525,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.3684210526315789
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.037275935605663044,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.0,
+     "breakout_up_share": 1.0,
+     "p_return_positive": 0.631578947368421
+    },
+    "trend_skew_correlation": -0.002884018390861735
+   },
+   "baseline:expanding": {
+    "all": {
+     "anchors": 98,
+     "mean_predicted_skew": -0.056214311108615356,
+     "realised_above_q90": 0.07142857142857142,
+     "realised_below_q10": 0.12244897959183673,
+     "breakout_up_share": 0.3684210526315789,
+     "p_return_positive": 0.5102040816326531
+    },
+    "skew_tail_correlation": {
+     "r": -0.16823965490561543,
+     "ci95": [
+      -0.38292487534224856,
+      0.049890040110428746
+     ],
+     "n": 98
+    },
+    "confident_up_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": 0.2255653947817488,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.4,
+     "p_return_positive": 0.631578947368421
+    },
+    "confident_down_skew": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.35520930110970717,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.0,
+     "breakout_up_share": 1.0,
+     "p_return_positive": 0.47368421052631576
+    },
+    "after_up_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.01720828851968056,
+     "realised_above_q90": 0.05263157894736842,
+     "realised_below_q10": 0.15789473684210525,
+     "breakout_up_share": 0.25,
+     "p_return_positive": 0.3684210526315789
+    },
+    "after_down_trend": {
+     "anchors": 19,
+     "mean_predicted_skew": -0.08323633568235368,
+     "realised_above_q90": 0.10526315789473684,
+     "realised_below_q10": 0.0,
+     "breakout_up_share": 1.0,
+     "p_return_positive": 0.631578947368421
+    },
+    "trend_skew_correlation": 0.056806396090575854
+   }
+  },
+  "seen:32": {
+   "model (3 seeds)": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": -0.014843239178385063,
+     "realised_above_q90": 0.10221354166666666,
+     "realised_below_q10": 0.13802083333333331,
+     "breakout_up_share": 0.4254742547425474,
+     "p_return_positive": 0.4765625
+    },
+    "skew_tail_correlation": {
+     "r": -0.04508840714026627,
+     "ci95": [
+      -0.14400524934578213,
+      0.04832376289431355
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.21930435585422936,
+     "realised_above_q90": 0.0718954248366013,
+     "realised_below_q10": 0.1241830065359477,
+     "breakout_up_share": 0.36666666666666664,
+     "p_return_positive": 0.5980392156862745
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.24662608405772712,
+     "realised_above_q90": 0.10784313725490194,
+     "realised_below_q10": 0.13725490196078433,
+     "breakout_up_share": 0.43999999999999995,
+     "p_return_positive": 0.4019607843137255
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.05033479268979855,
+     "realised_above_q90": 0.12418300653594773,
+     "realised_below_q10": 0.15686274509803919,
+     "breakout_up_share": 0.44186046511627913,
+     "p_return_positive": 0.4117647058823529
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.07890438875094292,
+     "realised_above_q90": 0.09477124183006536,
+     "realised_below_q10": 0.15359477124183005,
+     "breakout_up_share": 0.3815789473684211,
+     "p_return_positive": 0.38235294117647056
+    },
+    "trend_skew_correlation": 0.19935750366322572
+   },
+   "baseline:recent": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": 0.002306198471727791,
+     "realised_above_q90": 0.111328125,
+     "realised_below_q10": 0.134765625,
+     "breakout_up_share": 0.4523809523809524,
+     "p_return_positive": 0.4765625
+    },
+    "skew_tail_correlation": {
+     "r": -0.0969371132595416,
+     "ci95": [
+      -0.18656034384591044,
+      -0.0007450964188923303
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.3188161095357181,
+     "realised_above_q90": 0.11764705882352941,
+     "realised_below_q10": 0.24509803921568626,
+     "breakout_up_share": 0.32432432432432434,
+     "p_return_positive": 0.43137254901960786
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.312065759511373,
+     "realised_above_q90": 0.09803921568627451,
+     "realised_below_q10": 0.08823529411764706,
+     "breakout_up_share": 0.5263157894736842,
+     "p_return_positive": 0.4803921568627451
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.0021661902983710108,
+     "realised_above_q90": 0.17647058823529413,
+     "realised_below_q10": 0.21568627450980393,
+     "breakout_up_share": 0.45,
+     "p_return_positive": 0.4117647058823529
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.023797794524436373,
+     "realised_above_q90": 0.13725490196078433,
+     "realised_below_q10": 0.16666666666666666,
+     "breakout_up_share": 0.45161290322580644,
+     "p_return_positive": 0.38235294117647056
+    },
+    "trend_skew_correlation": 0.07016423250490043
+   },
+   "baseline:expanding": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": 0.0002834509037850986,
+     "realised_above_q90": 0.05859375,
+     "realised_below_q10": 0.07421875,
+     "breakout_up_share": 0.4411764705882353,
+     "p_return_positive": 0.4765625
+    },
+    "skew_tail_correlation": {
+     "r": 0.02357349682411024,
+     "ci95": [
+      -0.049651028957266495,
+      0.09903528857469056
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.187806872936984,
+     "realised_above_q90": 0.0392156862745098,
+     "realised_below_q10": 0.06862745098039216,
+     "breakout_up_share": 0.36363636363636365,
+     "p_return_positive": 0.4215686274509804
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.17714380537618116,
+     "realised_above_q90": 0.058823529411764705,
+     "realised_below_q10": 0.0784313725490196,
+     "breakout_up_share": 0.42857142857142855,
+     "p_return_positive": 0.5196078431372549
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.005069502098610129,
+     "realised_above_q90": 0.09803921568627451,
+     "realised_below_q10": 0.08823529411764706,
+     "breakout_up_share": 0.5263157894736842,
+     "p_return_positive": 0.4117647058823529
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.01759220312136131,
+     "realised_above_q90": 0.06862745098039216,
+     "realised_below_q10": 0.10784313725490197,
+     "breakout_up_share": 0.3888888888888889,
+     "p_return_positive": 0.38235294117647056
+    },
+    "trend_skew_correlation": 0.02977385462137688
+   }
+  },
+  "seen:128": {
+   "model (3 seeds)": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": -0.0029045496710563695,
+     "realised_above_q90": 0.08984375,
+     "realised_below_q10": 0.12109374999999999,
+     "breakout_up_share": 0.42592592592592593,
+     "p_return_positive": 0.447265625
+    },
+    "skew_tail_correlation": {
+     "r": -0.03277401533535428,
+     "ci95": [
+      -0.11825825188648827,
+      0.04733067263266043
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.20115220921766314,
+     "realised_above_q90": 0.0457516339869281,
+     "realised_below_q10": 0.10130718954248366,
+     "breakout_up_share": 0.31111111111111106,
+     "p_return_positive": 0.47058823529411764
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.19643126049802687,
+     "realised_above_q90": 0.08169934640522875,
+     "realised_below_q10": 0.12091503267973855,
+     "breakout_up_share": 0.4032258064516129,
+     "p_return_positive": 0.4117647058823529
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.02487385956924842,
+     "realised_above_q90": 0.14379084967320263,
+     "realised_below_q10": 0.11437908496732026,
+     "breakout_up_share": 0.5569620253164557,
+     "p_return_positive": 0.5098039215686274
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.012250652558982993,
+     "realised_above_q90": 0.06862745098039215,
+     "realised_below_q10": 0.1633986928104575,
+     "breakout_up_share": 0.29577464788732394,
+     "p_return_positive": 0.39215686274509803
+    },
+    "trend_skew_correlation": 0.07466432577278577
+   },
+   "baseline:recent": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": 0.0053200812907914065,
+     "realised_above_q90": 0.10546875,
+     "realised_below_q10": 0.12109375,
+     "breakout_up_share": 0.46551724137931033,
+     "p_return_positive": 0.447265625
+    },
+    "skew_tail_correlation": {
+     "r": -0.026942321388699935,
+     "ci95": [
+      -0.12599616636754918,
+      0.07316150737563258
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.24967696601667297,
+     "realised_above_q90": 0.08823529411764706,
+     "realised_below_q10": 0.13725490196078433,
+     "breakout_up_share": 0.391304347826087,
+     "p_return_positive": 0.4215686274509804
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.22824439364747165,
+     "realised_above_q90": 0.11764705882352941,
+     "realised_below_q10": 0.11764705882352941,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.45098039215686275
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.03463735530300369,
+     "realised_above_q90": 0.16666666666666666,
+     "realised_below_q10": 0.11764705882352941,
+     "breakout_up_share": 0.5862068965517241,
+     "p_return_positive": 0.5098039215686274
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.03313514017917043,
+     "realised_above_q90": 0.13725490196078433,
+     "realised_below_q10": 0.19607843137254902,
+     "breakout_up_share": 0.4117647058823529,
+     "p_return_positive": 0.39215686274509803
+    },
+    "trend_skew_correlation": 0.11757548177938949
+   },
+   "baseline:expanding": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": 0.0017502040892923743,
+     "realised_above_q90": 0.060546875,
+     "realised_below_q10": 0.083984375,
+     "breakout_up_share": 0.4189189189189189,
+     "p_return_positive": 0.447265625
+    },
+    "skew_tail_correlation": {
+     "r": 0.0712953301749932,
+     "ci95": [
+      -0.024839867524409448,
+      0.17304710773016593
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.1668824332221835,
+     "realised_above_q90": 0.09803921568627451,
+     "realised_below_q10": 0.06862745098039216,
+     "breakout_up_share": 0.5882352941176471,
+     "p_return_positive": 0.43137254901960786
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.15269946960773145,
+     "realised_above_q90": 0.06862745098039216,
+     "realised_below_q10": 0.10784313725490197,
+     "breakout_up_share": 0.3888888888888889,
+     "p_return_positive": 0.45098039215686275
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.00015199974125046993,
+     "realised_above_q90": 0.11764705882352941,
+     "realised_below_q10": 0.06862745098039216,
+     "breakout_up_share": 0.631578947368421,
+     "p_return_positive": 0.5098039215686274
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.00783215451891892,
+     "realised_above_q90": 0.058823529411764705,
+     "realised_below_q10": 0.12745098039215685,
+     "breakout_up_share": 0.3157894736842105,
+     "p_return_positive": 0.39215686274509803
+    },
+    "trend_skew_correlation": 0.006238868292442908
+   }
+  },
+  "seen:512": {
+   "model (3 seeds)": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": 0.0016553776790479285,
+     "realised_above_q90": 0.10156249999999999,
+     "realised_below_q10": 0.09505208333333333,
+     "breakout_up_share": 0.5165562913907285,
+     "p_return_positive": 0.46484375
+    },
+    "skew_tail_correlation": {
+     "r": -0.013269129638674056,
+     "ci95": [
+      -0.08886326531312269,
+      0.06916189717876269
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.2205681694017474,
+     "realised_above_q90": 0.08496732026143793,
+     "realised_below_q10": 0.09803921568627452,
+     "breakout_up_share": 0.46428571428571425,
+     "p_return_positive": 0.43137254901960786
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.20007956891617779,
+     "realised_above_q90": 0.10457516339869279,
+     "realised_below_q10": 0.09477124183006537,
+     "breakout_up_share": 0.5245901639344261,
+     "p_return_positive": 0.47058823529411764
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.030824788477863508,
+     "realised_above_q90": 0.1111111111111111,
+     "realised_below_q10": 0.1111111111111111,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.47058823529411764
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.029318227531488918,
+     "realised_above_q90": 0.09477124183006536,
+     "realised_below_q10": 0.09803921568627451,
+     "breakout_up_share": 0.4915254237288136,
+     "p_return_positive": 0.4117647058823529
+    },
+    "trend_skew_correlation": 0.13610706571596953
+   },
+   "baseline:recent": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": -0.011232938421573392,
+     "realised_above_q90": 0.119140625,
+     "realised_below_q10": 0.111328125,
+     "breakout_up_share": 0.5169491525423728,
+     "p_return_positive": 0.46484375
+    },
+    "skew_tail_correlation": {
+     "r": -0.019985992170800736,
+     "ci95": [
+      -0.1118854918765734,
+      0.07428286319658055
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.18482784895811888,
+     "realised_above_q90": 0.12745098039215685,
+     "realised_below_q10": 0.14705882352941177,
+     "breakout_up_share": 0.4642857142857143,
+     "p_return_positive": 0.4803921568627451
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.20416432442210988,
+     "realised_above_q90": 0.12745098039215685,
+     "realised_below_q10": 0.10784313725490197,
+     "breakout_up_share": 0.5416666666666666,
+     "p_return_positive": 0.46078431372549017
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.01649890224598436,
+     "realised_above_q90": 0.11764705882352941,
+     "realised_below_q10": 0.13725490196078433,
+     "breakout_up_share": 0.46153846153846156,
+     "p_return_positive": 0.47058823529411764
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.017808055315741058,
+     "realised_above_q90": 0.10784313725490197,
+     "realised_below_q10": 0.12745098039215685,
+     "breakout_up_share": 0.4583333333333333,
+     "p_return_positive": 0.4117647058823529
+    },
+    "trend_skew_correlation": 0.06670472918111538
+   },
+   "baseline:expanding": {
+    "all": {
+     "anchors": 512,
+     "mean_predicted_skew": -0.0057235115661977524,
+     "realised_above_q90": 0.068359375,
+     "realised_below_q10": 0.068359375,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.46484375
+    },
+    "skew_tail_correlation": {
+     "r": -0.012040900525447347,
+     "ci95": [
+      -0.09810635978955588,
+      0.06912416446730384
+     ],
+     "n": 512
+    },
+    "confident_up_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": 0.1410053220657888,
+     "realised_above_q90": 0.049019607843137254,
+     "realised_below_q10": 0.10784313725490197,
+     "breakout_up_share": 0.3125,
+     "p_return_positive": 0.5098039215686274
+    },
+    "confident_down_skew": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.14993939198125308,
+     "realised_above_q90": 0.0392156862745098,
+     "realised_below_q10": 0.058823529411764705,
+     "breakout_up_share": 0.4,
+     "p_return_positive": 0.49019607843137253
+    },
+    "after_up_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.011563015590258824,
+     "realised_above_q90": 0.09803921568627451,
+     "realised_below_q10": 0.09803921568627451,
+     "breakout_up_share": 0.5,
+     "p_return_positive": 0.47058823529411764
+    },
+    "after_down_trend": {
+     "anchors": 102,
+     "mean_predicted_skew": -0.023254102834303143,
+     "realised_above_q90": 0.058823529411764705,
+     "realised_below_q10": 0.0784313725490196,
+     "breakout_up_share": 0.42857142857142855,
+     "p_return_positive": 0.4117647058823529
+    },
+    "trend_skew_correlation": 0.03872317197509635
+   }
+  }
+ }
+}

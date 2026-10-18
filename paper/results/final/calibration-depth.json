@@ -1,0 +1,2165 @@
+{
+ "method": "Forecast calibration, paired comparisons and asymmetry tests from rollout_eval output.\n\nFor every anchor, horizon and forecaster (model seeds and history-only baselines):\n\n  scores     unbiased energy score (four endpoints) and CRPS of the price return;\n             paired differences against each baseline with a bootstrap over anchors\n             (anchors are spread across the test period and do not overlap)\n  PIT        where the realised return falls in the forecast ensemble; a calibrated\n             forecaster gives uniform PIT. Reported as a 10-bin histogram, the\n             share in the outer 10% on each side, and a chi-square statistic\n  asymmetry  the forecast's quantile skew (q90 + q10 - 2 q50) / (q90 - q10), estimated\n             from one half of the ensemble; the q10/q90 thresholds come from the other\n             half. (Using the same draws for both builds in a spurious negative\n             relation: a sample whose q90 is inflated by noise looks up-skewed and is\n             exceeded less often.) Anchors are grouped by predicted skew and realised\n             upside/downside tail frequencies are compared. Informative asymmetric\n             intervals put more realised breakouts on the side the forecast says is longer.\n  robust     median per-anchor energy and CRPS, which a few runaway paths cannot dominate\n\n  python -m scripts.calibration --rollouts eval/rollouts-test --out results/calibration.json\n",
+ "cells": {
+  "heldout:32": {
+   "anchors": 98,
+   "forecasters": {
+    "baseline:expanding": {
+     "mean_energy": 3.610240517315771,
+     "mean_crps_bp": 18.25437680877436,
+     "median_energy": 2.3658850267512204,
+     "median_crps_bp": 13.520018507555104,
+     "pit_histogram": [
+      9,
+      12,
+      7,
+      8,
+      11,
+      11,
+      11,
+      9,
+      10,
+      10
+     ],
+     "pit_chi2": 2.2040816326530615,
+     "outer_10": {
+      "below": 0.14285714285714285,
+      "above": 0.10204081632653061
+     },
+     "skew_spread": 0.4146573963983577,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 38,
+       "mean_predicted_skew": 0.3368856521611211,
+       "realised_above_q90": 0.13157894736842105,
+       "realised_below_q10": 0.13157894736842105
+      },
+      "symmetric": {
+       "anchors": 22,
+       "mean_predicted_skew": 0.0042356153721259645,
+       "realised_above_q90": 0.09090909090909091,
+       "realised_below_q10": 0.09090909090909091
+      },
+      "down_skew": {
+       "anchors": 38,
+       "mean_predicted_skew": -0.43424400574483646,
+       "realised_above_q90": 0.07894736842105263,
+       "realised_below_q10": 0.18421052631578946
+      }
+     },
+     "skew_tail_correlation": 0.05699802121592138
+    },
+    "baseline:recent": {
+     "mean_energy": 3.149281195209712,
+     "mean_crps_bp": 18.614688992664213,
+     "median_energy": 1.822270624241905,
+     "median_crps_bp": 11.68945305923698,
+     "pit_histogram": [
+      14,
+      10,
+      6,
+      9,
+      6,
+      10,
+      11,
+      9,
+      9,
+      14
+     ],
+     "pit_chi2": 6.897959183673469,
+     "outer_10": {
+      "below": 0.1836734693877551,
+      "above": 0.14285714285714285
+     },
+     "skew_spread": 0.3343696785339702,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 37,
+       "mean_predicted_skew": 0.3314311415331403,
+       "realised_above_q90": 0.13513513513513514,
+       "realised_below_q10": 0.13513513513513514
+      },
+      "symmetric": {
+       "anchors": 22,
+       "mean_predicted_skew": 0.011821398452301098,
+       "realised_above_q90": 0.22727272727272727,
+       "realised_below_q10": 0.13636363636363635
+      },
+      "down_skew": {
+       "anchors": 39,
+       "mean_predicted_skew": -0.35040693861783256,
+       "realised_above_q90": 0.10256410256410256,
+       "realised_below_q10": 0.2564102564102564
+      }
+     },
+     "skew_tail_correlation": 0.10678741901403449
+    },
+    "depth260930": {
+     "mean_energy": 2.689183924901467,
+     "mean_crps_bp": 16.992550238719826,
+     "median_energy": 1.5089532116520303,
+     "median_crps_bp": 8.93341529626302,
+     "pit_histogram": [
+      15,
+      6,
+      8,
+      5,
+      10,
+      11,
+      6,
+      10,
+      9,
+      18
+     ],
+     "pit_chi2": 15.46938775510204,
+     "outer_10": {
+      "below": 0.16326530612244897,
+      "above": 0.20408163265306123
+     },
+     "skew_spread": 0.3572114023066413,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 50,
+       "mean_predicted_skew": 0.3549885936772963,
+       "realised_above_q90": 0.16,
+       "realised_below_q10": 0.22
+      },
+      "symmetric": {
+       "anchors": 19,
+       "mean_predicted_skew": 0.0014582666266639635,
+       "realised_above_q90": 0.15789473684210525,
+       "realised_below_q10": 0.10526315789473684
+      },
+      "down_skew": {
+       "anchors": 29,
+       "mean_predicted_skew": -0.35862735791973516,
+       "realised_above_q90": 0.3103448275862069,
+       "realised_below_q10": 0.10344827586206896
+      }
+     },
+     "skew_tail_correlation": -0.17791488687367085
+    },
+    "depth260931": {
+     "mean_energy": 2.751641928228981,
+     "mean_crps_bp": 17.54678469948966,
+     "median_energy": 1.8405256808842247,
+     "median_crps_bp": 10.702103939389962,
+     "pit_histogram": [
+      6,
+      5,
+      11,
+      7,
+      10,
+      15,
+      10,
+      9,
+      10,
+      15
+     ],
+     "pit_chi2": 10.367346938775508,
+     "outer_10": {
+      "below": 0.10204081632653061,
+      "above": 0.15306122448979592
+     },
+     "skew_spread": 0.29408046962867707,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 26,
+       "mean_predicted_skew": 0.3271335340849272,
+       "realised_above_q90": 0.11538461538461539,
+       "realised_below_q10": 0.11538461538461539
+      },
+      "symmetric": {
+       "anchors": 27,
+       "mean_predicted_skew": -0.015803490709665077,
+       "realised_above_q90": 0.14814814814814814,
+       "realised_below_q10": 0.1111111111111111
+      },
+      "down_skew": {
+       "anchors": 45,
+       "mean_predicted_skew": -0.3126394121263589,
+       "realised_above_q90": 0.17777777777777778,
+       "realised_below_q10": 0.08888888888888889
+      }
+     },
+     "skew_tail_correlation": 0.0080104860717179
+    },
+    "depth260932": {
+     "mean_energy": 2.820587307539771,
+     "mean_crps_bp": 17.713990473881235,
+     "median_energy": 1.5417391711370012,
+     "median_crps_bp": 7.305336861895553,
+     "pit_histogram": [
+      10,
+      11,
+      6,
+      6,
+      5,
+      12,
+      9,
+      7,
+      15,
+      17
+     ],
+     "pit_chi2": 14.857142857142858,
+     "outer_10": {
+      "below": 0.17346938775510204,
+      "above": 0.1836734693877551
+     },
+     "skew_spread": 0.3307923459481471,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 41,
+       "mean_predicted_skew": 0.3463080185633039,
+       "realised_above_q90": 0.1951219512195122,
+       "realised_below_q10": 0.1951219512195122
+      },
+      "symmetric": {
+       "anchors": 23,
+       "mean_predicted_skew": 0.002261861891510397,
+       "realised_above_q90": 0.30434782608695654,
+       "realised_below_q10": 0.13043478260869565
+      },
+      "down_skew": {
+       "anchors": 34,
+       "mean_predicted_skew": -0.3079692762300055,
+       "realised_above_q90": 0.08823529411764706,
+       "realised_below_q10": 0.17647058823529413
+      }
+     },
+     "skew_tail_correlation": 0.0858968208614515
+    }
+   },
+   "paired": {
+    "depth260930 - baseline:expanding (energy)": {
+     "mean": -0.9210565924143035,
+     "ci95": [
+      -1.4293505177144268,
+      -0.5034016673578277
+     ],
+     "n": 98
+    },
+    "depth260930 - baseline:expanding (crps)": {
+     "mean": -1.2618265700545326,
+     "ci95": [
+      -3.084566659027447,
+      0.6474778159217695
+     ],
+     "n": 98
+    },
+    "depth260930 - baseline:recent (energy)": {
+     "mean": -0.4600972703082452,
+     "ci95": [
+      -0.9521863819689905,
+      -0.08250082034453626
+     ],
+     "n": 98
+    },
+    "depth260930 - baseline:recent (crps)": {
+     "mean": -1.6221387539443861,
+     "ci95": [
+      -3.609448630124033,
+      0.33714993960104905
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:expanding (energy)": {
+     "mean": -0.8585985890867894,
+     "ci95": [
+      -1.418501401534047,
+      -0.37573938876007984
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:expanding (crps)": {
+     "mean": -0.707592109284696,
+     "ci95": [
+      -3.1147084155940528,
+      2.0064603718822047
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:recent (energy)": {
+     "mean": -0.39763926698073104,
+     "ci95": [
+      -0.9778717463589803,
+      0.06970402025652946
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:recent (crps)": {
+     "mean": -1.0679042931745495,
+     "ci95": [
+      -3.6992183726092445,
+      1.7803525828623097
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:expanding (energy)": {
+     "mean": -0.7896532097759995,
+     "ci95": [
+      -1.3107787541280111,
+      -0.3661600466847771
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:expanding (crps)": {
+     "mean": -0.5403863348931263,
+     "ci95": [
+      -2.6482333611922817,
+      1.6064709948414204
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:recent (energy)": {
+     "mean": -0.328693887669941,
+     "ci95": [
+      -0.8175062983541316,
+      0.04619318615449916
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:recent (crps)": {
+     "mean": -0.9006985187829799,
+     "ci95": [
+      -2.735801083084886,
+      1.0261231699666893
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:expanding (energy)": {
+     "mean": -0.8564361304256973,
+     "ci95": [
+      -1.3736533109582663,
+      -0.4590954076860135
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:recent (energy)": {
+     "mean": -0.395476808319639,
+     "ci95": [
+      -0.9135406897818514,
+      0.007261093943059952
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:expanding (crps)": {
+     "mean": -0.8366016714107849,
+     "ci95": [
+      -2.8353289044492076,
+      1.2190999177895578
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:recent (crps)": {
+     "mean": -1.1969138553006387,
+     "ci95": [
+      -3.144569453492882,
+      0.8588466203764914
+     ],
+     "n": 98
+    }
+   }
+  },
+  "heldout:128": {
+   "anchors": 98,
+   "forecasters": {
+    "baseline:expanding": {
+     "mean_energy": 7.225039192373834,
+     "mean_crps_bp": 36.91707478634989,
+     "median_energy": 6.151435689220658,
+     "median_crps_bp": 28.706498936502875,
+     "pit_histogram": [
+      11,
+      13,
+      8,
+      7,
+      8,
+      16,
+      7,
+      4,
+      14,
+      10
+     ],
+     "pit_chi2": 12.612244897959183,
+     "outer_10": {
+      "below": 0.16326530612244897,
+      "above": 0.1326530612244898
+     },
+     "skew_spread": 0.42049008470990035,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 40,
+       "mean_predicted_skew": 0.37984848304644875,
+       "realised_above_q90": 0.1,
+       "realised_below_q10": 0.15
+      },
+      "symmetric": {
+       "anchors": 21,
+       "mean_predicted_skew": 0.005843857669198101,
+       "realised_above_q90": 0.14285714285714285,
+       "realised_below_q10": 0.09523809523809523
+      },
+      "down_skew": {
+       "anchors": 37,
+       "mean_predicted_skew": -0.43935096668272344,
+       "realised_above_q90": 0.16216216216216217,
+       "realised_below_q10": 0.21621621621621623
+      }
+     },
+     "skew_tail_correlation": -0.12231191219487628
+    },
+    "baseline:recent": {
+     "mean_energy": 6.476214296659838,
+     "mean_crps_bp": 36.89814219919657,
+     "median_energy": 4.4840143190381,
+     "median_crps_bp": 24.56508154729187,
+     "pit_histogram": [
+      12,
+      8,
+      7,
+      15,
+      6,
+      11,
+      12,
+      5,
+      11,
+      11
+     ],
+     "pit_chi2": 9.142857142857142,
+     "outer_10": {
+      "below": 0.14285714285714285,
+      "above": 0.1326530612244898
+     },
+     "skew_spread": 0.28262978252927523,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 26,
+       "mean_predicted_skew": 0.2819608173312008,
+       "realised_above_q90": 0.15384615384615385,
+       "realised_below_q10": 0.07692307692307693
+      },
+      "symmetric": {
+       "anchors": 24,
+       "mean_predicted_skew": 0.012327765641373325,
+       "realised_above_q90": 0.08333333333333333,
+       "realised_below_q10": 0.125
+      },
+      "down_skew": {
+       "anchors": 48,
+       "mean_predicted_skew": -0.3145289137872938,
+       "realised_above_q90": 0.14583333333333334,
+       "realised_below_q10": 0.1875
+      }
+     },
+     "skew_tail_correlation": -0.023995743820522424
+    },
+    "depth260930": {
+     "mean_energy": 5.974670903053683,
+     "mean_crps_bp": 36.7891199741119,
+     "median_energy": 4.428907454352856,
+     "median_crps_bp": 22.885672781483372,
+     "pit_histogram": [
+      8,
+      11,
+      8,
+      12,
+      8,
+      14,
+      9,
+      9,
+      5,
+      14
+     ],
+     "pit_chi2": 7.7142857142857135,
+     "outer_10": {
+      "below": 0.07142857142857142,
+      "above": 0.1326530612244898
+     },
+     "skew_spread": 0.30168738551264185,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 47,
+       "mean_predicted_skew": 0.33978968015120725,
+       "realised_above_q90": 0.0851063829787234,
+       "realised_below_q10": 0.0851063829787234
+      },
+      "symmetric": {
+       "anchors": 25,
+       "mean_predicted_skew": -0.0007697433446901203,
+       "realised_above_q90": 0.16,
+       "realised_below_q10": 0.08
+      },
+      "down_skew": {
+       "anchors": 26,
+       "mean_predicted_skew": -0.28640099633654437,
+       "realised_above_q90": 0.19230769230769232,
+       "realised_below_q10": 0.038461538461538464
+      }
+     },
+     "skew_tail_correlation": -0.13312403266905143
+    },
+    "depth260931": {
+     "mean_energy": 6.518055419830932,
+     "mean_crps_bp": 36.80712808117812,
+     "median_energy": 4.8868341986448485,
+     "median_crps_bp": 23.97445483701741,
+     "pit_histogram": [
+      5,
+      4,
+      13,
+      11,
+      8,
+      15,
+      11,
+      13,
+      6,
+      12
+     ],
+     "pit_chi2": 13.224489795918366,
+     "outer_10": {
+      "below": 0.07142857142857142,
+      "above": 0.17346938775510204
+     },
+     "skew_spread": 0.3586689918304499,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 35,
+       "mean_predicted_skew": 0.41233466217513326,
+       "realised_above_q90": 0.11428571428571428,
+       "realised_below_q10": 0.02857142857142857
+      },
+      "symmetric": {
+       "anchors": 17,
+       "mean_predicted_skew": -0.002253591218044854,
+       "realised_above_q90": 0.23529411764705882,
+       "realised_below_q10": 0.058823529411764705
+      },
+      "down_skew": {
+       "anchors": 46,
+       "mean_predicted_skew": -0.3046176396832113,
+       "realised_above_q90": 0.1956521739130435,
+       "realised_below_q10": 0.10869565217391304
+      }
+     },
+     "skew_tail_correlation": 0.07816782815585141
+    },
+    "depth260932": {
+     "mean_energy": 6.646591367949132,
+     "mean_crps_bp": 44.04818628856034,
+     "median_energy": 4.051914239232886,
+     "median_crps_bp": 19.5886054750805,
+     "pit_histogram": [
+      8,
+      10,
+      6,
+      8,
+      13,
+      15,
+      10,
+      3,
+      12,
+      13
+     ],
+     "pit_chi2": 12.204081632653061,
+     "outer_10": {
+      "below": 0.11224489795918367,
+      "above": 0.17346938775510204
+     },
+     "skew_spread": 0.3065434334019596,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 29,
+       "mean_predicted_skew": 0.3071798183974414,
+       "realised_above_q90": 0.06896551724137931,
+       "realised_below_q10": 0.10344827586206896
+      },
+      "symmetric": {
+       "anchors": 19,
+       "mean_predicted_skew": -0.005580280719958389,
+       "realised_above_q90": 0.3157894736842105,
+       "realised_below_q10": 0.05263157894736842
+      },
+      "down_skew": {
+       "anchors": 50,
+       "mean_predicted_skew": -0.30068336871591034,
+       "realised_above_q90": 0.18,
+       "realised_below_q10": 0.14
+      }
+     },
+     "skew_tail_correlation": -0.03856032150680285
+    }
+   },
+   "paired": {
+    "depth260930 - baseline:expanding (energy)": {
+     "mean": -1.2503682893201522,
+     "ci95": [
+      -2.0251897048552387,
+      -0.5833937314298329
+     ],
+     "n": 98
+    },
+    "depth260930 - baseline:expanding (crps)": {
+     "mean": -0.12795481223799643,
+     "ci95": [
+      -2.759559573588296,
+      2.7386320045330486
+     ],
+     "n": 98
+    },
+    "depth260930 - baseline:recent (energy)": {
+     "mean": -0.5015433936061559,
+     "ci95": [
+      -1.2967788015308033,
+      0.1667977208425446
+     ],
+     "n": 98
+    },
+    "depth260930 - baseline:recent (crps)": {
+     "mean": -0.10902222508468129,
+     "ci95": [
+      -3.0593505719279035,
+      2.9283302162637717
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:expanding (energy)": {
+     "mean": -0.7069837725429023,
+     "ci95": [
+      -1.4254490603224008,
+      -0.06256962487216707
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:expanding (crps)": {
+     "mean": -0.10994670517177385,
+     "ci95": [
+      -3.0213179656875493,
+      3.020160856580353
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:recent (energy)": {
+     "mean": 0.041841123171094355,
+     "ci95": [
+      -0.7822194716754626,
+      0.7240990540013393
+     ],
+     "n": 98
+    },
+    "depth260931 - baseline:recent (crps)": {
+     "mean": -0.09101411801845867,
+     "ci95": [
+      -3.1678439436858192,
+      2.971346770218661
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:expanding (energy)": {
+     "mean": -0.5784478244247024,
+     "ci95": [
+      -1.6511400091817794,
+      0.5906086526683832
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:expanding (crps)": {
+     "mean": 7.131111502210438,
+     "ci95": [
+      -0.777610910646928,
+      19.531945379303764
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:recent (energy)": {
+     "mean": 0.1703770712892941,
+     "ci95": [
+      -0.879096440692359,
+      1.3756550465822694
+     ],
+     "n": 98
+    },
+    "depth260932 - baseline:recent (crps)": {
+     "mean": 7.150044089363752,
+     "ci95": [
+      -1.0473122112851967,
+      19.470473682466732
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:expanding (energy)": {
+     "mean": -0.8452666287625856,
+     "ci95": [
+      -1.5926446241811334,
+      -0.17388349917054335
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:recent (energy)": {
+     "mean": -0.09644173304858909,
+     "ci95": [
+      -0.859551263887533,
+      0.5566186841147888
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:expanding (crps)": {
+     "mean": 2.297736661600223,
+     "ci95": [
+      -1.592675256805643,
+      7.134189315468199
+     ],
+     "n": 98
+    },
+    "seed mean - baseline:recent (crps)": {
+     "mean": 2.3166692487535387,
+     "ci95": [
+      -1.8151512733038553,
+      7.434233969542154
+     ],
+     "n": 98
+    }
+   }
+  },
+  "heldout:512": {
+   "anchors": 97,
+   "forecasters": {
+    "baseline:expanding": {
+     "mean_energy": 17.644270408671616,
+     "mean_crps_bp": 83.19170849073105,
+     "median_energy": 16.44758118719224,
+     "median_crps_bp": 68.4440339436195,
+     "pit_histogram": [
+      11,
+      9,
+      11,
+      10,
+      7,
+      11,
+      9,
+      10,
+      8,
+      11
+     ],
+     "pit_chi2": 1.8659793814432992,
+     "outer_10": {
+      "below": 0.15463917525773196,
+      "above": 0.10309278350515463
+     },
+     "skew_spread": 0.37311705231951153,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 34,
+       "mean_predicted_skew": 0.3250795502366519,
+       "realised_above_q90": 0.20588235294117646,
+       "realised_below_q10": 0.17647058823529413
+      },
+      "symmetric": {
+       "anchors": 24,
+       "mean_predicted_skew": -0.013073707544918082,
+       "realised_above_q90": 0.0,
+       "realised_below_q10": 0.08333333333333333
+      },
+      "down_skew": {
+       "anchors": 39,
+       "mean_predicted_skew": -0.3974832923761165,
+       "realised_above_q90": 0.07692307692307693,
+       "realised_below_q10": 0.1794871794871795
+      }
+     },
+     "skew_tail_correlation": 0.14736453084698523
+    },
+    "baseline:recent": {
+     "mean_energy": 16.825832203577903,
+     "mean_crps_bp": 85.223171374672,
+     "median_energy": 13.723766864657305,
+     "median_crps_bp": 52.94084309192118,
+     "pit_histogram": [
+      11,
+      6,
+      12,
+      11,
+      9,
+      10,
+      8,
+      10,
+      11,
+      9
+     ],
+     "pit_chi2": 2.8969072164948453,
+     "outer_10": {
+      "below": 0.15463917525773196,
+      "above": 0.13402061855670103
+     },
+     "skew_spread": 0.2579104500660762,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 31,
+       "mean_predicted_skew": 0.24146332768387782,
+       "realised_above_q90": 0.16129032258064516,
+       "realised_below_q10": 0.16129032258064516
+      },
+      "symmetric": {
+       "anchors": 24,
+       "mean_predicted_skew": 0.009372892635561405,
+       "realised_above_q90": 0.16666666666666666,
+       "realised_below_q10": 0.16666666666666666
+      },
+      "down_skew": {
+       "anchors": 42,
+       "mean_predicted_skew": -0.29109276649595134,
+       "realised_above_q90": 0.09523809523809523,
+       "realised_below_q10": 0.14285714285714285
+      }
+     },
+     "skew_tail_correlation": 0.07071105264606661
+    },
+    "depth260930": {
+     "mean_energy": 15.178212851184194,
+     "mean_crps_bp": 83.18476244490307,
+     "median_energy": 13.235650878869919,
+     "median_crps_bp": 57.02650000140761,
+     "pit_histogram": [
+      12,
+      10,
+      11,
+      7,
+      11,
+      11,
+      13,
+      8,
+      5,
+      9
+     ],
+     "pit_chi2": 5.577319587628866,
+     "outer_10": {
+      "below": 0.13402061855670103,
+      "above": 0.05154639175257732
+     },
+     "skew_spread": 0.3616014786375175,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 48,
+       "mean_predicted_skew": 0.41252041040840504,
+       "realised_above_q90": 0.041666666666666664,
+       "realised_below_q10": 0.10416666666666667
+      },
+      "symmetric": {
+       "anchors": 25,
+       "mean_predicted_skew": 6.613176901005601e-05,
+       "realised_above_q90": 0.08,
+       "realised_below_q10": 0.2
+      },
+      "down_skew": {
+       "anchors": 24,
+       "mean_predicted_skew": -0.32343703257383305,
+       "realised_above_q90": 0.041666666666666664,
+       "realised_below_q10": 0.125
+      }
+     },
+     "skew_tail_correlation": 0.004472273709727693
+    },
+    "depth260931": {
+     "mean_energy": 18.072003779796233,
+     "mean_crps_bp": 85.65547078738102,
+     "median_energy": 17.675248577322524,
+     "median_crps_bp": 54.343933069345624,
+     "pit_histogram": [
+      7,
+      6,
+      3,
+      18,
+      11,
+      16,
+      10,
+      12,
+      5,
+      9
+     ],
+     "pit_chi2": 21.04123711340207,
+     "outer_10": {
+      "below": 0.08247422680412371,
+      "above": 0.1134020618556701
+     },
+     "skew_spread": 0.3785833502250982,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 38,
+       "mean_predicted_skew": 0.4186611986110102,
+       "realised_above_q90": 0.05263157894736842,
+       "realised_below_q10": 0.07894736842105263
+      },
+      "symmetric": {
+       "anchors": 27,
+       "mean_predicted_skew": -0.01557350990225232,
+       "realised_above_q90": 0.18518518518518517,
+       "realised_below_q10": 0.037037037037037035
+      },
+      "down_skew": {
+       "anchors": 32,
+       "mean_predicted_skew": -0.32042275024663364,
+       "realised_above_q90": 0.125,
+       "realised_below_q10": 0.125
+      }
+     },
+     "skew_tail_correlation": -0.03924181420026542
+    },
+    "depth260932": {
+     "mean_energy": 16.413753536181893,
+     "mean_crps_bp": 99.76808867794806,
+     "median_energy": 10.713343360108926,
+     "median_crps_bp": 49.53709401761208,
+     "pit_histogram": [
+      11,
+      2,
+      8,
+      5,
+      11,
+      14,
+      10,
+      17,
+      4,
+      15
+     ],
+     "pit_chi2": 22.69072164948454,
+     "outer_10": {
+      "below": 0.1134020618556701,
+      "above": 0.13402061855670103
+     },
+     "skew_spread": 0.31850176181423956,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 28,
+       "mean_predicted_skew": 0.3045303470028098,
+       "realised_above_q90": 0.10714285714285714,
+       "realised_below_q10": 0.14285714285714285
+      },
+      "symmetric": {
+       "anchors": 27,
+       "mean_predicted_skew": 0.0044127479808433855,
+       "realised_above_q90": 0.18518518518518517,
+       "realised_below_q10": 0.14814814814814814
+      },
+      "down_skew": {
+       "anchors": 42,
+       "mean_predicted_skew": -0.35376535681966076,
+       "realised_above_q90": 0.11904761904761904,
+       "realised_below_q10": 0.07142857142857142
+      }
+     },
+     "skew_tail_correlation": -0.04513722174480387
+    }
+   },
+   "paired": {
+    "depth260930 - baseline:expanding (energy)": {
+     "mean": -2.4660575574874226,
+     "ci95": [
+      -3.7605335323447715,
+      -0.981415717482066
+     ],
+     "n": 97
+    },
+    "depth260930 - baseline:expanding (crps)": {
+     "mean": -0.006946045827966649,
+     "ci95": [
+      -6.537987925765053,
+      6.628007273953312
+     ],
+     "n": 97
+    },
+    "depth260930 - baseline:recent (energy)": {
+     "mean": -1.647619352393709,
+     "ci95": [
+      -3.5979552352014457,
+      0.2141795183514654
+     ],
+     "n": 97
+    },
+    "depth260930 - baseline:recent (crps)": {
+     "mean": -2.038408929768919,
+     "ci95": [
+      -8.768545978112165,
+      4.580083124151072
+     ],
+     "n": 97
+    },
+    "depth260931 - baseline:expanding (energy)": {
+     "mean": 0.42773337112461396,
+     "ci95": [
+      -0.8606928134251223,
+      1.7516104386179014
+     ],
+     "n": 97
+    },
+    "depth260931 - baseline:expanding (crps)": {
+     "mean": 2.4637622966499824,
+     "ci95": [
+      -4.692158287618134,
+      9.45045377477
+     ],
+     "n": 97
+    },
+    "depth260931 - baseline:recent (energy)": {
+     "mean": 1.246171576218327,
+     "ci95": [
+      -1.0860421170269725,
+      3.3847841181943505
+     ],
+     "n": 97
+    },
+    "depth260931 - baseline:recent (crps)": {
+     "mean": 0.4322994127090306,
+     "ci95": [
+      -6.96418386445046,
+      7.581936216372442
+     ],
+     "n": 97
+    },
+    "depth260932 - baseline:expanding (energy)": {
+     "mean": -1.2305168724897215,
+     "ci95": [
+      -3.8015622669919438,
+      1.9657413931638226
+     ],
+     "n": 97
+    },
+    "depth260932 - baseline:expanding (crps)": {
+     "mean": 16.576380187217023,
+     "ci95": [
+      -1.3501299003046825,
+      42.40412338172588
+     ],
+     "n": 97
+    },
+    "depth260932 - baseline:recent (energy)": {
+     "mean": -0.4120786673960085,
+     "ci95": [
+      -3.243170339991427,
+      3.095039892627902
+     ],
+     "n": 97
+    },
+    "depth260932 - baseline:recent (crps)": {
+     "mean": 14.54491730327607,
+     "ci95": [
+      -2.884598457709251,
+      41.074953188467966
+     ],
+     "n": 97
+    },
+    "seed mean - baseline:expanding (energy)": {
+     "mean": -1.0896136862841772,
+     "ci95": [
+      -2.5038224446457567,
+      0.504757339124051
+     ],
+     "n": 97
+    },
+    "seed mean - baseline:recent (energy)": {
+     "mean": -0.27117548119046364,
+     "ci95": [
+      -2.4091210432292893,
+      1.7708574927915148
+     ],
+     "n": 97
+    },
+    "seed mean - baseline:expanding (crps)": {
+     "mean": 6.34439881267968,
+     "ci95": [
+      -2.1396278134811,
+      16.615115341858925
+     ],
+     "n": 97
+    },
+    "seed mean - baseline:recent (crps)": {
+     "mean": 4.312935928738727,
+     "ci95": [
+      -4.290942018522731,
+      14.741331557823653
+     ],
+     "n": 97
+    }
+   }
+  },
+  "seen:32": {
+   "anchors": 512,
+   "forecasters": {
+    "baseline:expanding": {
+     "mean_energy": 4.096268525289213,
+     "mean_crps_bp": 23.46679425257371,
+     "median_energy": 2.840775914726993,
+     "median_crps_bp": 14.230310448957361,
+     "pit_histogram": [
+      44,
+      49,
+      56,
+      58,
+      55,
+      86,
+      49,
+      39,
+      41,
+      35
+     ],
+     "pit_chi2": 36.5546875,
+     "outer_10": {
+      "below": 0.109375,
+      "above": 0.078125
+     },
+     "skew_spread": 0.28037740459279664,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 171,
+       "mean_predicted_skew": 0.2907988071104278,
+       "realised_above_q90": 0.06432748538011696,
+       "realised_below_q10": 0.0935672514619883
+      },
+      "symmetric": {
+       "anchors": 141,
+       "mean_predicted_skew": -0.010139520681311973,
+       "realised_above_q90": 0.07801418439716312,
+       "realised_below_q10": 0.09929078014184398
+      },
+      "down_skew": {
+       "anchors": 200,
+       "mean_predicted_skew": -0.29810128885524567,
+       "realised_above_q90": 0.09,
+       "realised_below_q10": 0.13
+      }
+     },
+     "skew_tail_correlation": 0.05063365599339251
+    },
+    "baseline:recent": {
+     "mean_energy": 3.5709701421921523,
+     "mean_crps_bp": 23.638979975311827,
+     "median_energy": 2.14821556096906,
+     "median_crps_bp": 12.842518769546725,
+     "pit_histogram": [
+      78,
+      48,
+      35,
+      49,
+      46,
+      49,
+      48,
+      50,
+      48,
+      61
+     ],
+     "pit_chi2": 22.375,
+     "outer_10": {
+      "below": 0.1640625,
+      "above": 0.14453125
+     },
+     "skew_spread": 0.3439712769246598,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 207,
+       "mean_predicted_skew": 0.3346423350244598,
+       "realised_above_q90": 0.14492753623188406,
+       "realised_below_q10": 0.1642512077294686
+      },
+      "symmetric": {
+       "anchors": 105,
+       "mean_predicted_skew": -0.0017132299413453336,
+       "realised_above_q90": 0.1523809523809524,
+       "realised_below_q10": 0.13333333333333333
+      },
+      "down_skew": {
+       "anchors": 200,
+       "mean_predicted_skew": -0.3367093960186979,
+       "realised_above_q90": 0.14,
+       "realised_below_q10": 0.18
+      }
+     },
+     "skew_tail_correlation": -0.015125358257337908
+    },
+    "depth260930": {
+     "mean_energy": 2.9958389461608914,
+     "mean_crps_bp": 21.509602425734073,
+     "median_energy": 1.7885080142600955,
+     "median_crps_bp": 11.970882952822897,
+     "pit_histogram": [
+      72,
+      39,
+      48,
+      54,
+      51,
+      80,
+      48,
+      38,
+      36,
+      46
+     ],
+     "pit_chi2": 36.5546875,
+     "outer_10": {
+      "below": 0.1640625,
+      "above": 0.09375
+     },
+     "skew_spread": 0.3001518958776697,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 188,
+       "mean_predicted_skew": 0.30222425353503346,
+       "realised_above_q90": 0.06382978723404255,
+       "realised_below_q10": 0.1702127659574468
+      },
+      "symmetric": {
+       "anchors": 134,
+       "mean_predicted_skew": 0.001406793441016936,
+       "realised_above_q90": 0.08955223880597014,
+       "realised_below_q10": 0.15671641791044777
+      },
+      "down_skew": {
+       "anchors": 190,
+       "mean_predicted_skew": -0.3124144159760694,
+       "realised_above_q90": 0.12631578947368421,
+       "realised_below_q10": 0.1631578947368421
+      }
+     },
+     "skew_tail_correlation": -0.02957147651303117
+    },
+    "depth260931": {
+     "mean_energy": 2.991088940032591,
+     "mean_crps_bp": 21.326176061265294,
+     "median_energy": 1.7931149580182442,
+     "median_crps_bp": 11.495029081952524,
+     "pit_histogram": [
+      71,
+      29,
+      48,
+      59,
+      57,
+      68,
+      52,
+      45,
+      32,
+      51
+     ],
+     "pit_chi2": 32.8046875,
+     "outer_10": {
+      "below": 0.15625,
+      "above": 0.125
+     },
+     "skew_spread": 0.2910000696983014,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 176,
+       "mean_predicted_skew": 0.2847107662378,
+       "realised_above_q90": 0.125,
+       "realised_below_q10": 0.14204545454545456
+      },
+      "symmetric": {
+       "anchors": 141,
+       "mean_predicted_skew": -0.0014879145815258695,
+       "realised_above_q90": 0.14184397163120568,
+       "realised_below_q10": 0.15602836879432624
+      },
+      "down_skew": {
+       "anchors": 195,
+       "mean_predicted_skew": -0.3179274190734774,
+       "realised_above_q90": 0.11282051282051282,
+       "realised_below_q10": 0.16923076923076924
+      }
+     },
+     "skew_tail_correlation": 0.021708297778065985
+    },
+    "depth260932": {
+     "mean_energy": 3.0131491621931277,
+     "mean_crps_bp": 21.486090272503535,
+     "median_energy": 1.7776986227592912,
+     "median_crps_bp": 11.661797554449643,
+     "pit_histogram": [
+      66,
+      36,
+      51,
+      48,
+      60,
+      70,
+      38,
+      48,
+      38,
+      57
+     ],
+     "pit_chi2": 25.070312499999996,
+     "outer_10": {
+      "below": 0.150390625,
+      "above": 0.12109375
+     },
+     "skew_spread": 0.31089975932355773,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 178,
+       "mean_predicted_skew": 0.3235814731833684,
+       "realised_above_q90": 0.11235955056179775,
+       "realised_below_q10": 0.1404494382022472
+      },
+      "symmetric": {
+       "anchors": 124,
+       "mean_predicted_skew": -0.003922925047283257,
+       "realised_above_q90": 0.0967741935483871,
+       "realised_below_q10": 0.12903225806451613
+      },
+      "down_skew": {
+       "anchors": 210,
+       "mean_predicted_skew": -0.3018296537575548,
+       "realised_above_q90": 0.14285714285714285,
+       "realised_below_q10": 0.17142857142857143
+      }
+     },
+     "skew_tail_correlation": -0.029768122302823795
+    }
+   },
+   "paired": {
+    "depth260930 - baseline:expanding (energy)": {
+     "mean": -1.1004295791283218,
+     "ci95": [
+      -1.3936846391246722,
+      -0.8661016497833607
+     ],
+     "n": 512
+    },
+    "depth260930 - baseline:expanding (crps)": {
+     "mean": -1.9571918268396373,
+     "ci95": [
+      -2.9546045327836685,
+      -0.9618921544296474
+     ],
+     "n": 512
+    },
+    "depth260930 - baseline:recent (energy)": {
+     "mean": -0.5751311960312606,
+     "ci95": [
+      -0.8639897456484109,
+      -0.3420394738416856
+     ],
+     "n": 512
+    },
+    "depth260930 - baseline:recent (crps)": {
+     "mean": -2.1293775495777543,
+     "ci95": [
+      -3.374926604773247,
+      -0.9039279088641694
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:expanding (energy)": {
+     "mean": -1.1051795852566217,
+     "ci95": [
+      -1.3948692858196097,
+      -0.8521073821213492
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:expanding (crps)": {
+     "mean": -2.1406181913084144,
+     "ci95": [
+      -3.1130940873841686,
+      -1.149351418705049
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:recent (energy)": {
+     "mean": -0.5798812021595606,
+     "ci95": [
+      -0.877401438283333,
+      -0.3389029158115984
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:recent (crps)": {
+     "mean": -2.3128039140465306,
+     "ci95": [
+      -3.566157007728033,
+      -1.05806297707295
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:expanding (energy)": {
+     "mean": -1.0831193630960858,
+     "ci95": [
+      -1.3766582379135965,
+      -0.8307864691433517
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:expanding (crps)": {
+     "mean": -1.9807039800701771,
+     "ci95": [
+      -2.945850868818066,
+      -1.0009843055833954
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:recent (energy)": {
+     "mean": -0.5578209799990246,
+     "ci95": [
+      -0.8490794858077529,
+      -0.3263996062808717
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:recent (crps)": {
+     "mean": -2.1528897028082934,
+     "ci95": [
+      -3.3327827967990995,
+      -0.9380514400300068
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:expanding (energy)": {
+     "mean": -1.0962428424936763,
+     "ci95": [
+      -1.4136248254110255,
+      -0.8660506097765912
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:recent (energy)": {
+     "mean": -0.5709444593966152,
+     "ci95": [
+      -0.8539196465577351,
+      -0.34071632494776244
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:expanding (crps)": {
+     "mean": -2.0261713327394095,
+     "ci95": [
+      -2.926663819437775,
+      -1.1355832706769047
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:recent (crps)": {
+     "mean": -2.1983570554775262,
+     "ci95": [
+      -3.3461552855247922,
+      -1.0936335645523327
+     ],
+     "n": 512
+    }
+   }
+  },
+  "seen:128": {
+   "anchors": 512,
+   "forecasters": {
+    "baseline:expanding": {
+     "mean_energy": 10.81583024633565,
+     "mean_crps_bp": 49.6525216676584,
+     "median_energy": 8.112116077840568,
+     "median_crps_bp": 29.42924848861749,
+     "pit_histogram": [
+      49,
+      39,
+      59,
+      53,
+      68,
+      65,
+      72,
+      40,
+      34,
+      33
+     ],
+     "pit_chi2": 36.6328125,
+     "outer_10": {
+      "below": 0.09765625,
+      "above": 0.083984375
+     },
+     "skew_spread": 0.2831143696638341,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 153,
+       "mean_predicted_skew": 0.2800591139717042,
+       "realised_above_q90": 0.08496732026143791,
+       "realised_below_q10": 0.13071895424836602
+      },
+      "symmetric": {
+       "anchors": 135,
+       "mean_predicted_skew": 0.0031129524692977495,
+       "realised_above_q90": 0.1037037037037037,
+       "realised_below_q10": 0.07407407407407407
+      },
+      "down_skew": {
+       "anchors": 224,
+       "mean_predicted_skew": -0.3084859393180435,
+       "realised_above_q90": 0.07142857142857142,
+       "realised_below_q10": 0.08928571428571429
+      }
+     },
+     "skew_tail_correlation": -0.02688834196961592
+    },
+    "baseline:recent": {
+     "mean_energy": 7.995826662302023,
+     "mean_crps_bp": 50.28363734619428,
+     "median_energy": 5.296177466597355,
+     "median_crps_bp": 27.567625448458614,
+     "pit_histogram": [
+      69,
+      53,
+      43,
+      42,
+      47,
+      64,
+      50,
+      43,
+      37,
+      64
+     ],
+     "pit_chi2": 21.242187500000004,
+     "outer_10": {
+      "below": 0.16015625,
+      "above": 0.13671875
+     },
+     "skew_spread": 0.2828124885330257,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 183,
+       "mean_predicted_skew": 0.29394778588816917,
+       "realised_above_q90": 0.12568306010928962,
+       "realised_below_q10": 0.1912568306010929
+      },
+      "symmetric": {
+       "anchors": 141,
+       "mean_predicted_skew": -0.0032041334607796576,
+       "realised_above_q90": 0.19858156028368795,
+       "realised_below_q10": 0.14893617021276595
+      },
+      "down_skew": {
+       "anchors": 188,
+       "mean_predicted_skew": -0.2904092474913132,
+       "realised_above_q90": 0.10106382978723404,
+       "realised_below_q10": 0.13829787234042554
+      }
+     },
+     "skew_tail_correlation": 0.004275806127374767
+    },
+    "depth260930": {
+     "mean_energy": 7.848977393339008,
+     "mean_crps_bp": 50.57248657140288,
+     "median_energy": 5.139374874576799,
+     "median_crps_bp": 29.190540070418606,
+     "pit_histogram": [
+      63,
+      64,
+      47,
+      49,
+      44,
+      75,
+      55,
+      40,
+      36,
+      39
+     ],
+     "pit_chi2": 28.5859375,
+     "outer_10": {
+      "below": 0.146484375,
+      "above": 0.099609375
+     },
+     "skew_spread": 0.28090087113901235,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 202,
+       "mean_predicted_skew": 0.30416884007266276,
+       "realised_above_q90": 0.07425742574257425,
+       "realised_below_q10": 0.13366336633663367
+      },
+      "symmetric": {
+       "anchors": 143,
+       "mean_predicted_skew": -0.008239201873214246,
+       "realised_above_q90": 0.1258741258741259,
+       "realised_below_q10": 0.13986013986013987
+      },
+      "down_skew": {
+       "anchors": 167,
+       "mean_predicted_skew": -0.2817421897430643,
+       "realised_above_q90": 0.10778443113772455,
+       "realised_below_q10": 0.16766467065868262
+      }
+     },
+     "skew_tail_correlation": 0.009478206987042954
+    },
+    "depth260931": {
+     "mean_energy": 7.862607818195999,
+     "mean_crps_bp": 49.202376852692254,
+     "median_energy": 5.227084597424325,
+     "median_crps_bp": 27.431452848799097,
+     "pit_histogram": [
+      55,
+      54,
+      54,
+      48,
+      49,
+      71,
+      41,
+      52,
+      40,
+      48
+     ],
+     "pit_chi2": 13.234375,
+     "outer_10": {
+      "below": 0.140625,
+      "above": 0.109375
+     },
+     "skew_spread": 0.28772122257328075,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 181,
+       "mean_predicted_skew": 0.290026528773856,
+       "realised_above_q90": 0.09944751381215469,
+       "realised_below_q10": 0.14917127071823205
+      },
+      "symmetric": {
+       "anchors": 139,
+       "mean_predicted_skew": -0.0008312574836254012,
+       "realised_above_q90": 0.11510791366906475,
+       "realised_below_q10": 0.15827338129496402
+      },
+      "down_skew": {
+       "anchors": 192,
+       "mean_predicted_skew": -0.3025765176281369,
+       "realised_above_q90": 0.11458333333333333,
+       "realised_below_q10": 0.11979166666666667
+      }
+     },
+     "skew_tail_correlation": -0.03130014298006707
+    },
+    "depth260932": {
+     "mean_energy": 7.9231595896555165,
+     "mean_crps_bp": 49.44190789114083,
+     "median_energy": 5.267018971249524,
+     "median_crps_bp": 27.669746956198622,
+     "pit_histogram": [
+      60,
+      49,
+      52,
+      45,
+      51,
+      70,
+      39,
+      56,
+      43,
+      47
+     ],
+     "pit_chi2": 14.2890625,
+     "outer_10": {
+      "below": 0.146484375,
+      "above": 0.1171875
+     },
+     "skew_spread": 0.2819958086681978,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 165,
+       "mean_predicted_skew": 0.2990745906640411,
+       "realised_above_q90": 0.12121212121212122,
+       "realised_below_q10": 0.13333333333333333
+      },
+      "symmetric": {
+       "anchors": 157,
+       "mean_predicted_skew": -0.007349796355951623,
+       "realised_above_q90": 0.11464968152866242,
+       "realised_below_q10": 0.12738853503184713
+      },
+      "down_skew": {
+       "anchors": 190,
+       "mean_predicted_skew": -0.3030867060706612,
+       "realised_above_q90": 0.11578947368421053,
+       "realised_below_q10": 0.1736842105263158
+      }
+     },
+     "skew_tail_correlation": 0.0699541933138148
+    }
+   },
+   "paired": {
+    "depth260930 - baseline:expanding (energy)": {
+     "mean": -2.9668528529966416,
+     "ci95": [
+      -3.5402273421454007,
+      -2.3792826045741644
+     ],
+     "n": 512
+    },
+    "depth260930 - baseline:expanding (crps)": {
+     "mean": 0.9199649037444781,
+     "ci95": [
+      -0.8970831983724267,
+      2.724583495333507
+     ],
+     "n": 512
+    },
+    "depth260930 - baseline:recent (energy)": {
+     "mean": -0.14684926896301448,
+     "ci95": [
+      -0.6544303724925429,
+      0.3977145451870841
+     ],
+     "n": 512
+    },
+    "depth260930 - baseline:recent (crps)": {
+     "mean": 0.2888492252085926,
+     "ci95": [
+      -1.6403063001261613,
+      2.1959756742749845
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:expanding (energy)": {
+     "mean": -2.9532224281396515,
+     "ci95": [
+      -3.565143910201056,
+      -2.2944577290422523
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:expanding (crps)": {
+     "mean": -0.45014481496614295,
+     "ci95": [
+      -2.133568645402861,
+      1.3492297381662657
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:recent (energy)": {
+     "mean": -0.13321884410602447,
+     "ci95": [
+      -0.6407010659602274,
+      0.41812257863803226
+     ],
+     "n": 512
+    },
+    "depth260931 - baseline:recent (crps)": {
+     "mean": -1.081260493502029,
+     "ci95": [
+      -3.1327939875562727,
+      0.9434374569345594
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:expanding (energy)": {
+     "mean": -2.892670656680134,
+     "ci95": [
+      -3.579866037464128,
+      -2.1039161555366412
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:expanding (crps)": {
+     "mean": -0.2106137765175664,
+     "ci95": [
+      -1.8769533357055312,
+      1.579543964614177
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:recent (energy)": {
+     "mean": -0.07266707264650663,
+     "ci95": [
+      -0.6619196091731828,
+      0.620215733840056
+     ],
+     "n": 512
+    },
+    "depth260932 - baseline:recent (crps)": {
+     "mean": -0.8417294550534522,
+     "ci95": [
+      -2.912958214949167,
+      1.2481902796728113
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:expanding (energy)": {
+     "mean": -2.9375819792721423,
+     "ci95": [
+      -3.5224617060799557,
+      -2.2739122279753756
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:recent (energy)": {
+     "mean": -0.11757839523851515,
+     "ci95": [
+      -0.618343168071376,
+      0.4749047850531768
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:expanding (crps)": {
+     "mean": 0.08640210408692317,
+     "ci95": [
+      -1.387949104816616,
+      1.5772460340680297
+     ],
+     "n": 512
+    },
+    "seed mean - baseline:recent (crps)": {
+     "mean": -0.5447135744489624,
+     "ci95": [
+      -2.450053934595336,
+      1.1950401627120268
+     ],
+     "n": 512
+    }
+   }
+  },
+  "seen:512": {
+   "anchors": 510,
+   "forecasters": {
+    "baseline:expanding": {
+     "mean_energy": 32.7251614064364,
+     "mean_crps_bp": 103.48021963567749,
+     "median_energy": 24.74177995552302,
+     "median_crps_bp": 63.49204644894586,
+     "pit_histogram": [
+      48,
+      40,
+      58,
+      63,
+      66,
+      62,
+      49,
+      42,
+      43,
+      39
+     ],
+     "pit_chi2": 18.862745098039216,
+     "outer_10": {
+      "below": 0.12352941176470589,
+      "above": 0.09607843137254903
+     },
+     "skew_spread": 0.26835814617116555,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 189,
+       "mean_predicted_skew": 0.2826463229412533,
+       "realised_above_q90": 0.08994708994708994,
+       "realised_below_q10": 0.14285714285714285
+      },
+      "symmetric": {
+       "anchors": 133,
+       "mean_predicted_skew": -0.004331557164575241,
+       "realised_above_q90": 0.12781954887218044,
+       "realised_below_q10": 0.07518796992481203
+      },
+      "down_skew": {
+       "anchors": 188,
+       "mean_predicted_skew": -0.27479911578292976,
+       "realised_above_q90": 0.0797872340425532,
+       "realised_below_q10": 0.13829787234042554
+      }
+     },
+     "skew_tail_correlation": 0.0068190307195113275
+    },
+    "baseline:recent": {
+     "mean_energy": 21.931456993696088,
+     "mean_crps_bp": 101.16331629021767,
+     "median_energy": 14.18806192683284,
+     "median_crps_bp": 52.075158450013205,
+     "pit_histogram": [
+      64,
+      50,
+      45,
+      43,
+      54,
+      69,
+      39,
+      42,
+      43,
+      61
+     ],
+     "pit_chi2": 19.45098039215686,
+     "outer_10": {
+      "below": 0.15490196078431373,
+      "above": 0.1392156862745098
+     },
+     "skew_spread": 0.2665546740935158,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 169,
+       "mean_predicted_skew": 0.2852690463886605,
+       "realised_above_q90": 0.1242603550295858,
+       "realised_below_q10": 0.1893491124260355
+      },
+      "symmetric": {
+       "anchors": 147,
+       "mean_predicted_skew": 0.0006170036033675618,
+       "realised_above_q90": 0.1360544217687075,
+       "realised_below_q10": 0.1360544217687075
+      },
+      "down_skew": {
+       "anchors": 194,
+       "mean_predicted_skew": -0.27583141342191086,
+       "realised_above_q90": 0.15463917525773196,
+       "realised_below_q10": 0.13917525773195877
+      }
+     },
+     "skew_tail_correlation": -0.07717210690136367
+    },
+    "depth260930": {
+     "mean_energy": 24.420140749857264,
+     "mean_crps_bp": 108.55047421660933,
+     "median_energy": 17.412755342769387,
+     "median_crps_bp": 64.31582376003047,
+     "pit_histogram": [
+      55,
+      46,
+      52,
+      63,
+      58,
+      69,
+      48,
+      41,
+      42,
+      36
+     ],
+     "pit_chi2": 19.098039215686274,
+     "outer_10": {
+      "below": 0.1392156862745098,
+      "above": 0.08823529411764706
+     },
+     "skew_spread": 0.30759244004332464,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 183,
+       "mean_predicted_skew": 0.30211046466611624,
+       "realised_above_q90": 0.08196721311475409,
+       "realised_below_q10": 0.14207650273224043
+      },
+      "symmetric": {
+       "anchors": 129,
+       "mean_predicted_skew": 0.0020444272612428972,
+       "realised_above_q90": 0.08527131782945736,
+       "realised_below_q10": 0.18604651162790697
+      },
+      "down_skew": {
+       "anchors": 198,
+       "mean_predicted_skew": -0.3072492837839474,
+       "realised_above_q90": 0.09595959595959595,
+       "realised_below_q10": 0.10606060606060606
+      }
+     },
+     "skew_tail_correlation": -0.04531834797111755
+    },
+    "depth260931": {
+     "mean_energy": 25.69810824210637,
+     "mean_crps_bp": 106.58361445484927,
+     "median_energy": 17.986029098713303,
+     "median_crps_bp": 64.748407892931,
+     "pit_histogram": [
+      38,
+      40,
+      54,
+      51,
+      50,
+      82,
+      40,
+      59,
+      45,
+      51
+     ],
+     "pit_chi2": 29.058823529411768,
+     "outer_10": {
+      "below": 0.11176470588235295,
+      "above": 0.10980392156862745
+     },
+     "skew_spread": 0.3153552329029336,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 172,
+       "mean_predicted_skew": 0.3465389328529068,
+       "realised_above_q90": 0.11046511627906977,
+       "realised_below_q10": 0.0872093023255814
+      },
+      "symmetric": {
+       "anchors": 143,
+       "mean_predicted_skew": 0.0037552808741267317,
+       "realised_above_q90": 0.13986013986013987,
+       "realised_below_q10": 0.1048951048951049
+      },
+      "down_skew": {
+       "anchors": 195,
+       "mean_predicted_skew": -0.30154037391446664,
+       "realised_above_q90": 0.08717948717948718,
+       "realised_below_q10": 0.13846153846153847
+      }
+     },
+     "skew_tail_correlation": 0.05442097817011635
+    },
+    "depth260932": {
+     "mean_energy": 27.020200230989815,
+     "mean_crps_bp": 105.37684426263993,
+     "median_energy": 17.900367560212285,
+     "median_crps_bp": 66.1045055380416,
+     "pit_histogram": [
+      50,
+      35,
+      40,
+      53,
+      57,
+      74,
+      48,
+      46,
+      46,
+      61
+     ],
+     "pit_chi2": 21.68627450980392,
+     "outer_10": {
+      "below": 0.11960784313725491,
+      "above": 0.1568627450980392
+     },
+     "skew_spread": 0.30747688153040964,
+     "skew_groups": {
+      "up_skew": {
+       "anchors": 167,
+       "mean_predicted_skew": 0.3238974028381943,
+       "realised_above_q90": 0.16766467065868262,
+       "realised_below_q10": 0.10179640718562874
+      },
+      "symmetric": {
+       "anchors": 140,
+       "mean_predicted_skew": -0.0055651089434387525,
+       "realised_above_q90": 0.15714285714285714,
+       "realised_below_q10": 0.17142857142857143
+      },
+      "down_skew": {
+       "anchors": 203,
+       "mean_predicted_skew": -0.2992306130095155,
+       "realised_above_q90": 0.1477832512315271,
+       "realised_below_q10": 0.09852216748768473
+      }
+     },
+     "skew_tail_correlation": -0.013668288968992753
+    }
+   },
+   "paired": {
+    "depth260930 - baseline:expanding (energy)": {
+     "mean": -8.305020656579126,
+     "ci95": [
+      -9.660779289128353,
+      -6.955335015017029
+     ],
+     "n": 510
+    },
+    "depth260930 - baseline:expanding (crps)": {
+     "mean": 5.0702545809318345,
+     "ci95": [
+      0.8262354918982501,
+      9.848724948042216
+     ],
+     "n": 510
+    },
+    "depth260930 - baseline:recent (energy)": {
+     "mean": 2.4886837561611794,
+     "ci95": [
+      0.9648860829788222,
+      3.9881069443401795
+     ],
+     "n": 510
+    },
+    "depth260930 - baseline:recent (crps)": {
+     "mean": 7.387157926391663,
+     "ci95": [
+      2.239147620113292,
+      12.348978735411034
+     ],
+     "n": 510
+    },
+    "depth260931 - baseline:expanding (energy)": {
+     "mean": -7.027053164330026,
+     "ci95": [
+      -8.312983962192016,
+      -5.778810778135523
+     ],
+     "n": 510
+    },
+    "depth260931 - baseline:expanding (crps)": {
+     "mean": 3.103394819171771,
+     "ci95": [
+      -1.0818009013499106,
+      7.4319106579553
+     ],
+     "n": 510
+    },
+    "depth260931 - baseline:recent (energy)": {
+     "mean": 3.766651248410279,
+     "ci95": [
+      2.1342217003578807,
+      5.374119920612759
+     ],
+     "n": 510
+    },
+    "depth260931 - baseline:recent (crps)": {
+     "mean": 5.420298164631599,
+     "ci95": [
+      0.9414784120685168,
+      9.853294804388927
+     ],
+     "n": 510
+    },
+    "depth260932 - baseline:expanding (energy)": {
+     "mean": -5.7049611754465746,
+     "ci95": [
+      -7.029816689384079,
+      -4.290695678539197
+     ],
+     "n": 510
+    },
+    "depth260932 - baseline:expanding (crps)": {
+     "mean": 1.8966246269624654,
+     "ci95": [
+      -3.520601025352222,
+      8.455478885953884
+     ],
+     "n": 510
+    },
+    "depth260932 - baseline:recent (energy)": {
+     "mean": 5.088743237293731,
+     "ci95": [
+      3.2375976355027594,
+      6.989583295355051
+     ],
+     "n": 510
+    },
+    "depth260932 - baseline:recent (crps)": {
+     "mean": 4.213527972422294,
+     "ci95": [
+      -1.1644964410178085,
+      10.817937363250067
+     ],
+     "n": 510
+    },
+    "seed mean - baseline:expanding (energy)": {
+     "mean": -7.012344998785243,
+     "ci95": [
+      -8.234555137332709,
+      -5.803278235805946
+     ],
+     "n": 510
+    },
+    "seed mean - baseline:recent (energy)": {
+     "mean": 3.7813594139550624,
+     "ci95": [
+      2.186063505882321,
+      5.407127078323647
+     ],
+     "n": 510
+    },
+    "seed mean - baseline:expanding (crps)": {
+     "mean": 3.356758009022023,
+     "ci95": [
+      -0.19591380096969233,
+      7.074948488604929
+     ],
+     "n": 510
+    },
+    "seed mean - baseline:recent (crps)": {
+     "mean": 5.673661354481854,
+     "ci95": [
+      1.6895256444829865,
+      9.487555239559429
+     ],
+     "n": 510
+    }
+   }
+  }
+ }
+}

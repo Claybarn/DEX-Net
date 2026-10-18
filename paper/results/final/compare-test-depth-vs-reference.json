@@ -1,0 +1,276 @@
+{
+ "method": "Head-to-head comparison of two model families evaluated on the same anchors.\n\nReads two scripts.rollout_eval output folders built from the same anchor set (for\nexample the reference model and a variant, each with several seeds). Per anchor and\nhorizon, each family's score is the mean over its seeds of the unbiased ensemble\nenergy (four endpoints) and the price CRPS; family B minus family A is bootstrapped\nover anchors. Also reported per family, against the realised outcomes at the same\nanchors:\n\n  collapse  share of paths whose active liquidity falls by more than 63%\n            (log change < -1), and the 1st percentile of the log change\n  spread    width of the 5-95% range of price outcomes, simulated / realised\n\n  python -m scripts.compare_rollouts --a eval/rollouts-test --b eval/rollouts-test-depth       --label-a reference --label-b depth --out results/compare.json\n",
+ "anchors": 610,
+ "cells": {
+  "seen:32": {
+   "anchors": 511,
+   "energy": {
+    "reference": 3.0056022140718124,
+    "depth": 3.0040700950838484,
+    "difference": {
+     "mean": -0.0015321189879646069,
+     "ci95": [
+      -0.03628349348229068,
+      0.03536935318030081
+     ],
+     "n": 511
+    }
+   },
+   "crps_bp": {
+    "reference": 21.63641097938881,
+    "depth": 21.47047392955484,
+    "difference": {
+     "mean": -0.16593704983397226,
+     "ci95": [
+      -0.4442889555325528,
+      0.09815822970331849
+     ],
+     "n": 511
+    }
+   },
+   "collapse": {
+    "real": {
+     "share_lost_63pct": 0.009765625,
+     "q01": -0.5217840662117035
+    },
+    "reference": {
+     "share_lost_63pct": 0.00773127708490163,
+     "q01": -0.6135155384406659
+    },
+    "depth": {
+     "share_lost_63pct": 0.008199055989583334,
+     "q01": -0.6798075204643382
+    }
+   },
+   "spread_ratio": {
+    "reference": 1.057856598389265,
+    "depth": 1.0793205678882867
+   }
+  },
+  "seen:128": {
+   "anchors": 509,
+   "energy": {
+    "reference": 7.817309000231712,
+    "depth": 7.8552712846210255,
+    "difference": {
+     "mean": 0.037962284389313344,
+     "ci95": [
+      -0.0715663636459299,
+      0.14919866605740303
+     ],
+     "n": 509
+    }
+   },
+   "crps_bp": {
+    "reference": 49.86590963251159,
+    "depth": 49.6927653798966,
+    "difference": {
+     "mean": -0.1731442526149973,
+     "ci95": [
+      -0.9519109146682184,
+      0.6067841248644958
+     ],
+     "n": 509
+    }
+   },
+   "collapse": {
+    "real": {
+     "share_lost_63pct": 0.01171875,
+     "q01": -0.9999279910958206
+    },
+    "reference": {
+     "share_lost_63pct": 0.016317727725894727,
+     "q01": -1.40605115308568
+    },
+    "depth": {
+     "share_lost_63pct": 0.015604654947916666,
+     "q01": -1.3598202742603853
+    }
+   },
+   "spread_ratio": {
+    "reference": 1.2429809629330417,
+    "depth": 1.2537985869907313
+   }
+  },
+  "seen:512": {
+   "anchors": 501,
+   "energy": {
+    "reference": 25.993928777045024,
+    "depth": 25.542705705307533,
+    "difference": {
+     "mean": -0.45122307173748977,
+     "ci95": [
+      -1.10713894845024,
+      0.1931679467448996
+     ],
+     "n": 501
+    }
+   },
+   "crps_bp": {
+    "reference": 109.92161556422822,
+    "depth": 107.02131462155262,
+    "difference": {
+     "mean": -2.900300942675618,
+     "ci95": [
+      -7.08223228230311,
+      1.2702719987512183
+     ],
+     "n": 501
+    }
+   },
+   "collapse": {
+    "real": {
+     "share_lost_63pct": 0.015625,
+     "q01": -1.2180360324665909
+    },
+    "reference": {
+     "share_lost_63pct": 0.039070448903178547,
+     "q01": -3.619261058470554
+    },
+    "depth": {
+     "share_lost_63pct": 0.03121057985757884,
+     "q01": -2.7249822133395494
+    }
+   },
+   "spread_ratio": {
+    "reference": 1.462411370595731,
+    "depth": 1.3680100630507646
+   }
+  },
+  "heldout:32": {
+   "anchors": 98,
+   "energy": {
+    "reference": 3.4303325091184957,
+    "depth": 2.753804386890073,
+    "difference": {
+     "mean": -0.6765281222284231,
+     "ci95": [
+      -1.5614147567165393,
+      -0.11053825938184306
+     ],
+     "n": 98
+    }
+   },
+   "crps_bp": {
+    "reference": 23.788632033160653,
+    "depth": 17.417775137363577,
+    "difference": {
+     "mean": -6.3708568957970755,
+     "ci95": [
+      -15.05471431424485,
+      -1.058151974630215
+     ],
+     "n": 98
+    }
+   },
+   "collapse": {
+    "real": {
+     "share_lost_63pct": 0.030612244897959183,
+     "q01": -2.0387468607507113
+    },
+    "reference": {
+     "share_lost_63pct": 0.05229591836734694,
+     "q01": -3.081923348168675
+    },
+    "depth": {
+     "share_lost_63pct": 0.039540816326530615,
+     "q01": -2.330053558594667
+    }
+   },
+   "spread_ratio": {
+    "reference": 1.0723993295689012,
+    "depth": 0.9531774559137906
+   }
+  },
+  "heldout:128": {
+   "anchors": 96,
+   "energy": {
+    "reference": 8.790115848591709,
+    "depth": 6.232587945792602,
+    "difference": {
+     "mean": -2.5575279027991065,
+     "ci95": [
+      -4.4336238608607745,
+      -1.1507099261466567
+     ],
+     "n": 96
+    }
+   },
+   "crps_bp": {
+    "reference": 59.33500706376504,
+    "depth": 38.19865889409757,
+    "difference": {
+     "mean": -21.13634816966748,
+     "ci95": [
+      -39.55578056471127,
+      -7.553482256553382
+     ],
+     "n": 96
+    }
+   },
+   "collapse": {
+    "real": {
+     "share_lost_63pct": 0.02040816326530612,
+     "q01": -1.4436392955851909
+    },
+    "reference": {
+     "share_lost_63pct": 0.12971823498139287,
+     "q01": -11.323129031897956
+    },
+    "depth": {
+     "share_lost_63pct": 0.08322704081632654,
+     "q01": -3.143700925267613
+    }
+   },
+   "spread_ratio": {
+    "reference": 1.288396096243452,
+    "depth": 1.048699785022003
+   }
+  },
+  "heldout:512": {
+   "anchors": 80,
+   "energy": {
+    "reference": 37.235863563648834,
+    "depth": 18.7692992975953,
+    "difference": {
+     "mean": -18.466564266053535,
+     "ci95": [
+      -27.30256913330111,
+      -10.768955249579964
+     ],
+     "n": 80
+    }
+   },
+   "crps_bp": {
+    "reference": 260.73819518116017,
+    "depth": 106.71203464695891,
+    "difference": {
+     "mean": -154.02616053420124,
+     "ci95": [
+      -237.6353739252234,
+      -78.81360369465821
+     ],
+     "n": 80
+    }
+   },
+   "collapse": {
+    "real": {
+     "share_lost_63pct": 0.05102040816326531,
+     "q01": -2.338534308688843
+    },
+    "reference": {
+     "share_lost_63pct": 0.2423531919428754,
+     "q01": -12.547438019750906
+    },
+    "depth": {
+     "share_lost_63pct": 0.15192430363597703,
+     "q01": -5.281644894271746
+    }
+   },
+   "spread_ratio": {
+    "reference": 1.776891156459012,
+    "depth": 1.0109992134660495
+   }
+  }
+ }
+}
