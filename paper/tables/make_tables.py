@@ -20,10 +20,10 @@ def load(p):return json.loads(Path(p).read_text())
 def write(name,caption,header,rows,align=None):
     """One table as LaTeX (booktabs) and as Markdown."""
     align=align or 'l'+'r'*(len(header)-1)
-    tex=['\\begin{table}[t]','\\centering','\\small',f'\\caption{{{caption}}}',f'\\label{{tab:{name}}}',f'\\begin{{tabular}}{{{align}}}','\\toprule',
+    tex=['\\begin{table}[t]','\\centering','\\small',f'\\caption{{{caption}}}',f'\\label{{tab:{name}}}','\\begin{adjustbox}{max width=\\linewidth}',f'\\begin{{tabular}}{{{align}}}','\\toprule',
          ' & '.join(header)+' \\\\','\\midrule']
     for r in rows:tex.append('\\midrule' if r=='---' else ' & '.join(str(c) for c in r)+' \\\\')
-    tex+=['\\bottomrule','\\end{tabular}','\\end{table}']
+    tex+=['\\bottomrule','\\end{tabular}','\\end{adjustbox}','\\end{table}']
     OUT.mkdir(exist_ok=True);(OUT/f'{name}.tex').write_text('\n'.join(tex).replace('±','$\\pm$').replace('×','$\\times$').replace('%','\\%').replace('−','$-$'))
     (OUT/f'{name}.tex').write_text(re.sub(r'\*\*(.+?)\*\*',r'\\textbf{\1}',(OUT/f'{name}.tex').read_text())+'\n')
     md.extend([f'### {caption}','','| '+' | '.join(header)+' |','|'+'---|'*len(header)]+['| '+' | '.join(str(c) for c in r)+' |' for r in rows if r!='---']+[''])

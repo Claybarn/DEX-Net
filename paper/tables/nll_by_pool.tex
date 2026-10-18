@@ -3,6 +3,7 @@
 \small
 \caption{Next-event NLL (nats/event) on the test period, mean $\pm$ s.d. over 3 seeds; 32,768 fixed examples per pool.}
 \label{tab:nll_by_pool}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lrrrrr}
 \toprule
 Pool & Reference & Depth-aware & Depth 64$\times$2 & Depth, 8 events & Depth, no history \\
@@ -22,4 +23,5 @@ Macro, seen pools & 5.534 $\pm$ 0.005 & 5.542 $\pm$ 0.005 & 5.620 $\pm$ 0.010 & 
 Macro, held-out pools & 7.649 $\pm$ 0.003 & 7.667 $\pm$ 0.019 & 7.797 $\pm$ 0.028 & 7.953 $\pm$ 0.046 & 23.550 $\pm$ 9.794 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

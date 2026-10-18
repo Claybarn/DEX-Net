@@ -3,6 +3,7 @@
 \small
 \caption{Rollout energy score (lower is better) at 32/128/512 events; models are the mean of 3 seeds $\times$ 32 paths; best per row in bold.}
 \label{tab:rollout_energy}
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lllrrrrrr}
 \toprule
 Period & Pools & Events & Anchors & Reference & Depth-aware & Depth 64$\times$2 & Recent & Expanding \\
@@ -24,4 +25,5 @@ Validation & seen & 128 & 512 & 12.24 & \textbf{12.11} & 12.49 & 14.35 & 15.29 \
 Validation & seen & 512 & 512 & 39.36 & \textbf{37.95} & 40.11 & 44.16 & 45.99 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
