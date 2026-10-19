@@ -1,0 +1,827 @@
+{
+ "method": "LP-facing evaluation: does the simulator predict what a liquidity provider earns?\n\nAt each anchor a hypothetical marginal position covers [p0 e^-w, p0 e^+w] around the\nanchor price p0 (in the economic base/quote orientation). For any price path the\nposition's outcome after h events follows from the path alone, because a marginal\nposition's share of each swap's fee does not depend on other liquidity:\n\n  fee yield        fees earned by the position (fee tier f; a swap moving sqrt(p) from a\n                   to b pays f/(1-f) * L * |clip(b) - clip(a)| in quote when the price\n                   rises, and f/(1-f) * L * |1/clip(b) - 1/clip(a)| in base when it\n                   falls, with clip() to the range), valued at the final price\n  divergence       position value minus the value of holding its initial tokens, at the\n                   final price (impermanent loss; always <= 0)\n  P&L vs holding   fee yield + divergence\n\nall in bp of the initial position value, gross of any protocol fee share. Simulated\npaths use their stored per-event price traces; the realised outcome uses the anchor's\nrealised trace; the two history baselines use the same window rules as\nscripts.prepare_anchors (recent: 256 evenly spaced windows from the last 32h events;\nexpanding: 256 windows from all earlier history) on the pool's realised price returns.\nEach forecaster is scored by CRPS per metric (mean over its seeds for models);\ndifferences against the recent baseline are bootstrapped over anchors.\n\n  python -m scripts.lp_eval --anchors eval/anchors-test --data data/prepared       --rollouts depth=eval/final/rollouts-test-depth --rollouts reference=... --out results/lp-test.json\n",
+ "anchors": 610,
+ "families": [
+  "depth",
+  "reference",
+  "depth-small"
+ ],
+ "cells": {
+  "seen:32:0.01": {
+   "anchors": 512,
+   "real_median": {
+    "fee_bp": 1.8928736363939649,
+    "divergence_bp": -0.5901246288188639,
+    "pnl_bp": 0.36299450438853376
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 1.4928357706252506,
+     "crps_divergence_bp": 4.052871157538106,
+     "crps_pnl_bp": 3.955575699598004,
+     "pnl_median_bias": 2.2614341259286315,
+     "pnl_coverage90": 0.8860677083333333
+    },
+    "reference": {
+     "crps_fee_bp": 1.5007879928499128,
+     "crps_divergence_bp": 4.084652819566337,
+     "crps_pnl_bp": 3.989001021284602,
+     "pnl_median_bias": 2.2936826634830125,
+     "pnl_coverage90": 0.8938802083333333
+    },
+    "depth-small": {
+     "crps_fee_bp": 1.5333362610192132,
+     "crps_divergence_bp": 4.319303292393665,
+     "crps_pnl_bp": 4.203475782145629,
+     "pnl_median_bias": 1.6986484325551672,
+     "pnl_coverage90": 0.8880208333333333
+    },
+    "recent": {
+     "crps_fee_bp": 1.7434858290819735,
+     "crps_divergence_bp": 4.192723030216925,
+     "crps_pnl_bp": 4.120212841758508,
+     "pnl_median_bias": 2.182828652815213,
+     "pnl_coverage90": 0.888671875
+    },
+    "expanding": {
+     "crps_fee_bp": 2.510745391236869,
+     "crps_divergence_bp": 4.530534914235885,
+     "crps_pnl_bp": 4.522441661564772,
+     "pnl_median_bias": 2.332755094679125,
+     "pnl_coverage90": 0.95703125
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": -0.16463714216050454,
+     "ci95": [
+      -0.31430486255290474,
+      -0.02186011458944729
+     ]
+    },
+    "reference-recent": {
+     "mean": -0.13121182047390667,
+     "ci95": [
+      -0.297711529863298,
+      0.02330438075282147
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 0.08326294038711991,
+     "ci95": [
+      -0.09205752880159898,
+      0.28854250646547736
+     ]
+    }
+   }
+  },
+  "seen:32:0.002": {
+   "anchors": 512,
+   "real_median": {
+    "fee_bp": 6.603867697122299,
+    "divergence_bp": -2.9447307398380227,
+    "pnl_bp": 0.9180910350711649
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 3.570319309743181,
+     "crps_divergence_bp": 6.7035794284095225,
+     "crps_pnl_bp": 8.633496806388115,
+     "pnl_median_bias": 1.9318923685214036,
+     "pnl_coverage90": 0.869140625
+    },
+    "reference": {
+     "crps_fee_bp": 3.5826032052148102,
+     "crps_divergence_bp": 6.739904416186524,
+     "crps_pnl_bp": 8.697231957967812,
+     "pnl_median_bias": 2.19608307318516,
+     "pnl_coverage90": 0.8717447916666666
+    },
+    "depth-small": {
+     "crps_fee_bp": 3.5386242695693744,
+     "crps_divergence_bp": 7.048272552818634,
+     "crps_pnl_bp": 8.90769642492426,
+     "pnl_median_bias": 0.903888622824031,
+     "pnl_coverage90": 0.869140625
+    },
+    "recent": {
+     "crps_fee_bp": 3.6024994136393573,
+     "crps_divergence_bp": 6.9289898416806,
+     "crps_pnl_bp": 8.81794520753172,
+     "pnl_median_bias": 2.1744195973557963,
+     "pnl_coverage90": 0.880859375
+    },
+    "expanding": {
+     "crps_fee_bp": 4.336311351775299,
+     "crps_divergence_bp": 7.537210595625685,
+     "crps_pnl_bp": 9.292733617888702,
+     "pnl_median_bias": 1.6678807001473954,
+     "pnl_coverage90": 0.9453125
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": -0.1844484011436056,
+     "ci95": [
+      -0.44498168080078393,
+      0.06757921060686223
+     ]
+    },
+    "reference-recent": {
+     "mean": -0.12071324956390864,
+     "ci95": [
+      -0.40069481763701903,
+      0.15174641402883254
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 0.08975121739254138,
+     "ci95": [
+      -0.20016481443002707,
+      0.3918154018916172
+     ]
+    }
+   }
+  },
+  "seen:128:0.01": {
+   "anchors": 512,
+   "real_median": {
+    "fee_bp": 8.282182494165948,
+    "divergence_bp": -3.005838971701391,
+    "pnl_bp": 1.3972622792510039
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 4.764225654661198,
+     "crps_divergence_bp": 12.646230219973283,
+     "crps_pnl_bp": 14.87769896835595,
+     "pnl_median_bias": 6.280983817685696,
+     "pnl_coverage90": 0.8919270833333333
+    },
+    "reference": {
+     "crps_fee_bp": 4.8119344571083085,
+     "crps_divergence_bp": 12.613864870781535,
+     "crps_pnl_bp": 14.861467204587427,
+     "pnl_median_bias": 6.49993507025508,
+     "pnl_coverage90": 0.8997395833333333
+    },
+    "depth-small": {
+     "crps_fee_bp": 4.737813178077412,
+     "crps_divergence_bp": 14.511859220039371,
+     "crps_pnl_bp": 16.633337990279962,
+     "pnl_median_bias": 4.204413437787922,
+     "pnl_coverage90": 0.89453125
+    },
+    "recent": {
+     "crps_fee_bp": 4.942792064896584,
+     "crps_divergence_bp": 12.622650222410792,
+     "crps_pnl_bp": 15.094383262954917,
+     "pnl_median_bias": 7.252313012291696,
+     "pnl_coverage90": 0.87890625
+    },
+    "expanding": {
+     "crps_fee_bp": 6.4885123793981485,
+     "crps_divergence_bp": 13.458478298980964,
+     "crps_pnl_bp": 15.67397622310464,
+     "pnl_median_bias": 6.487974478162858,
+     "pnl_coverage90": 0.935546875
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": -0.2166842945989632,
+     "ci95": [
+      -0.6638360833629265,
+      0.20352935420332569
+     ]
+    },
+    "reference-recent": {
+     "mean": -0.23291605836748802,
+     "ci95": [
+      -0.6816256790841155,
+      0.19985530708036273
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 1.538954727325047,
+     "ci95": [
+      0.1251091638142904,
+      3.88029974344315
+     ]
+    }
+   }
+  },
+  "seen:128:0.002": {
+   "anchors": 512,
+   "real_median": {
+    "fee_bp": 15.085612404696477,
+    "divergence_bp": -12.321246160824638,
+    "pnl_bp": 0.08101327564834213
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 9.639689802312745,
+     "crps_divergence_bp": 15.703853971211489,
+     "crps_pnl_bp": 21.516471213385596,
+     "pnl_median_bias": 3.8988982145493924,
+     "pnl_coverage90": 0.8782552083333333
+    },
+    "reference": {
+     "crps_fee_bp": 9.702328013498894,
+     "crps_divergence_bp": 15.671335242514836,
+     "crps_pnl_bp": 21.39747959540329,
+     "pnl_median_bias": 4.131752949135965,
+     "pnl_coverage90": 0.8815104166666666
+    },
+    "depth-small": {
+     "crps_fee_bp": 9.455096357392337,
+     "crps_divergence_bp": 17.656099472509545,
+     "crps_pnl_bp": 23.19528361407244,
+     "pnl_median_bias": 0.19576046622232463,
+     "pnl_coverage90": 0.8756510416666666
+    },
+    "recent": {
+     "crps_fee_bp": 9.609939098614063,
+     "crps_divergence_bp": 15.736055311661577,
+     "crps_pnl_bp": 21.66837514179796,
+     "pnl_median_bias": 5.382452375210698,
+     "pnl_coverage90": 0.873046875
+    },
+    "expanding": {
+     "crps_fee_bp": 10.859723580934926,
+     "crps_divergence_bp": 16.735608562329553,
+     "crps_pnl_bp": 22.107774055540535,
+     "pnl_median_bias": 3.3068976860369377,
+     "pnl_coverage90": 0.9375
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": -0.1519039284123624,
+     "ci95": [
+      -0.7281394997206356,
+      0.41067945615754803
+     ]
+    },
+    "reference-recent": {
+     "mean": -0.27089554639466884,
+     "ci95": [
+      -0.8177233153493295,
+      0.25055771467793464
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 1.5269084722744832,
+     "ci95": [
+      0.01753591405783816,
+      3.8873191264566063
+     ]
+    }
+   }
+  },
+  "seen:512:0.01": {
+   "anchors": 512,
+   "real_median": {
+    "fee_bp": 24.368995303071742,
+    "divergence_bp": -13.437699641380433,
+    "pnl_bp": 3.1766216217735037
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 14.692816934190287,
+     "crps_divergence_bp": 33.656037049992264,
+     "crps_pnl_bp": 41.70117575907544,
+     "pnl_median_bias": 9.315248842834317,
+     "pnl_coverage90": 0.8600260416666666
+    },
+    "reference": {
+     "crps_fee_bp": 15.085864237479914,
+     "crps_divergence_bp": 32.465640499857344,
+     "crps_pnl_bp": 40.389198946610364,
+     "pnl_median_bias": 7.373548625171807,
+     "pnl_coverage90": 0.8854166666666666
+    },
+    "depth-small": {
+     "crps_fee_bp": 14.710391216471965,
+     "crps_divergence_bp": 45.399444031175484,
+     "crps_pnl_bp": 53.0461566896777,
+     "pnl_median_bias": -1.3802910779022657,
+     "pnl_coverage90": 0.8880208333333333
+    },
+    "recent": {
+     "crps_fee_bp": 14.331394952113099,
+     "crps_divergence_bp": 28.991946243140454,
+     "crps_pnl_bp": 37.93783784146144,
+     "pnl_median_bias": 14.981668182829724,
+     "pnl_coverage90": 0.861328125
+    },
+    "expanding": {
+     "crps_fee_bp": 16.86426650950241,
+     "crps_divergence_bp": 31.665184776930335,
+     "crps_pnl_bp": 39.54042124727366,
+     "pnl_median_bias": 12.39180530485083,
+     "pnl_coverage90": 0.935546875
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 3.7633379176140034,
+     "ci95": [
+      1.3789498499037272,
+      6.957240436710307
+     ]
+    },
+    "reference-recent": {
+     "mean": 2.4513611051489272,
+     "ci95": [
+      1.0930477745621496,
+      3.7466128496062416
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 15.108318848216259,
+     "ci95": [
+      7.531805764473396,
+      27.057853493104965
+     ]
+    }
+   }
+  },
+  "seen:512:0.002": {
+   "anchors": 512,
+   "real_median": {
+    "fee_bp": 34.415090008939615,
+    "divergence_bp": -31.62414138868943,
+    "pnl_bp": 0.060102368994645106
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 21.56015513246443,
+     "crps_divergence_bp": 36.37778192158505,
+     "crps_pnl_bp": 48.85245126488243,
+     "pnl_median_bias": 3.230236554828971,
+     "pnl_coverage90": 0.8522135416666666
+    },
+    "reference": {
+     "crps_fee_bp": 21.900000666069914,
+     "crps_divergence_bp": 35.24758863808469,
+     "crps_pnl_bp": 47.522855101147506,
+     "pnl_median_bias": 1.4015095268183793,
+     "pnl_coverage90": 0.8782552083333334
+    },
+    "depth-small": {
+     "crps_fee_bp": 21.33681364210285,
+     "crps_divergence_bp": 48.18409783484539,
+     "crps_pnl_bp": 60.424845624390954,
+     "pnl_median_bias": -9.000351381344423,
+     "pnl_coverage90": 0.8736979166666667
+    },
+    "recent": {
+     "crps_fee_bp": 21.199453823997132,
+     "crps_divergence_bp": 31.641629525779692,
+     "crps_pnl_bp": 45.03502043149004,
+     "pnl_median_bias": 10.23205453283932,
+     "pnl_coverage90": 0.876953125
+    },
+    "expanding": {
+     "crps_fee_bp": 23.09385534537272,
+     "crps_divergence_bp": 34.45706636139526,
+     "crps_pnl_bp": 46.35143667021555,
+     "pnl_median_bias": 6.315488302933758,
+     "pnl_coverage90": 0.919921875
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 3.817430833392395,
+     "ci95": [
+      1.3822662134513644,
+      7.060328279425187
+     ]
+    },
+    "reference-recent": {
+     "mean": 2.4878346696574742,
+     "ci95": [
+      1.0640577234360336,
+      3.9497941259232086
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 15.389825192900915,
+     "ci95": [
+      7.718341136298371,
+      27.27214018723535
+     ]
+    }
+   }
+  },
+  "heldout:32:0.01": {
+   "anchors": 98,
+   "real_median": {
+    "fee_bp": 3.0410063935941873,
+    "divergence_bp": -0.27551279659125627,
+    "pnl_bp": 0.7345924303598768
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 2.119565223056888,
+     "crps_divergence_bp": 2.7265366360772747,
+     "crps_pnl_bp": 2.5046953014707802,
+     "pnl_median_bias": 0.5085543153056696,
+     "pnl_coverage90": 0.8333333333333333
+    },
+    "reference": {
+     "crps_fee_bp": 2.1709145655171285,
+     "crps_divergence_bp": 3.2128863414033573,
+     "crps_pnl_bp": 3.116242069758552,
+     "pnl_median_bias": 0.46679304908902725,
+     "pnl_coverage90": 0.8775510204081632
+    },
+    "depth-small": {
+     "crps_fee_bp": 2.104214365077916,
+     "crps_divergence_bp": 2.733869593858585,
+     "crps_pnl_bp": 2.6323375202360366,
+     "pnl_median_bias": 0.644867169514437,
+     "pnl_coverage90": 0.8061224489795918
+    },
+    "recent": {
+     "crps_fee_bp": 2.2512792147228775,
+     "crps_divergence_bp": 2.5425011658943992,
+     "crps_pnl_bp": 2.47553794306407,
+     "pnl_median_bias": -0.060694921391530286,
+     "pnl_coverage90": 0.8775510204081632
+    },
+    "expanding": {
+     "crps_fee_bp": 2.8668716584322524,
+     "crps_divergence_bp": 2.658347453300166,
+     "crps_pnl_bp": 2.810548713076242,
+     "pnl_median_bias": -0.43883128150900247,
+     "pnl_coverage90": 0.9489795918367347
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 0.029157358406710576,
+     "ci95": [
+      -0.26015297163066753,
+      0.2903842229911028
+     ]
+    },
+    "reference-recent": {
+     "mean": 0.6407041266944821,
+     "ci95": [
+      0.2354690796016153,
+      1.1796325904071017
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 0.15679957717196677,
+     "ci95": [
+      -0.12306789251591313,
+      0.4767081527784248
+     ]
+    }
+   }
+  },
+  "heldout:32:0.002": {
+   "anchors": 98,
+   "real_median": {
+    "fee_bp": 14.564600622731032,
+    "divergence_bp": -1.3748129830966773,
+    "pnl_bp": 1.1097876763268761
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 3.8462120269659423,
+     "crps_divergence_bp": 5.305137708231108,
+     "crps_pnl_bp": 6.672479534634638,
+     "pnl_median_bias": 1.9566857832231772,
+     "pnl_coverage90": 0.8503401360544217
+    },
+    "reference": {
+     "crps_fee_bp": 3.947238008411386,
+     "crps_divergence_bp": 5.746025918829803,
+     "crps_pnl_bp": 7.288947171991303,
+     "pnl_median_bias": 1.600194477032616,
+     "pnl_coverage90": 0.8979591836734694
+    },
+    "depth-small": {
+     "crps_fee_bp": 3.967910458631239,
+     "crps_divergence_bp": 5.2298564701966415,
+     "crps_pnl_bp": 6.710744054363996,
+     "pnl_median_bias": 2.34694768254443,
+     "pnl_coverage90": 0.8129251700680272
+    },
+    "recent": {
+     "crps_fee_bp": 3.776263543524997,
+     "crps_divergence_bp": 5.022875910850016,
+     "crps_pnl_bp": 6.374426353010676,
+     "pnl_median_bias": 0.16622323409427003,
+     "pnl_coverage90": 0.8673469387755102
+    },
+    "expanding": {
+     "crps_fee_bp": 4.454632004774389,
+     "crps_divergence_bp": 5.269682210543265,
+     "crps_pnl_bp": 6.673246557406095,
+     "pnl_median_bias": -0.25769631642742535,
+     "pnl_coverage90": 0.9489795918367347
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 0.29805318162396066,
+     "ci95": [
+      -0.18957410900908092,
+      0.7656692857531355
+     ]
+    },
+    "reference-recent": {
+     "mean": 0.9145208189806259,
+     "ci95": [
+      0.30444970514395925,
+      1.5859679667943516
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 0.33631770135331696,
+     "ci95": [
+      -0.18449164260513135,
+      0.8853968768950561
+     ]
+    }
+   }
+  },
+  "heldout:128:0.01": {
+   "anchors": 98,
+   "real_median": {
+    "fee_bp": 15.140112397736083,
+    "divergence_bp": -1.1985294716286865,
+    "pnl_bp": 2.171726623166081
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 5.626803492496328,
+     "crps_divergence_bp": 9.20823029255089,
+     "crps_pnl_bp": 12.11291692266478,
+     "pnl_median_bias": 4.41850058766277,
+     "pnl_coverage90": 0.8231292517006802
+    },
+    "reference": {
+     "crps_fee_bp": 6.023842615445718,
+     "crps_divergence_bp": 20.04873892208934,
+     "crps_pnl_bp": 22.98676781505359,
+     "pnl_median_bias": 4.229055745181356,
+     "pnl_coverage90": 0.8401360544217686
+    },
+    "depth-small": {
+     "crps_fee_bp": 5.8454133196074665,
+     "crps_divergence_bp": 9.359740721816449,
+     "crps_pnl_bp": 12.233368606244834,
+     "pnl_median_bias": 5.156512101559727,
+     "pnl_coverage90": 0.727891156462585
+    },
+    "recent": {
+     "crps_fee_bp": 5.769080127682042,
+     "crps_divergence_bp": 8.881214214007318,
+     "crps_pnl_bp": 11.663924050028912,
+     "pnl_median_bias": 2.434480768895704,
+     "pnl_coverage90": 0.8367346938775511
+    },
+    "expanding": {
+     "crps_fee_bp": 6.430488139490309,
+     "crps_divergence_bp": 9.359485554874507,
+     "crps_pnl_bp": 12.171120937131551,
+     "pnl_median_bias": -0.8138697569928938,
+     "pnl_coverage90": 0.9693877551020408
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 0.4489928726358691,
+     "ci95": [
+      -0.5404749706637272,
+      1.5852266819696732
+     ]
+    },
+    "reference-recent": {
+     "mean": 11.322843765024679,
+     "ci95": [
+      1.6683254125948475,
+      29.191524530248813
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 0.5694445562159207,
+     "ci95": [
+      -0.5761294341781624,
+      1.7301057064090892
+     ]
+    }
+   }
+  },
+  "heldout:128:0.002": {
+   "anchors": 98,
+   "real_median": {
+    "fee_bp": 15.067120421410486,
+    "divergence_bp": -5.936611521906864,
+    "pnl_bp": 2.301415435640599
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 10.455983790499042,
+     "crps_divergence_bp": 12.080172778426494,
+     "crps_pnl_bp": 18.879637001395093,
+     "pnl_median_bias": 4.835037343544083,
+     "pnl_coverage90": 0.8435374149659864
+    },
+    "reference": {
+     "crps_fee_bp": 10.521382782149825,
+     "crps_divergence_bp": 23.163464269216092,
+     "crps_pnl_bp": 29.71010674179861,
+     "pnl_median_bias": 2.480334086891872,
+     "pnl_coverage90": 0.8945578231292519
+    },
+    "depth-small": {
+     "crps_fee_bp": 10.391085016379686,
+     "crps_divergence_bp": 12.336061402822494,
+     "crps_pnl_bp": 19.119268243392845,
+     "pnl_median_bias": 4.511792566568207,
+     "pnl_coverage90": 0.7585034013605442
+    },
+    "recent": {
+     "crps_fee_bp": 10.394315369586073,
+     "crps_divergence_bp": 11.740163867536992,
+     "crps_pnl_bp": 18.155340532865793,
+     "pnl_median_bias": -1.8680040246035161,
+     "pnl_coverage90": 0.8571428571428571
+    },
+    "expanding": {
+     "crps_fee_bp": 10.640351412868212,
+     "crps_divergence_bp": 12.278883889713526,
+     "crps_pnl_bp": 18.7444783004123,
+     "pnl_median_bias": -6.480405460670015,
+     "pnl_coverage90": 0.9795918367346939
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 0.7242964685292976,
+     "ci95": [
+      -0.7862887114376175,
+      2.2521242849848644
+     ]
+    },
+    "reference-recent": {
+     "mean": 11.554766208932824,
+     "ci95": [
+      1.6115294931122734,
+      29.63145948838828
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 0.9639277105270527,
+     "ci95": [
+      -0.6721746016835328,
+      2.5880197916461585
+     ]
+    }
+   }
+  },
+  "heldout:512:0.01": {
+   "anchors": 98,
+   "real_median": {
+    "fee_bp": 37.531893849375706,
+    "divergence_bp": -6.853009919593625,
+    "pnl_bp": 3.9304152030871338
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 18.21332627360248,
+     "crps_divergence_bp": 25.815267561732536,
+     "crps_pnl_bp": 38.61157809072488,
+     "pnl_median_bias": 6.945679754516076,
+     "pnl_coverage90": 0.8095238095238094
+    },
+    "reference": {
+     "crps_fee_bp": 19.263891990553425,
+     "crps_divergence_bp": 106.0182134283395,
+     "crps_pnl_bp": 117.49609788990655,
+     "pnl_median_bias": -33.30326987007771,
+     "pnl_coverage90": 0.9421768707482993
+    },
+    "depth-small": {
+     "crps_fee_bp": 18.320395898318775,
+     "crps_divergence_bp": 28.028442502987993,
+     "crps_pnl_bp": 41.410301404732664,
+     "pnl_median_bias": 6.474039384438704,
+     "pnl_coverage90": 0.7006802721088435
+    },
+    "recent": {
+     "crps_fee_bp": 18.204872447540872,
+     "crps_divergence_bp": 22.53560190443809,
+     "crps_pnl_bp": 35.30463944308296,
+     "pnl_median_bias": 7.020018689908893,
+     "pnl_coverage90": 0.8877551020408163
+    },
+    "expanding": {
+     "crps_fee_bp": 18.632067862264613,
+     "crps_divergence_bp": 24.40463370413727,
+     "crps_pnl_bp": 36.265850314284044,
+     "pnl_median_bias": -4.238873973393808,
+     "pnl_coverage90": 0.9693877551020408
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 3.3069386476419154,
+     "ci95": [
+      0.059013953777071554,
+      7.688844132348936
+     ]
+    },
+    "reference-recent": {
+     "mean": 82.19145844682356,
+     "ci95": [
+      27.74182431063564,
+      158.50534729606412
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 6.105661961649692,
+     "ci95": [
+      0.9074462044185767,
+      14.380769957075318
+     ]
+    }
+   }
+  },
+  "heldout:512:0.002": {
+   "anchors": 98,
+   "real_median": {
+    "fee_bp": 39.62381927222904,
+    "divergence_bp": -21.04342083795484,
+    "pnl_bp": 7.633155936670913
+   },
+   "scores": {
+    "depth": {
+     "crps_fee_bp": 25.84561900973935,
+     "crps_divergence_bp": 27.95013749695865,
+     "crps_pnl_bp": 46.40840708449287,
+     "pnl_median_bias": 5.516476224551984,
+     "pnl_coverage90": 0.7823129251700679
+    },
+    "reference": {
+     "crps_fee_bp": 25.98613660646234,
+     "crps_divergence_bp": 109.08571334700753,
+     "crps_pnl_bp": 125.21381751190135,
+     "pnl_median_bias": -39.00017189106774,
+     "pnl_coverage90": 0.8843537414965985
+    },
+    "depth-small": {
+     "crps_fee_bp": 26.05462935693252,
+     "crps_divergence_bp": 30.253909184344504,
+     "crps_pnl_bp": 49.68014931795359,
+     "pnl_median_bias": 3.459956410128922,
+     "pnl_coverage90": 0.697278911564626
+    },
+    "recent": {
+     "crps_fee_bp": 24.996309540317316,
+     "crps_divergence_bp": 24.465099927338002,
+     "crps_pnl_bp": 42.130304084283736,
+     "pnl_median_bias": -0.4828494984562707,
+     "pnl_coverage90": 0.8877551020408163
+    },
+    "expanding": {
+     "crps_fee_bp": 25.783418568644418,
+     "crps_divergence_bp": 26.442621538146827,
+     "crps_pnl_bp": 43.690316205375964,
+     "pnl_median_bias": -14.565364493563695,
+     "pnl_coverage90": 0.9591836734693877
+    }
+   },
+   "pnl_crps_difference": {
+    "depth-recent": {
+     "mean": 4.278103000209132,
+     "ci95": [
+      0.7043731696661236,
+      8.769550822378205
+     ]
+    },
+    "reference-recent": {
+     "mean": 83.08351342761762,
+     "ci95": [
+      29.53405087959884,
+      158.63245446261726
+     ]
+    },
+    "depth-small-recent": {
+     "mean": 7.549845233669839,
+     "ci95": [
+      1.8987473592808597,
+      15.746399191371143
+     ]
+    }
+   }
+  }
+ }
+}
