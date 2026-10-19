@@ -117,7 +117,7 @@ Figure~\ref{fig:architecture} summarises the model and the sampling loop.
 
 \subsection{Next-event likelihood}
 
-Table~\ref{tab:nll_by_pool} reports NLL by pool. The reference model is best on aggregate (seen 5.534, held-out 7.649); the depth-aware model is marginally worse (+0.008 seen, s.e.\ 0.004; +0.018 held-out, s.e.\ 0.011). The small model costs +0.08 and +0.13. History matters a great deal: with only the last eight events the depth-aware model loses 0.18 nats per event on seen pools and 0.29 on held-out pools, far beyond seed-to-seed variation; with no history it loses 1.04 on seen pools.
+Table~\ref{tab:nll_by_pool} reports NLL by pool. The reference model is best on aggregate (seen 5.534, held-out 7.649); the depth-aware model is marginally worse (+0.008 seen, s.e.\ 0.004; +0.018 held-out, s.e.\ 0.011). The small depth-aware model (64$\times$2) is worse than the large depth-aware model by 0.078 nats per event on seen pools (s.e.\ 0.007) and 0.130 on held-out pools (s.e.\ 0.020). History matters a great deal: with only the last eight events the depth-aware model loses 0.18 nats per event on seen pools and 0.29 on held-out pools, far beyond seed-to-seed variation; with no history it loses 1.04 on seen pools.
 
 The no-history model fails on held-out pools (23.6 $\pm$ 9.8). The failure is concentrated in one component and one pool: event timing in USDC/USDT 0.05\%, where the clock NLL reaches 12--47 nats instead of 1--2. Without history the model cannot tell how active an unseen pool is. Its validation NLL is also lowest after very few training rounds (rounds 2, 3 and 16 of 97 across seeds), after which it learns the training period's average activity at the expense of transfer to later periods.
 
