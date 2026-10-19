@@ -30,10 +30,12 @@ def main():
         gk=[k for k in keys if data[first][k]['split'].startswith('heldout')==(group=='heldout')]
         for h in sorted({h for k in gk for h in data[first][k]['actual']},key=int):
             ok=[k for k in gk if all(h in p['values'] for d in data.values() for lab,ps in d[k]['paths'].items() if not lab.startswith('baseline:') for p in ps)]
-            score={}
+            score={};seeds={}
             for f,d in data.items():
-                score[f]=np.array([np.mean([proper_scores(np.array([p['values'][h] for p in ps]),np.asarray(d[k]['actual'][h]))[0]
-                                            for lab,ps in d[k]['paths'].items() if not lab.startswith('baseline:')]) for k in ok])
+                per={lab:np.array([proper_scores(np.array([p['values'][h] for p in d[k]['paths'][lab]]),np.asarray(d[k]['actual'][h]))[0] for k in ok])
+                     for lab in d[ok[0]]['paths'] if not lab.startswith('baseline:')} if ok else {}
+                seeds[f]={lab:float(v.mean()) for lab,v in per.items()}
+                score[f]=np.mean(list(per.values()),0) if per else np.array([])
             for b in ('recent','expanding'):
                 score[b]=np.array([proper_scores(np.array([p['values'][h] for p in data[first][k]['paths'][f'baseline:{b}']]),np.asarray(data[first][k]['actual'][h]))[0] for k in ok])
             diffs={}
@@ -41,7 +43,7 @@ def main():
                 for g in [x for x in score if x!=f]:
                     d=score[f]-score[g];idx=rng.integers(0,len(d),(4000,len(d)))
                     diffs[f'{f}-{g}']=dict(mean=float(d.mean()),ci95=[float(x) for x in np.quantile(d[idx].mean(1),[.025,.975])])
-            result['cells'][f'{group}:{h}']=dict(anchors=len(ok),anchors_in_group=len(gk),energy={k:float(v.mean()) for k,v in score.items()},differences=diffs)
+            result['cells'][f'{group}:{h}']=dict(anchors=len(ok),anchors_in_group=len(gk),energy={k:float(v.mean()) for k,v in score.items()},seed_energy=seeds,differences=diffs)
     a.out.parent.mkdir(parents=True,exist_ok=True);a.out.write_text(json.dumps(result,indent=1)+'\n')
     for k,c in result['cells'].items():print(k,f"{c['anchors']}/{c['anchors_in_group']}",' '.join(f'{f} {v:.2f}' for f,v in c['energy'].items()))
 

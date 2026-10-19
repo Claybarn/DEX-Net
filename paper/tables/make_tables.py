@@ -81,28 +81,25 @@ def table3():
 def table4():
     rows=[]
     for split,label in (('test','Test'),('val','Validation')):
-        S={f:load(FINAL/'rollout-summaries'/f'{split}-{f}.json')['results'] for f in ('reference','depth','depth-small')}
-        for group in (f'heldout_{split}',split):
+        T=load(FINAL/f'rollout-table-{split}.json')['cells']
+        for group in ('heldout','seen'):
             for h in ('32','128','512'):
-                m={f:S[f][group][h]['models'] for f in S}
-                e={f:np.mean([v['mean_energy'] for k,v in m[f].items() if not k.startswith('baseline:')]) for f in S}
-                base=m['depth']
-                vals=[e['reference'],e['depth'],e['depth-small'],base['baseline:recent']['mean_energy'],base['baseline:expanding']['mean_energy']]
-                best=int(np.argmin(vals))
-                rows.append([label,'held out' if group.startswith('heldout') else 'seen',h,S['depth'][group][h]['anchors']]+[f'**{v:.2f}**' if i==best else f'{v:.2f}' for i,v in enumerate(vals)])
+                c=T[f'{group}:{h}'];e=c['energy']
+                vals=[e['reference'],e['depth'],e['depth-small'],e['recent'],e['expanding']];best=int(np.argmin(vals))
+                rows.append([label,'held out' if group=='heldout' else 'seen',h,c['anchors']]+[f'**{v:.2f}**' if i==best else f'{v:.2f}' for i,v in enumerate(vals)])
             rows.append('---')
-    write('rollout_energy','Rollout energy score (lower is better) at 32/128/512 events; models are the mean of 3 seeds × 32 paths; best per row in bold.',
+    write('rollout_energy','Rollout energy score (lower is better) at 32/128/512 events, on the anchors where every path of every model reached the horizon (the same anchors in every column); models are the mean of 3 seeds × 32 paths; best per row in bold.',
           ['Period','Pools','Events','Anchors','Reference','Depth-aware','Depth 64×2','Recent','Expanding'],rows[:-1],'lllrrrrrr')
     # Paired differences, depth minus reference.
     rows=[]
     for split in ('test','val'):
-        c=load(FINAL/f'compare-{split}-depth-vs-reference.json')['cells']
+        c=load(FINAL/f'compare-{split}-depth-vs-reference.json')['cells'];T=load(FINAL/f'rollout-table-{split}.json')['cells']
         for k,v in c.items():
-            e=v['energy']['difference'];col=v['collapse'];sp=v['spread_ratio'];g,h=k.split(':')
+            e=T[k]['differences']['depth-reference'];col=v['collapse'];sp=v['spread_ratio'];g,h=k.split(':')
             rows.append([split,'held out' if g=='heldout' else 'seen',h,f"{e['mean']:+.2f} [{e['ci95'][0]:+.2f}, {e['ci95'][1]:+.2f}]",
                          f"{100*col['real']['share_lost_63pct']:.1f}%",f"{100*col['reference']['share_lost_63pct']:.1f}%",f"{100*col['depth']['share_lost_63pct']:.1f}%",
                          f"{sp['reference']:.2f}×",f"{sp['depth']:.2f}×"])
-    write('depth_vs_reference','Depth-aware minus reference: paired energy difference with 95% bootstrap CI over anchors; share of paths losing >63% of active liquidity; 5–95% return-spread ratio (simulated / realised).',
+    write('depth_vs_reference','Depth-aware minus reference: paired energy difference with 95% bootstrap CI over the Table 4 anchors; share of paths losing >63% of active liquidity; 5–95% return-spread ratio (simulated / realised).',
           ['Period','Pools','Events','Δ energy [95% CI]','Collapse real','Collapse ref.','Collapse depth','Spread ref.','Spread depth'],rows,'lllrrrrrr')
 
 

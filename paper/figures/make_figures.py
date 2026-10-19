@@ -168,17 +168,16 @@ def fig4():
 
 # ---------------------------------------------------------------- Figure 5
 def fig5():
-    nll=load(FINAL/'nll.json')['families'];summ={(f,s):load(FINAL/'rollout-summaries'/f'{s}-{FAM[f]}.json')['results'] for f in FAM for s in ('test',)}
+    nll=load(FINAL/'nll.json')['families'];T=load(FINAL/'rollout-table-test.json')['cells']
     fig,axes=plt.subplots(1,2,figsize=(6.6,2.6))
-    for ax,(group,ng,title) in zip(axes,(('test','seen','Seen pools'),('heldout_test','heldout','Held-out pools'))):
+    for ax,(group,ng,title) in zip(axes,(('seen','seen','Seen pools'),('heldout','heldout','Held-out pools'))):
+        c=T[f'{group}:512']
         for f,fam in FAM.items():
-            x=np.array([nll[fam][ng]['seeds'][str(s)] for s in SEEDS])
-            m=summ[(f,'test')][group]['512']['models'];y=np.array([m[f'{fam}{s}']['mean_energy'] for s in SEEDS])
+            x=np.array([nll[fam][ng]['seeds'][str(s)] for s in SEEDS]);y=np.array([c['seed_energy'][fam][f'{fam}{s}'] for s in SEEDS])
             ax.errorbar(x.mean(),y.mean(),xerr=x.std(ddof=1),yerr=y.std(ddof=1),fmt='o',color=COL[f],ms=5,capsize=2,label=NAME[f])
             ax.scatter(x,y,s=8,color=COL[f],alpha=.5,lw=0)
-        for b in ('recent','expanding'):
-            ax.axhline(m[f'baseline:{b}']['mean_energy'],color=COL[b],ls=':',lw=1,label=NAME[b])
-        ax.set_title(title);ax.set_xlabel('next-event NLL (nats/event)');ax.set_ylabel('512-event energy score')
+        for b in ('recent','expanding'):ax.axhline(c['energy'][b],color=COL[b],ls=':',lw=1,label=NAME[b])
+        ax.set_title(f"{title} ({c['anchors']} anchors)");ax.set_xlabel('next-event NLL (nats/event)');ax.set_ylabel('512-event energy score')
     axes[0].legend(frameon=False,fontsize=6)
     fig.suptitle('Better next-event likelihood does not mean better simulation (test anchors; points are seeds)',fontsize=8,y=1.03)
     fig.tight_layout();save(fig,'fig5_nll_vs_rollout')

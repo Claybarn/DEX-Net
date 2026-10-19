@@ -1,28 +1,28 @@
 \begin{table}[t]
 \centering
 \small
-\caption{Rollout energy score (lower is better) at 32/128/512 events; models are the mean of 3 seeds $\times$ 32 paths; best per row in bold.}
+\caption{Rollout energy score (lower is better) at 32/128/512 events, on the anchors where every path of every model reached the horizon (the same anchors in every column); models are the mean of 3 seeds $\times$ 32 paths; best per row in bold.}
 \label{tab:rollout_energy}
 \begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lllrrrrrr}
 \toprule
 Period & Pools & Events & Anchors & Reference & Depth-aware & Depth 64$\times$2 & Recent & Expanding \\
 \midrule
-Test & held out & 32 & 98 & 3.43 & \textbf{2.75} & 3.03 & 3.15 & 3.61 \\
-Test & held out & 128 & 98 & 8.79 & 6.38 & \textbf{6.34} & 6.48 & 7.23 \\
-Test & held out & 512 & 98 & 37.24 & \textbf{16.55} & 16.76 & 16.83 & 17.64 \\
+Test & held out & 32 & 97 & 3.45 & \textbf{2.77} & 3.03 & 3.17 & 3.62 \\
+Test & held out & 128 & 95 & 8.81 & \textbf{6.27} & 6.31 & 6.49 & 7.24 \\
+Test & held out & 512 & 79 & 36.60 & \textbf{18.48} & 18.55 & 19.37 & 19.82 \\
 \midrule
-Test & seen & 32 & 512 & 3.01 & \textbf{3.00} & 3.01 & 3.57 & 4.10 \\
-Test & seen & 128 & 512 & \textbf{7.82} & 7.88 & 8.23 & 8.00 & 10.82 \\
-Test & seen & 512 & 512 & 26.49 & 25.71 & 31.46 & \textbf{21.93} & 32.73 \\
+Test & seen & 32 & 511 & 3.01 & \textbf{3.00} & 3.01 & 3.58 & 4.10 \\
+Test & seen & 128 & 509 & \textbf{7.82} & 7.86 & 8.20 & 8.00 & 10.80 \\
+Test & seen & 512 & 500 & 26.04 & 25.59 & 30.90 & \textbf{21.70} & 32.68 \\
 \midrule
 Validation & held out & 32 & 95 & 7.24 & 6.64 & \textbf{6.24} & 6.93 & 7.28 \\
-Validation & held out & 128 & 95 & 15.97 & 11.81 & 11.24 & \textbf{11.09} & 12.97 \\
-Validation & held out & 512 & 95 & 56.30 & 33.03 & 31.74 & \textbf{31.47} & 34.43 \\
+Validation & held out & 128 & 92 & 15.97 & 12.14 & 11.55 & \textbf{11.42} & 13.33 \\
+Validation & held out & 512 & 77 & 56.30 & 36.94 & \textbf{36.80} & 37.89 & 40.69 \\
 \midrule
 Validation & seen & 32 & 512 & 5.33 & \textbf{5.30} & 5.35 & 6.22 & 6.51 \\
-Validation & seen & 128 & 512 & 12.24 & \textbf{12.11} & 12.49 & 14.35 & 15.29 \\
-Validation & seen & 512 & 512 & 39.36 & \textbf{37.95} & 40.11 & 44.16 & 45.99 \\
+Validation & seen & 128 & 510 & 12.24 & \textbf{12.12} & 12.48 & 14.36 & 15.29 \\
+Validation & seen & 512 & 505 & 38.22 & \textbf{36.85} & 40.17 & 43.23 & 44.70 \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
