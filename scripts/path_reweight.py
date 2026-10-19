@@ -14,9 +14,13 @@ the KL penalty per model on the latest 25%; average three fitting seeds. Held-ou
 pools are never used for fitting or selection. The objective sums, over horizons,
 the weighted energy score normalised by the uniform-weight score.
 
-Test scoring uses one formula for everything: the proper score of the issued
-finite weighted distribution (V-statistic, including the diagonal), so uniform,
-reweighted and baseline ensembles are compared like for like. Reported per pool
+Test scoring uses one formula for everything. --estimator weighted (default): the
+proper score of the issued finite weighted distribution (V-statistic, including the
+diagonal). --estimator fair: the weighted analogue of the fair (unbiased) ensemble
+estimator, sum_{i!=j} w_i w_j d_ij / (1 - sum w_i^2) for the spread term, which equals
+the usual fair estimator for uniform weights and does not penalise small ensembles
+against the 256-window baselines. --weights-out saves each test path's weight
+(global model). Reported per pool
 group and horizon: energy (four endpoints) and price CRPS (bp), paired bootstrap
 of reweighted minus uniform, effective sample size and maximum weight.
 
@@ -101,14 +105,18 @@ def ensemble_weights(models,feats,ctx):
     return w/w.sum(-1,keepdim=True)
 
 
+FAIR=False
+
+
 def scores(record,w,j):
     """Weighted proper scores at horizon j for one ensemble (None if incomplete)."""
     x=record['x'][:,j]
     if np.isnan(x).any():return None
     y=record['y'][j];u=x/ENDPOINT_SCALES;v=y/ENDPOINT_SCALES
     to=np.linalg.norm(u-v,axis=-1);pair=np.linalg.norm(u[:,None]-u[None],axis=-1)
-    e=float(w@to-.5*w@pair@w)
-    r=x[:,0];crps=float(w@np.abs(r-y[0])-.5*w@np.abs(r[:,None]-r[None])@w)
+    k=1/(1-float(w@w)) if FAIR else 1.
+    e=float(w@to-.5*k*w@pair@w)
+    r=x[:,0];crps=float(w@np.abs(r-y[0])-.5*k*w@np.abs(r[:,None]-r[None])@w)
     return e,crps
 
 
@@ -121,7 +129,9 @@ def main():
     p=argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('--fit',type=Path,required=True);p.add_argument('--fit-anchors',type=Path,required=True)
     p.add_argument('--test',type=Path,required=True);p.add_argument('--test-anchors',type=Path,required=True)
-    p.add_argument('--out',type=Path,required=True);a=p.parse_args();rng=np.random.default_rng(0);torch.set_num_threads(8)
+    p.add_argument('--out',type=Path,required=True);p.add_argument('--estimator',choices=('weighted','fair'),default='weighted');p.add_argument('--weights-out',type=Path)
+    a=p.parse_args();rng=np.random.default_rng(0);torch.set_num_threads(8)
+    global FAIR;FAIR=a.estimator=='fair'
     fit_all=[r for r in extract(a.fit,a.fit_anchors,seen_only=True) if not r['label'].startswith('baseline:')]
     times=np.array([r['time'] for r in fit_all]);cut=np.quantile(times,.75)
     fit_set=[r for r in fit_all if r['time']<cut];tune_set=[r for r in fit_all if r['time']>=cut]
@@ -144,7 +154,10 @@ def main():
     models_test=[r for r in test if not r['label'].startswith('baseline:')];base_test=[r for r in test if r['label'].startswith('baseline:')]
     f_test,c_test=tensors(models_test,scale)
     weights={name:ensemble_weights(m,f_test,c_test).numpy() for name,(_,_,m) in chosen.items()}
-    result=dict(method=__doc__,selection=selection,chosen={k:dict(kl=v[1],tune_objective=v[0]) for k,v in chosen.items()},uniform_tune_objective=w_uniform,cells={})
+    if a.weights_out:
+        a.weights_out.parent.mkdir(parents=True,exist_ok=True)
+        a.weights_out.write_text(json.dumps({f"{r['pool']}|{r['row']}|{r['label']}":weights['global'][i].tolist() for i,r in enumerate(models_test)})+'\n')
+    result=dict(method=__doc__,estimator=a.estimator,selection=selection,chosen={k:dict(kl=v[1],tune_objective=v[0]) for k,v in chosen.items()},uniform_tune_objective=w_uniform,cells={})
     hs=models_test[0]['horizons']
     for group in ('seen','heldout'):
         for j,h in enumerate(hs):

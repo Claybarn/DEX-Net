@@ -44,16 +44,25 @@ def outcomes(logp,f,w):
     return 1e4*fee/v0,1e4*div/v0,1e4*(fee+div)/v0
 
 
-def crps(x,y):
+def crps(x,y,w=None):
+    """Fair CRPS; with weights, the weighted analogue (spread term over i != j, divided by 1 - sum w^2)."""
     x=np.asarray(x,float);n=len(x)
-    return float(np.abs(x-y).mean()-np.abs(x[:,None]-x[None]).sum()/(2*n*(n-1)))
+    if w is None:return float(np.abs(x-y).mean()-np.abs(x[:,None]-x[None]).sum()/(2*n*(n-1)))
+    w=np.asarray(w,float)/np.sum(w)
+    return float(w@np.abs(x-y)-.5*(w@np.abs(x[:,None]-x[None])@w)/(1-w@w))
+
+
+def wquantile(x,w,q):
+    o=np.argsort(x);c=np.cumsum(np.asarray(w)[o])/np.sum(w);return float(np.interp(q,c,np.asarray(x)[o]))
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('--anchors',type=Path,required=True);p.add_argument('--data',type=Path,required=True)
     p.add_argument('--rollouts',action='append',required=True,help='family=folder');p.add_argument('--out',type=Path,required=True)
+    p.add_argument('--weights',action='append',default=[],help='family=weights.json from scripts.path_reweight --weights-out (adds <family>-reweighted)')
     a=p.parse_args();fams=dict(x.split('=',1) for x in a.rollouts);rng=np.random.default_rng(0)
+    W={f:json.loads(Path(w).read_text()) for f,w in (x.split('=',1) for x in a.weights)}
     files={f:{x.name:x for x in (Path(d)/'anchors').glob('*.json')} for f,d in fams.items()}
     names=sorted(set.intersection(*(set(v) for v in files.values())));lr={};rows=[]
     for name in names:
@@ -68,8 +77,8 @@ def main():
             H=int(h)
             if len(real)<H:continue
             starts={'recent':np.unique(np.linspace(max(1,row-32*H),row-H,256).astype(int)),'expanding':rng.integers(1,row-H+1,256)}
-            for w in WIDTHS:
-                y=outcomes(real[:H],fee,w);cell={}
+            for w_width in WIDTHS:
+                w=w_width;y=outcomes(real[:H],fee,w);cell={}
                 for f,r in R.items():
                     seeds=[]
                     for lab,ps in r['paths'].items():
@@ -77,6 +86,16 @@ def main():
                         sims=np.array([outcomes(np.asarray(q['trace']['return_bp'][:H],float)/1e4,fee,w) for q in ps if q['trace'] and len(q['trace']['return_bp'])>=H])
                         if len(sims)>=16:seeds.append([crps(sims[:,m],y[m]) for m in range(3)]+[float(np.median(sims[:,2])-y[2]),float(np.mean((np.quantile(sims[:,2],.05)<=y[2])&(y[2]<=np.quantile(sims[:,2],.95))))])
                     if seeds:cell[f]=np.mean(seeds,0).tolist()
+                    if f in W:
+                        seeds=[]
+                        for lab,ps in r['paths'].items():
+                            if lab.startswith('baseline:'):continue
+                            pw=np.asarray(W[f][f'{pool}|{row}|{lab}'],float);ok=[i for i,q in enumerate(ps) if q['trace'] and len(q['trace']['return_bp'])>=H]
+                            if len(ok)<16:continue
+                            sims=np.array([outcomes(np.asarray(ps[i]['trace']['return_bp'][:H],float)/1e4,fee,w_width) for i in ok]);ww=pw[ok]/pw[ok].sum()
+                            lo_,hi_,med=wquantile(sims[:,2],ww,.05),wquantile(sims[:,2],ww,.95),wquantile(sims[:,2],ww,.5)
+                            seeds.append([crps(sims[:,m],y[m],ww) for m in range(3)]+[med-y[2],float(lo_<=y[2]<=hi_)])
+                        if seeds:cell[f+'-reweighted']=np.mean(seeds,0).tolist()
                 for b,st in starts.items():
                     st=st[(st>=1)&(st+H<=row)]
                     sims=np.array([outcomes(np.cumsum(ret[s0:s0+H]),fee,w) for s0 in st])
@@ -90,11 +109,11 @@ def main():
             for w in WIDTHS:
                 key=f'{h}:{w}';rs=[r['cells'][key] for r in rows if r['group']==group and key in r['cells'] and all(f in r['cells'][key] for f in fams)]
                 if not rs:continue
-                forecasters=list(fams)+['recent','expanding'];out=dict(anchors=len(rs),real_median={m:float(np.median([r['real'][i] for r in rs])) for i,m in enumerate(METRICS)},scores={})
+                forecasters=[f for f in list(fams)+[f+'-reweighted' for f in W]+['recent','expanding'] if all(f in r for r in rs)];out=dict(anchors=len(rs),real_median={m:float(np.median([r['real'][i] for r in rs])) for i,m in enumerate(METRICS)},scores={})
                 for fc in forecasters:
                     v=np.array([r[fc] for r in rs]);out['scores'][fc]=dict(**{f'crps_{m}':float(v[:,i].mean()) for i,m in enumerate(METRICS)},pnl_median_bias=float(v[:,3].mean()),pnl_coverage90=float(v[:,4].mean()))
                 diffs={}
-                for fc in fams:
+                for fc in [f for f in forecasters if f not in ('recent','expanding')]:
                     d=np.array([r[fc][2]-r['recent'][2] for r in rs]);idx=rng.integers(0,len(d),(4000,len(d)))
                     diffs[f'{fc}-recent']=dict(mean=float(d.mean()),ci95=[float(x) for x in np.quantile(d[idx].mean(1),[.025,.975])])
                 out['pnl_crps_difference']=diffs
