@@ -1,25 +1,25 @@
 \begin{table}[t]
 \centering
 \small
-\caption{Depth-aware minus reference: paired energy difference with 95\% bootstrap CI over the Table 4 anchors; share of paths losing >63\% of active liquidity; 5–95\% return-spread ratio (simulated / realised).}
+\caption{DEX-Net minus the no-profile model: paired energy difference with 95\% bootstrap CI over the Table 4 anchors; share of paths losing >63\% of active liquidity; 5–95\% return-spread ratio (simulated / realised).}
 \label{tab:depth_vs_reference}
 \begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lllrrrrrr}
 \toprule
-Period & Pools & Events & Δ energy [95\% CI] & Collapse real & Collapse ref. & Collapse depth & Spread ref. & Spread depth \\
+Period & Pools & Events & Δ energy [95\% CI] & Collapse real & Collapse DEX-Net & Collapse no profile & Spread DEX-Net & Spread no profile \\
 \midrule
-test & seen & 32 & -0.00 [-0.04, +0.04] & 1.0\% & 0.8\% & 0.8\% & 1.06$\times$ & 1.08$\times$ \\
-test & seen & 128 & +0.04 [-0.07, +0.15] & 1.2\% & 1.6\% & 1.6\% & 1.24$\times$ & 1.25$\times$ \\
-test & seen & 512 & -0.45 [-1.10, +0.23] & 1.6\% & 3.9\% & 3.1\% & 1.46$\times$ & 1.37$\times$ \\
-test & held out & 32 & -0.68 [-1.56, -0.10] & 3.1\% & 5.2\% & 4.0\% & 1.07$\times$ & 0.95$\times$ \\
-test & held out & 128 & -2.55 [-4.46, -1.09] & 2.0\% & 13.0\% & 8.3\% & 1.29$\times$ & 1.05$\times$ \\
-test & held out & 512 & -18.11 [-27.09, -10.48] & 5.1\% & 24.2\% & 15.2\% & 1.78$\times$ & 1.01$\times$ \\
-val & seen & 32 & -0.03 [-0.08, +0.02] & 2.0\% & 2.3\% & 2.3\% & 1.16$\times$ & 1.17$\times$ \\
-val & seen & 128 & -0.12 [-0.35, +0.07] & 3.1\% & 3.3\% & 3.2\% & 1.02$\times$ & 1.02$\times$ \\
-val & seen & 512 & -1.37 [-2.65, -0.24] & 3.5\% & 6.8\% & 6.0\% & 1.21$\times$ & 1.12$\times$ \\
-val & held out & 32 & -0.60 [-1.71, +0.02] & 4.2\% & 5.7\% & 4.6\% & 1.01$\times$ & 0.93$\times$ \\
-val & held out & 128 & -3.83 [-8.25, -1.01] & 4.2\% & 14.8\% & 9.5\% & 1.13$\times$ & 0.99$\times$ \\
-val & held out & 512 & -19.36 [-36.53, -5.49] & 8.4\% & 30.6\% & 19.9\% & 1.77$\times$ & 0.80$\times$ \\
+test & seen & 32 & -0.00 [-0.04, +0.03] & 1.0\% & 0.8\% & 0.8\% & 1.08$\times$ & 1.06$\times$ \\
+test & seen & 128 & +0.04 [-0.07, +0.15] & 1.2\% & 1.6\% & 1.6\% & 1.25$\times$ & 1.24$\times$ \\
+test & seen & 512 & -0.32 [-0.98, +0.35] & 1.6\% & 3.1\% & 3.9\% & 1.37$\times$ & 1.46$\times$ \\
+test & held out & 32 & -0.68 [-1.57, -0.11] & 3.1\% & 4.0\% & 5.2\% & 0.95$\times$ & 1.07$\times$ \\
+test & held out & 128 & -6.08 [-14.20, -1.53] & 2.0\% & 8.3\% & 13.0\% & 1.05$\times$ & 1.29$\times$ \\
+test & held out & 512 & -43.66 [-78.95, -21.84] & 5.1\% & 15.2\% & 24.2\% & 1.01$\times$ & 1.78$\times$ \\
+val & seen & 32 & -0.03 [-0.08, +0.02] & 2.0\% & 2.3\% & 2.3\% & 1.17$\times$ & 1.16$\times$ \\
+val & seen & 128 & -0.12 [-0.35, +0.07] & 3.1\% & 3.2\% & 3.3\% & 1.02$\times$ & 1.02$\times$ \\
+val & seen & 512 & -1.34 [-2.58, -0.23] & 3.5\% & 6.0\% & 6.8\% & 1.12$\times$ & 1.21$\times$ \\
+val & held out & 32 & -0.60 [-1.69, +0.03] & 4.2\% & 4.6\% & 5.7\% & 0.93$\times$ & 1.01$\times$ \\
+val & held out & 128 & -3.90 [-7.90, -1.22] & 4.2\% & 9.5\% & 14.8\% & 0.99$\times$ & 1.13$\times$ \\
+val & held out & 512 & -47.27 [-69.07, -28.81] & 8.4\% & 19.9\% & 30.6\% & 0.80$\times$ & 1.77$\times$ \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}

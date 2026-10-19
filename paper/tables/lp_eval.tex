@@ -1,0 +1,29 @@
+\begin{table}[t]
+\centering
+\small
+\caption{LP-facing evaluation: a hypothetical marginal position over $\pm$1\% around the anchor price. CRPS (bp of position value, lower is better) of P&L versus holding; DEX-Net minus the recent baseline with 95\% bootstrap CI; DEX-Net 90\%-interval coverage of the realized P&L; fee-income CRPS for DEX-Net / recent baseline. Real median fee in bp. Gross of any protocol fee share.}
+\label{tab:lp_eval}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lllrrrrrrrrrr}
+\toprule
+Period & Pools & Events & Anchors & Real fee & DEX-Net & No profile & DEX-Net-small & Recent & Expanding & DEX-Net $-$ recent & Coverage & Fee CRPS \\
+\midrule
+Test & held out & 32 & 98 & 3.0 & 2.50 & 3.12 & 2.63 & \textbf{2.48} & 2.81 & +0.03 [-0.26, +0.29] & 83\% & 2.1 / 2.3 \\
+Test & held out & 128 & 98 & 15.1 & 12.11 & 22.99 & 12.23 & \textbf{11.66} & 12.17 & +0.45 [-0.54, +1.59] & 82\% & 5.6 / 5.8 \\
+Test & held out & 512 & 98 & 37.5 & 38.61 & 117.50 & 41.41 & \textbf{35.30} & 36.27 & +3.31 [+0.06, +7.69] & 81\% & 18.2 / 18.2 \\
+\midrule
+Test & seen & 32 & 512 & 1.9 & \textbf{3.96} & 3.99 & 4.20 & 4.12 & 4.52 & -0.16 [-0.31, -0.02] & 89\% & 1.5 / 1.7 \\
+Test & seen & 128 & 512 & 8.3 & 14.88 & \textbf{14.86} & 16.63 & 15.09 & 15.67 & -0.22 [-0.66, +0.20] & 89\% & 4.8 / 4.9 \\
+Test & seen & 512 & 512 & 24.4 & 41.70 & 40.39 & 53.05 & \textbf{37.94} & 39.54 & +3.76 [+1.38, +6.96] & 86\% & 14.7 / 14.3 \\
+\midrule
+Validation & held out & 32 & 95 & 6.9 & 5.95 & 6.57 & \textbf{5.73} & 5.78 & 6.19 & +0.17 [-0.66, +1.06] & 84\% & 2.7 / 3.4 \\
+Validation & held out & 128 & 95 & 17.0 & 17.37 & 23.20 & 16.71 & 17.12 & \textbf{16.59} & +0.24 [-1.32, +1.91] & 86\% & 8.4 / 8.8 \\
+Validation & held out & 512 & 95 & 37.6 & 65.97 & 114.01 & 66.02 & \textbf{63.76} & 65.02 & +2.21 [-1.51, +6.38] & 69\% & 26.4 / 26.9 \\
+\midrule
+Validation & seen & 32 & 512 & 3.2 & 8.78 & \textbf{8.71} & 8.99 & 9.21 & 9.42 & -0.43 [-0.79, -0.14] & 87\% & 1.8 / 2.3 \\
+Validation & seen & 128 & 512 & 11.7 & \textbf{20.95} & 21.15 & 21.69 & 21.71 & 21.86 & -0.76 [-1.44, -0.12] & 86\% & 6.0 / 6.7 \\
+Validation & seen & 512 & 512 & 29.4 & 52.01 & 54.43 & 57.84 & 51.62 & \textbf{51.09} & +0.39 [-1.10, +1.85] & 82\% & 18.5 / 19.3 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}

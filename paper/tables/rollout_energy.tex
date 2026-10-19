@@ -1,28 +1,28 @@
 \begin{table}[t]
 \centering
 \small
-\caption{Rollout energy score (lower is better) at 32/128/512 events, on the anchors where every path of every model reached the horizon (the same anchors in every column); models are the mean of 3 seeds $\times$ 32 paths; best per row in bold.}
+\caption{Rollout energy score (lower is better) at 32/128/512 events on all anchors; a seed’s forecast is the ensemble of its paths that reached the horizon (failed paths, at most 0.3\%, are dropped); models are the mean of 3 seeds $\times$ 32 paths; best per row in bold.}
 \label{tab:rollout_energy}
 \begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lllrrrrrr}
 \toprule
-Period & Pools & Events & Anchors & Reference & Depth-aware & Depth 64$\times$2 & Recent & Expanding \\
+Period & Pools & Events & Anchors & DEX-Net & No profile & DEX-Net-small & Recent & Expanding \\
 \midrule
-Test & held out & 32 & 97 & 3.45 & \textbf{2.77} & 3.03 & 3.17 & 3.62 \\
-Test & held out & 128 & 95 & 8.81 & \textbf{6.27} & 6.31 & 6.49 & 7.24 \\
-Test & held out & 512 & 79 & 36.60 & \textbf{18.48} & 18.55 & 19.37 & 19.82 \\
+Test & held out & 32 & 98 & \textbf{2.75} & 3.43 & 3.01 & 3.15 & 3.61 \\
+Test & held out & 128 & 98 & 6.38 & 12.46 & \textbf{6.30} & 6.48 & 7.23 \\
+Test & held out & 512 & 98 & \textbf{16.63} & 60.30 & 16.64 & 17.00 & 17.76 \\
 \midrule
-Test & seen & 32 & 511 & 3.01 & \textbf{3.00} & 3.01 & 3.58 & 4.10 \\
-Test & seen & 128 & 509 & \textbf{7.82} & 7.86 & 8.20 & 8.00 & 10.80 \\
-Test & seen & 512 & 500 & 26.04 & 25.59 & 30.90 & \textbf{21.70} & 32.68 \\
+Test & seen & 32 & 512 & \textbf{3.00} & 3.00 & 3.01 & 3.57 & 4.10 \\
+Test & seen & 128 & 512 & 7.88 & \textbf{7.84} & 8.23 & 8.00 & 10.82 \\
+Test & seen & 512 & 512 & 26.29 & 26.61 & 31.44 & \textbf{21.92} & 32.81 \\
 \midrule
-Validation & held out & 32 & 95 & 7.24 & 6.64 & \textbf{6.24} & 6.93 & 7.28 \\
-Validation & held out & 128 & 92 & 15.97 & 12.14 & 11.55 & \textbf{11.42} & 13.33 \\
-Validation & held out & 512 & 77 & 56.30 & 36.94 & \textbf{36.80} & 37.89 & 40.69 \\
+Validation & held out & 32 & 95 & 6.64 & 7.24 & \textbf{6.24} & 6.93 & 7.28 \\
+Validation & held out & 128 & 95 & 11.81 & 15.71 & 11.24 & \textbf{11.09} & 12.97 \\
+Validation & held out & 512 & 95 & 33.03 & 80.30 & 31.74 & \textbf{31.47} & 34.43 \\
 \midrule
-Validation & seen & 32 & 512 & 5.33 & \textbf{5.30} & 5.35 & 6.22 & 6.51 \\
-Validation & seen & 128 & 510 & 12.24 & \textbf{12.12} & 12.48 & 14.36 & 15.29 \\
-Validation & seen & 512 & 505 & 38.22 & \textbf{36.85} & 40.17 & 43.23 & 44.70 \\
+Validation & seen & 32 & 512 & \textbf{5.30} & 5.33 & 5.35 & 6.22 & 6.51 \\
+Validation & seen & 128 & 512 & \textbf{12.11} & 12.23 & 12.49 & 14.36 & 15.32 \\
+Validation & seen & 512 & 512 & \textbf{37.94} & 39.27 & 41.38 & 44.12 & 46.05 \\
 \bottomrule
 \end{tabular}
 \end{adjustbox}
