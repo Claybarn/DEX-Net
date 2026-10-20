@@ -9,14 +9,15 @@ never repaired. History-only baselines stored with the anchors are scored alongs
   python -m scripts.rollout_eval --anchors eval/anchors-test --out eval/rollouts-test \
       --model ref=runs/ref/training/best.pt --paths 32 --workers 8
 """
-import argparse,json,os,time,zlib
+import argparse,json,math,os,time,zlib
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor,as_completed
 from copy import deepcopy
 from pathlib import Path
 import numpy as np
 import torch
-from dexnet.model import PooledEventModel,apply_pooled_event,native_range
+from dexnet.model import PooledEventModel,apply_pooled_event,native_range,log_reserve
+from dexnet.learned import LearnedTransitionModel,learned_features,advance
 from dexnet.diagnostics import ENDPOINT_NAMES,ENDPOINT_SCALES,proper_scores,feedback,endpoint
 from dexnet.rollout_context import liquidity_profile
 from dexnet.tick_mechanics import PoolState,TickBook
@@ -25,7 +26,8 @@ from dexnet.utils import dump
 
 def load_model(path,device):
     ck=torch.load(path,map_location='cpu',weights_only=False)
-    m=PooledEventModel(ck['scalers'],**ck['model_config']).to(device).eval();m.load_state_dict(ck['model'])
+    cls=LearnedTransitionModel if ck['model_config'].get('learned_transitions') else PooledEventModel
+    m=cls(ck['scalers'],**ck['model_config']).to(device).eval();m.load_state_dict(ck['model'])
     return m
 
 
@@ -59,6 +61,31 @@ def trajectory(model,b,initial,inventory,book,meta,mean,std,horizons,seed,device
     return dict(values=values,trace=trace,failure=None)
 
 
+@torch.no_grad()
+def learned_trajectory(model,b,initial,meta,mean,std,horizons,seed,device):
+    """trajectory() for the mechanics ablation: the state advances by the model's learned changes."""
+    torch.manual_seed(seed);b={k:v.clone() for k,v in b.items()}
+    reserve0=log_reserve(initial,meta['base_is_token0']);liquidity0=math.log(initial.liquidity)
+    state=dict(log_price=0.,log_liquidity=liquidity0,tick=float(initial.tick),log_reserve=reserve0)
+    values={};blocks=0;volume=0.;trace=dict(kind=[],dt=[],return_bp=[],base_volume=[])
+    for step in range(1,max(horizons)+1):
+        try:
+            e=model.sample_learned(b,state,meta)
+            if 'error' in e:raise ValueError(e['error'])
+            advance(state,e,meta);blocks+=e['dt'];size=e.get('base_amount',0.);volume+=size
+            f,mask=learned_features(e,meta,mean,std)
+            b['x']=torch.cat([b['x'][:,1:],torch.as_tensor(f,device=device)[None,None]],1)
+            b['history_mask']=torch.cat([b['history_mask'][:,1:],torch.as_tensor(mask,device=device)[None,None]],1)
+            b['history_kind']=torch.cat([b['history_kind'][:,1:],torch.tensor([[e['kind']]],device=device)],1)
+            # Same endpoints as diagnostics.endpoint, from the tracked state.
+            v=[state['log_price']*1e4,np.logaddexp(0,state['log_liquidity'])-np.logaddexp(0,liquidity0),math.log1p(blocks),math.log1p(volume*math.exp(-reserve0))]
+            if not np.isfinite(v).all():raise ValueError('Nonfinite outcome')
+            trace['kind'].append(int(e['kind']));trace['dt'].append(int(e['dt']));trace['return_bp'].append(float(v[0]));trace['base_volume'].append(float(size))
+            if step in horizons:values[str(step)]=v
+        except (ValueError,OverflowError,RuntimeError) as exc:return dict(values=values,trace=trace,failure=dict(step=step,error=str(exc)))
+    return dict(values=values,trace=trace,failure=None)
+
+
 def run_anchor(task):
     """One anchor, all models; runs in a worker process."""
     torch.set_num_threads(1)
@@ -75,8 +102,9 @@ def run_anchor(task):
     record=dict(pool=pool,row=row,split=r['split'],actual=r['actual'],actual_trace=r.get('actual_trace'),paths={})
     for no,(label,checkpoint) in enumerate(models.items()):
         model=load_model(checkpoint,device)
-        sampled=[trajectory(model,b,initial,inv,book,meta,mean,std,horizons,
-                            int(np.random.SeedSequence([row,j,no,zlib.crc32(pool.encode())]).generate_state(1)[0]),device) for j in range(paths)]
+        seeds=[int(np.random.SeedSequence([row,j,no,zlib.crc32(pool.encode())]).generate_state(1)[0]) for j in range(paths)]
+        if getattr(model,'learned',False):sampled=[learned_trajectory(model,b,initial,meta,mean,std,horizons,s,device) for s in seeds]
+        else:sampled=[trajectory(model,b,initial,inv,book,meta,mean,std,horizons,s,device) for s in seeds]
         if not traces:
             for s in sampled:s.pop('trace')
         record['paths'][label]=sampled

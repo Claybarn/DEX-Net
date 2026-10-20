@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from dexnet.model import PooledEventModel
+from dexnet.learned import LearnedTransitionModel
 from dexnet.coverage import CoverageSchedule
 from dexnet.utils import dump,atomic_save
 from dexnet.evaluation import load_sets,device_batch,host_batch,merge_batches,expand_candidates,evaluate,evaluate_fast
@@ -51,7 +52,8 @@ def main():
     scalers=json.loads((Path(plan['data'])/'scalers.json').read_text())['scalers'];torch.manual_seed(plan['seed'])
     config=dict(d_model=plan['d_model'],layers=plan['layers'],pool_count=len(plan['pool_ids']) if plan['embeddings'] else 0,pool_dropout=.1)
     if plan.get('depth'):config['liquidity_context']=True
-    model=PooledEventModel(scalers,**config).cuda();optimizer=torch.optim.AdamW(model.parameters(),lr=plan['learning_rate'],weight_decay=.01)
+    if plan.get('learned_transitions'):config['learned_transitions']=True
+    model=(LearnedTransitionModel if plan.get('learned_transitions') else PooledEventModel)(scalers,**config).cuda();optimizer=torch.optim.AdamW(model.parameters(),lr=plan['learning_rate'],weight_decay=.01)
     best=math.inf
     if a.round>1:
         ck=torch.load(a.out/f'round-{a.round-1}.pt',map_location='cpu',weights_only=False)

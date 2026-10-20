@@ -32,6 +32,8 @@ class PooledTrainingDataset(PooledDataset):
 def pooled_collate(items):
     fields=['x','history_mask','history_kind','kind','targets','target_mask','metadata','anchor','buy_log_cap','dt','lower','width','grid_min','grid_max','unit']
     b={k:torch.as_tensor(np.stack([v[k] for v in items])) for k in fields}
+    if 'next_x' in items[0]:
+        b['next_x']=torch.as_tensor(np.stack([v['next_x'] for v in items])).float();b['next_mask']=torch.as_tensor(np.stack([v['next_mask'] for v in items]))
     b['x']=b['x'].float();b['metadata']=b['metadata'].float();b['history_kind']=b['history_kind'].long();b['kind']=b['kind'].long()
     if 'depth' in items[0]:b['depth']=torch.as_tensor(np.stack([v['depth'] for v in items])).float()
     burns=[v for v in items if v['kind']==3]

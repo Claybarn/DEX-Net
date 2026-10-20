@@ -187,6 +187,7 @@ class PooledDataset:
         row=int(self.rows[i]);a=self.arrays
         return dict(x=np.array(a['features'][row-self.seq_len:row]),history_mask=np.array(a['feature_mask'][row-self.seq_len:row]),
                     history_kind=np.array(a['kind'][row-self.seq_len:row]),kind=int(a['kind'][row]),
+                    next_x=np.array(a['features'][row]),next_mask=np.array(a['feature_mask'][row]),
                     targets=np.array(a['targets'][row]),target_mask=np.array(a['target_mask'][row]),metadata=self.metadata.copy(),
                     current_timestamp=int(a['timestamp'][row-1]),current_block=int(a['block'][row-1]),
                     row=row,end_row=row+self.horizon-1,pool=self.folder.name)
