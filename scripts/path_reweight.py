@@ -6,8 +6,10 @@ ensemble median (signed and absolute, scaled by the typical fit-set ensemble
 spread), plus a failure flag. Two weight models (dexnet.reweighting.PathWeighter):
 
   global       one coefficient vector shared by all anchors
-  conditional  coefficients adjusted by anchor context (log recent realised spread
-               of returns at each horizon, from the history-only windows)
+  conditional  coefficients adjusted by anchor context: --context absolute (default)
+               uses the log recent realised spread of returns at each horizon from
+               the history-only windows; --context relative uses the log ratio of
+               that spread to the pool's long-run spread (expanding windows)
 
 Protocol: fit on the earliest 75% (by time) of seen-pool validation anchors; choose
 the KL penalty per model on the latest 25%; average three fitting seeds. Held-out
@@ -35,6 +37,9 @@ from dexnet.diagnostics import ENDPOINT_SCALES
 from dexnet.reweighting import PathWeighter,energy as weighted_energy,diagnostics
 
 
+CONTEXT='absolute'
+
+
 def extract(rollouts,anchors,seen_only):
     """One record per (anchor, model seed) ensemble, plus baseline ensembles for scoring."""
     out=[]
@@ -46,7 +51,11 @@ def extract(rollouts,anchors,seen_only):
         context=[]
         for h in hs:
             rec=np.asarray(anchor['baselines']['recent'].get(str(h)) or anchor['baselines']['recent'].get(h) or [[0]*4],float)[:,0]
-            context.append(np.log(max(np.subtract(*np.quantile(rec,[.75,.25])),1e-3)))
+            spread=max(np.subtract(*np.quantile(rec,[.75,.25])),1e-3)
+            if CONTEXT=='relative':
+                ex=np.asarray(anchor['baselines']['expanding'].get(str(h)) or anchor['baselines']['expanding'].get(h) or [[0]*4],float)[:,0]
+                spread/=max(np.subtract(*np.quantile(ex,[.75,.25])),1e-3)
+            context.append(np.log(spread))
         y=np.array([r['actual'][str(h)] for h in hs],float)
         for label,paths in r['paths'].items():
             x=np.full((len(paths),len(hs),4),np.nan)
@@ -130,8 +139,9 @@ def main():
     p.add_argument('--fit',type=Path,required=True);p.add_argument('--fit-anchors',type=Path,required=True)
     p.add_argument('--test',type=Path,required=True);p.add_argument('--test-anchors',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True);p.add_argument('--estimator',choices=('weighted','fair'),default='weighted');p.add_argument('--weights-out',type=Path)
+    p.add_argument('--context',choices=('absolute','relative'),default='absolute');p.add_argument('--weights-model',choices=('global','conditional'),default='global')
     a=p.parse_args();rng=np.random.default_rng(0);torch.set_num_threads(8)
-    global FAIR;FAIR=a.estimator=='fair'
+    global FAIR,CONTEXT;FAIR=a.estimator=='fair';CONTEXT=a.context
     fit_all=[r for r in extract(a.fit,a.fit_anchors,seen_only=True) if not r['label'].startswith('baseline:')]
     times=np.array([r['time'] for r in fit_all]);cut=np.quantile(times,.75)
     fit_set=[r for r in fit_all if r['time']<cut];tune_set=[r for r in fit_all if r['time']>=cut]
@@ -156,8 +166,8 @@ def main():
     weights={name:ensemble_weights(m,f_test,c_test).numpy() for name,(_,_,m) in chosen.items()}
     if a.weights_out:
         a.weights_out.parent.mkdir(parents=True,exist_ok=True)
-        a.weights_out.write_text(json.dumps({f"{r['pool']}|{r['row']}|{r['label']}":weights['global'][i].tolist() for i,r in enumerate(models_test)})+'\n')
-    result=dict(method=__doc__,estimator=a.estimator,selection=selection,chosen={k:dict(kl=v[1],tune_objective=v[0]) for k,v in chosen.items()},uniform_tune_objective=w_uniform,cells={})
+        a.weights_out.write_text(json.dumps({f"{r['pool']}|{r['row']}|{r['label']}":weights[a.weights_model][i].tolist() for i,r in enumerate(models_test)})+'\n')
+    result=dict(method=__doc__,estimator=a.estimator,context=a.context,selection=selection,chosen={k:dict(kl=v[1],tune_objective=v[0]) for k,v in chosen.items()},uniform_tune_objective=w_uniform,cells={})
     hs=models_test[0]['horizons']
     for group in ('seen','heldout'):
         for j,h in enumerate(hs):
