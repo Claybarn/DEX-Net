@@ -1,0 +1,329 @@
+{
+ "method": "Robustness checks for the rollout comparisons (energy score, 512 events by default).\n\n  shrinkage    a blend baseline: equal mixture of the recent and expanding history\n               windows (128 of each), testing whether DEX-Net's edge in volatile regimes\n               is only shrinkage toward long-run behavior; reported overall and by\n               thirds of recent/long-run volatility\n  seeds        bootstrap over anchors AND training seeds (each draw resamples three\n               seeds per family), and a pool-clustered bootstrap for seen pools\n  pools        per-pool means of the paired difference\n  endpoints    fair CRPS of each scaled endpoint, for what drives the energy score\n\n  python -m scripts.robustness --rollouts depth=eval/final/rollouts-test-depth       --rollouts reference=eval/final/rollouts-test-reference --out results/robustness-test.json\n",
+ "horizon": "512",
+ "groups": {
+  "seen": {
+   "shrinkage": {
+    "depth-recent": {
+     "mean": -6.182036011976177,
+     "ci95": [
+      -9.286300570789614,
+      -3.5929518113964773
+     ]
+    },
+    "depth-recent by regime": {
+     "calm": {
+      "mean": -2.3039612961734495,
+      "ci95": [
+       -5.409054193795319,
+       0.5093559590520182
+      ]
+     },
+     "mid": {
+      "mean": -4.8017699861803465,
+      "ci95": [
+       -8.73292554599772,
+       -1.1467980945090368
+      ]
+     },
+     "volatile": {
+      "mean": -11.43230502242973,
+      "ci95": [
+       -19.229459488622425,
+       -5.5142775518331275
+      ]
+     }
+    },
+    "depth-blend": {
+     "mean": -5.006019527144254,
+     "ci95": [
+      -7.764311808542816,
+      -2.876793947277032
+     ]
+    },
+    "depth-blend by regime": {
+     "calm": {
+      "mean": -2.1636462553022846,
+      "ci95": [
+       -4.759504401391862,
+       0.23725970287795325
+      ]
+     },
+     "mid": {
+      "mean": -3.867700609796443,
+      "ci95": [
+       -7.0502965896880765,
+       -0.58138605435072
+      ]
+     },
+     "volatile": {
+      "mean": -8.98005488056007,
+      "ci95": [
+       -15.697838123314224,
+       -4.290732708304527
+      ]
+     }
+    }
+   },
+   "baseline_energy": {
+    "recent": 44.117905666899006,
+    "expanding": 46.050972802046864,
+    "blend": 42.94188918206709
+   },
+   "bootstrap": {
+    "depth-reference": {
+     "anchors_and_seeds": {
+      "mean": -1.3372995309081253,
+      "ci95": [
+       -3.203889517517158,
+       0.2559982272498933
+      ]
+     },
+     "pool_clustered": {
+      "mean": -1.3372995309081253,
+      "ci95": [
+       -2.8443765933229357,
+       0.005763047224411558
+      ]
+     },
+     "per_pool": {
+      "DAI-WETH-3000": -0.0980844372472165,
+      "DAI-WETH-500": -2.5268732995881895,
+      "USDC-USDT-100": -4.530351355303986,
+      "USDC-WETH-3000": 1.6360412559138309,
+      "USDC-WETH-500": -0.3625430816993032,
+      "USDT-WETH-3000": -0.21574813978720161,
+      "USDT-WETH-500": -4.234720659577667,
+      "WBTC-WETH-500": -0.3661165299752692
+     }
+    },
+    "depth-recent": {
+     "anchors_and_seeds": {
+      "mean": -6.182036011976177,
+      "ci95": [
+       -9.177150726640098,
+       -3.4740752584976677
+      ]
+     },
+     "pool_clustered": {
+      "mean": -6.182036011976177,
+      "ci95": [
+       -9.655634425682269,
+       -3.030692808502786
+      ]
+     },
+     "per_pool": {
+      "DAI-WETH-3000": -14.986847675709473,
+      "DAI-WETH-500": -6.040775934210827,
+      "USDC-USDT-100": 0.8254244254862514,
+      "USDC-WETH-3000": -6.449967213432182,
+      "USDC-WETH-500": -3.49118077297861,
+      "USDT-WETH-3000": -2.570669494547423,
+      "USDT-WETH-500": -11.939879412798305,
+      "WBTC-WETH-500": -4.802392017618844
+     }
+    },
+    "reference-recent": {
+     "anchors_and_seeds": {
+      "mean": -4.844736481068052,
+      "ci95": [
+       -7.883625060584787,
+       -2.2044270229312537
+      ]
+     },
+     "pool_clustered": {
+      "mean": -4.844736481068052,
+      "ci95": [
+       -8.568981402593765,
+       -1.3027119496169546
+      ]
+     },
+     "per_pool": {
+      "DAI-WETH-3000": -14.888763238462257,
+      "DAI-WETH-500": -3.5139026346226387,
+      "USDC-USDT-100": 5.355775780790236,
+      "USDC-WETH-3000": -8.086008469346012,
+      "USDC-WETH-500": -3.128637691279307,
+      "USDT-WETH-3000": -2.354921354760222,
+      "USDT-WETH-500": -7.705158753220638,
+      "WBTC-WETH-500": -4.436275487643575
+     }
+    }
+   },
+   "endpoint_crps": {
+    "depth": {
+     "return": 13.563602289155975,
+     "liquidity": 1.7727379129805614,
+     "blocks": 0.3523742768341889,
+     "volume": 31.312248086500393
+    },
+    "reference": {
+     "return": 14.531727127703363,
+     "liquidity": 1.7874020470535816,
+     "blocks": 0.3326289974302915,
+     "volume": 31.871457087372413
+    },
+    "recent": {
+     "return": 13.515217623016536,
+     "liquidity": 2.395374401413312,
+     "blocks": 0.22921982284845685,
+     "volume": 38.17789107464376
+    },
+    "expanding": {
+     "return": 13.220186871446131,
+     "liquidity": 2.4172275499811238,
+     "blocks": 0.3227011721016179,
+     "volume": 40.622330994971755
+    },
+    "blend": {
+     "return": 13.154268354890146,
+     "liquidity": 2.369516940370316,
+     "blocks": 0.2473042065500196,
+     "volume": 37.229929188713626
+    }
+   }
+  },
+  "heldout": {
+   "shrinkage": {
+    "depth-recent": {
+     "mean": 1.5638843179714352,
+     "ci95": [
+      -3.2874616322215138,
+      7.064584989782147
+     ]
+    },
+    "depth-recent by regime": {
+     "calm": {
+      "mean": 11.001715004873828,
+      "ci95": [
+       1.9393115659450666,
+       24.663044680001306
+      ]
+     },
+     "mid": {
+      "mean": -0.5605811316416269,
+      "ci95": [
+       -8.238143932445132,
+       7.345301052070069
+      ]
+     },
+     "volatile": {
+      "mean": -5.815870464618307,
+      "ci95": [
+       -11.431457314082044,
+       -0.3646189093367734
+      ]
+     }
+    },
+    "depth-blend": {
+     "mean": 1.7115825291146065,
+     "ci95": [
+      -2.595582201561562,
+      6.992376463213368
+     ]
+    },
+    "depth-blend by regime": {
+     "calm": {
+      "mean": 10.24954366364023,
+      "ci95": [
+       1.3581708339991272,
+       23.89185888674387
+      ]
+     },
+     "mid": {
+      "mean": 1.2276138663742007,
+      "ci95": [
+       -4.680526210818936,
+       8.027872453241487
+      ]
+     },
+     "volatile": {
+      "mean": -6.357533963381252,
+      "ci95": [
+       -11.16856007394693,
+       -1.6772548015381494
+      ]
+     }
+    }
+   },
+   "baseline_energy": {
+    "recent": 31.466262931439363,
+    "expanding": 34.43016814900349,
+    "blend": 31.318564720296187
+   },
+   "bootstrap": {
+    "depth-reference": {
+     "anchors_and_seeds": {
+      "mean": -47.2688550319965,
+      "ci95": [
+       -88.99665714703183,
+       -9.925461987130745
+      ]
+     },
+     "per_pool": {
+      "USDC-USDT-500": -151.18091585411253,
+      "WBTC-WETH-3000": 3.0635494287159446
+     }
+    },
+    "depth-recent": {
+     "anchors_and_seeds": {
+      "mean": 1.5638843179714346,
+      "ci95": [
+       -4.513731741275973,
+       11.180986107247573
+      ]
+     },
+     "per_pool": {
+      "USDC-USDT-500": 13.283636783982244,
+      "WBTC-WETH-3000": -4.112870782752552
+     }
+    },
+    "reference-recent": {
+     "anchors_and_seeds": {
+      "mean": 48.832739349967945,
+      "ci95": [
+       8.492477077414094,
+       93.05085645132769
+      ]
+     },
+     "per_pool": {
+      "USDC-USDT-500": 164.46455263809483,
+      "WBTC-WETH-3000": -7.176420211468496
+     }
+    }
+   },
+   "endpoint_crps": {
+    "depth": {
+     "return": 16.580709007167126,
+     "liquidity": 3.90724287387634,
+     "blocks": 0.6913270247961852,
+     "volume": 21.910654534406437
+    },
+    "reference": {
+     "return": 64.3429903074551,
+     "liquidity": 7.754411415538933,
+     "blocks": 0.7495043725420126,
+     "volume": 20.139113491571376
+    },
+    "recent": {
+     "return": 12.951051356595082,
+     "liquidity": 3.607922866672904,
+     "blocks": 0.2591748032594678,
+     "volume": 24.952940603526585
+    },
+    "expanding": {
+     "return": 13.224686749459632,
+     "liquidity": 3.6726676445894615,
+     "blocks": 0.6743610462861894,
+     "volume": 27.741611997991157
+    },
+    "blend": {
+     "return": 12.84811163124953,
+     "liquidity": 3.5612348711716746,
+     "blocks": 0.3319281872486468,
+     "volume": 24.758340927370696
+    }
+   }
+  }
+ }
+}

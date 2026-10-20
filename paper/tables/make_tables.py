@@ -85,8 +85,8 @@ def table4():
         for group in ('heldout','seen'):
             for h in ('32','128','512'):
                 c=T[f'{group}:{h}'];e=c['energy']
-                vals=[e['depth'],e['reference'],e['depth-small'],e['recent'],e['expanding']];best=int(np.argmin(vals))
-                rows.append([label,'held out' if group=='heldout' else 'seen',h,c['anchors']]+[f'**{v:.2f}**' if i==best else f'{v:.2f}' for i,v in enumerate(vals)])
+                vals=[e['depth'],e['reference'],e['depth-small'],e['recent'],e['expanding']];best=min(round(v,2) for v in vals)
+                rows.append([label,'held out' if group=='heldout' else 'seen',h,c['anchors']]+[f'**{v:.2f}**' if round(v,2)==best else f'{v:.2f}' for v in vals])
             rows.append('---')
     write('rollout_energy','Rollout energy score (lower is better) at 32/128/512 events on all anchors; a seed’s forecast is the ensemble of its paths that reached the horizon (failed paths, at most 0.3%, are dropped); models are the mean of 3 seeds × 32 paths; best per row in bold.',
           ['Period','Pools','Events','Anchors','DEX-Net','No profile','DEX-Net-small','Recent','Expanding'],rows[:-1],'lllrrrrrr')
