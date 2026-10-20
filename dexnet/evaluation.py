@@ -7,9 +7,12 @@ from .training_data import PooledTrainingDataset,pooled_collate
 
 
 def load_sets(plan,split):
+    """Pools of a split. A run limited to some pools (plan['pools']) trains and selects on them only;
+    its test splits keep every pool, in manifest order, so evaluation rows match the pooled runs."""
     manifest=json.loads((Path(plan['data'])/'dataset.json').read_text())
+    keep=set(plan['pools']) if plan.get('pools') and split in ('train','val') else None
     return {name:PooledTrainingDataset(Path(plan['data']),Path(plan['context']),name,split,depth=plan.get('depth'))
-            for name,m in manifest['pools'].items() if m['held_out']==split.startswith('heldout')}
+            for name,m in manifest['pools'].items() if m['held_out']==split.startswith('heldout') and (keep is None or name in keep)}
 
 
 def host_batch(ds,indices):

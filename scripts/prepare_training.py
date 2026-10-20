@@ -28,6 +28,7 @@ def main():
     p.add_argument('--static',action='store_true',help='fused, plus the sync-free static loss with statistics read every 32 updates (faster)')
     p.add_argument('--compile',action='store_true',help='with --static: torch.compile the loss (forward and backward)')
     p.add_argument('--loader-workers',type=int,default=6,help='batch-building worker processes (fused/static paths)')
+    p.add_argument('--pools',help='comma-separated seen pools to train on (single-pool ablation; default all); final test scores still cover every pool')
     p.add_argument('--learned-transitions',action='store_true',help='mechanics ablation: learn each event\'s effect on price and liquidity instead of the exact replica (dexnet.learned)')
     p.add_argument('--compile-mode',default=None,help="torch.compile mode, e.g. 'reduce-overhead' for CUDA graphs")
     a=p.parse_args()
@@ -37,12 +38,16 @@ def main():
         raise ValueError('Prepared data and context must be complete')
     manifest=json.loads((data/'dataset.json').read_text())
     lengths={n:v['indices']['train-h1'] for n,v in manifest['pools'].items() if not v['held_out']}
+    if a.pools:
+        chosen=a.pools.split(',')
+        if not set(chosen)<=set(lengths):raise ValueError(f'Unknown or held-out pools: {sorted(set(chosen)-set(lengths))}')
+        lengths={n:lengths[n] for n in chosen}
     schedule=make_schedule(a.out/'schedule',lengths,epochs=a.epochs,seed=a.seed)
     pool_ids={n:i+1 for i,n in enumerate(sorted(lengths))}
     plan=dict(data=str(data),context=str(context),schedule=str((a.out/'schedule').resolve()),seed=a.seed,pool_ids=pool_ids,embeddings=a.embeddings,
         epochs=a.epochs,d_model=a.d_model,layers=a.layers,learning_rate=.0001,learning_rate_schedule='1000-update warmup; cosine decay to 10% of peak',
         batches_per_round=8192,rounds=math.ceil(schedule['total_batches']/8192),training_examples=schedule['total_examples'],
-        microbatch=256,effective_batch=1024,initialization=f'Fresh; seed {a.seed}',visible_history=a.visible_history,depth=str(a.depth.resolve()) if a.depth else None,fused=a.fused or a.static,static=a.static,compile=a.compile,compile_mode=a.compile_mode,loader_workers=a.loader_workers,learned_transitions=a.learned_transitions,
+        microbatch=256,effective_batch=1024,initialization=f'Fresh; seed {a.seed}',visible_history=a.visible_history,depth=str(a.depth.resolve()) if a.depth else None,fused=a.fused or a.static,static=a.static,compile=a.compile,compile_mode=a.compile_mode,loader_workers=a.loader_workers,learned_transitions=a.learned_transitions,pools=sorted(lengths) if a.pools else None,
         sampling=schedule['coverage'],selection='Minimum seen-pool validation macro joint NLL; fixed training budget, no early stopping',
         heldout='Held-out pools use neutral ID 0; no held-out weights/scaler fitting or checkpoint selection',
         validation='8192 fixed examples per seen pool each round',final_evaluation='32768 fixed examples per pool; selected checkpoint only',
