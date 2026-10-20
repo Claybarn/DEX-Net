@@ -1,243 +1,388 @@
-% DEX-Net — first draft (generated from paper/results; to be rewritten by the author).
-% Numbers: every figure in this text comes from paper/results/final/, paper/results/economics/
-% or the generated tables in paper/tables/. Comments marked CHECK flag statements the author
-% should confirm or soften when rewriting.
+% DEX-Net paper. Generated from the working draft (Claude Docs); edit the doc, then regenerate.
 \documentclass[11pt]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{adjustbox}
-\usepackage[numbers,sort&compress]{natbib}
+\usepackage[round]{natbib}
 \usepackage{xcolor}
+\usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 \graphicspath{{../figures/}}
 
-\title{DEX-Net: Learning Only the Stochastic Part of\\ Uniswap v3 Order Flow}
+\title{DEX-Net:\\ A Generative Model of Uniswap v3 Order Flow}
 \author{Clayton Barnes}
-\date{Draft --- \today}
+\date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Liquidity providers in concentrated-liquidity automated market makers (AMMs) need simulators that reproduce how swaps, mints and burns arrive and interact, not only how prices move. We present DEX-Net, a pooled neural event model for Uniswap v3 that learns only the stochastic parts of order flow---event timing, event type, swap size relative to available depth, and liquidity ranges and amounts---and computes prices and liquidity exactly from pool state. Because the exact state is available during simulation, the model can also condition on the pool's liquidity profile around the current price. We train on 29.4 million events from ten Ethereum pools, with active liquidity reconciled exactly at every swap, and evaluate with three seeds per model on 1,217 fixed start points. On two pools held out from training, conditioning on the liquidity profile halves the 512-event energy score of an otherwise identical model (37.2 to 16.6), cuts spurious liquidity collapse from 24\% to 15\% of paths (real: 5\%), and brings the width of the simulated price distribution to 1.01 times the realised width (from 1.78). The liquidity-aware model is nonetheless slightly \emph{worse} at next-event likelihood, illustrating that one-step likelihood and simulation quality are different targets. The model beats a fitted multivariate Hawkes process on event timing and type, and matches or beats simple history-based forecasters on held-out pools. We document its failures: predicted skew is not directionally informative, swap-size tails remain too heavy, and just-in-time liquidity is too rare, too large relative to its deposit, and too often left in place. Finally, we measure what an LP simulator must get right: across ten pools on Ethereum, Arbitrum and Base, fees approximately equal loss-versus-rebalancing, and a perfect-foresight bound shows that the value of timing liquidity concentrates at intervals of minutes rather than days. We release code and a reconciled dataset.
+Liquidity providers (LPs) in concentrated-liquidity automated market makers (AMMs) need simulators that reflect how swaps, mints and burns arrive and interact. We present DEX-Net, a neural marked temporal point process for Uniswap v3 that learns event timing, event type, swap size, and liquidity changes, while prices and liquidity are computed exactly from the pool state. Because the exact pool state is available during simulation, the model can condition its predictions on the immediate liquidity profile. We train on 29.4 million events from ten Ethereum pools, with active liquidity reconciled exactly at every swap. Conditioning on the liquidity profile reduces a liquidity-collapse failure on unseen pools: on a held-out stablecoin pool, the share of 512-event paths that lose most of their active liquidity falls from 68\% without the profile to 42\% with it (real: 15\%), and the energy score falls from 127 to 7.6, while on a held-out WBTC/WETH pool the two are close. The profile changes next-event likelihood by only 0.018 nats, confirming in this setting that one-step likelihood can be a poor guide to simulation quality. The model beats a fitted multivariate Hawkes process on event timing and type and matches simple history-based forecasters on held-out pools overall (better on WBTC/WETH, worse on the nearly static stablecoin pool); on seen pools it is better at short horizons but loses to a recent-history forecaster at 512 events in the test period, which was calmer than the validation period relative to each pool's history. For a hypothetical LP position, it forecasts fee income better than history baselines at most horizons. Its long-horizon P\&L forecasts trail the best baseline slightly; a post-hoc path reweighting fitted on validation data closes the gap on held-out pools and reverses it on seen pools. We release the code, model weights and reconciled dataset under open licenses.
 \end{abstract}
 
-% ===================================================================== 1
 \section{Introduction}
 
-A liquidity provider (LP) in a Uniswap v3 pool earns fees from swaps that trade through its price range and loses value to arbitrageurs who trade against stale pool prices. Both depend on the joint dynamics of order flow and liquidity: how often swaps arrive, how large they are relative to the liquidity they meet, and how other LPs add and remove liquidity around the price. Price-only simulators---geometric Brownian motion, GARCH-type models, or learned return generators---ignore this liquidity. Agent-based simulators represent it, but require behaviour to be specified by hand.
+A liquidity provider (LP) in a Uniswap v3 pool earns fees from swaps that trade through its price range and loses value to arbitrageurs who trade against stale pool prices. The two effects depend on swap frequency and size relative to active liquidity. Price-only simulators, such as geometric Brownian motion, GARCH-type models \citep{bollerslev1986garch} and learned return generators \citep{wiese2020quantgans}, do not explicitly model pool liquidity or swap arrivals and sizes. Agent-based simulators capture liquidity dynamics through specified agent behaviors and calibrated parameters \citep{angeris2021analysis,dinosse2026dynamic}.
 
-We take a third route. An AMM is a deterministic machine: given its state and an event, the next state follows exactly from the protocol's rules. What is uncertain is \emph{which} event arrives next---when, of which type, how large, and over which range. We learn only this stochastic part, from data, and compute everything else exactly. A simulated path is a sequence of sampled events, each applied to an exact replica of the pool.
+We take a third route. An AMM is a deterministic machine: given its state and an event, the next state follows exactly from the protocol's rules. What is uncertain is which, when, and how large of an event arrives. We learn only this stochastic part from historical data and compute what is deterministic exactly. A simulated path is a sequence of sampled events, each applied to an exact replica of the pool.
 
-This split has a second benefit that turns out to matter more than we expected. Because the simulator holds the exact pool state, the model can condition on quantities that a pure sequence model would have to infer, such as the liquidity available at each price level near the current price. Adding this liquidity profile as an input costs a little next-event likelihood but removes most of the model's long-horizon failures on pools it has never seen.
+Simulating the pool state also enables more powerful and stable modeling. The model gains direct access to the liquidity near the current price, which a generic sequence model would have to infer. The added liquidity context makes long-horizon rollouts on unseen pools far more accurate (on a held-out stablecoin pool, the 512-event energy score falls from 127 to 7.6).
 
 \paragraph{Contributions.}
+
 \begin{enumerate}
-\item A reconciled multi-pool Uniswap v3 event dataset: ten Ethereum pools from May 2021 to September 2026, with active liquidity reproduced exactly at every swap (Section~\ref{sec:data}).
-\item DEX-Net, a pooled event model with exact, mechanics-consistent sampling and liquidity-profile conditioning (Section~\ref{sec:model}).
-\item A multi-seed evaluation of next-event likelihood against point-process baselines, of rollouts against history-based forecasters, and of liquidity behaviour, with documented failure modes and evidence that likelihood and simulation quality diverge (Section~\ref{sec:results}).
-\item An economic lens on what such simulators must capture: cross-chain measurements of fees against loss-versus-rebalancing, and a perfect-foresight bound on the value of timing (Section~\ref{sec:economics}).
+\item A reconciled multi-pool Uniswap v3 event dataset: ten Ethereum pools from May 2021-September 2026, with active liquidity reproduced exactly at every swap (Section 3).
+\item DEX-Net, an event model trained jointly across pools, with exact, mechanics-consistent sampling and liquidity profile conditioning (Section 4)
+\item A multi-seed evaluation of next-event likelihood against point-process baselines, rollouts against history-based forecasters, liquidity behavior, and the fee income and P\&L of a hypothetical LP position, including a confirmation in AMM simulation that next-event likelihood can be a poor guide to rollout quality, and the mechanism behind it (Section 6).
 \end{enumerate}
 
-% ===================================================================== 2
-\section{Background and related work}\label{sec:background}
+\section{Background and related work}
 
-\paragraph{Uniswap v3.} In Uniswap v3~\citep{adams2021uniswap}, LPs deposit liquidity $L$ over a price range $[p_a,p_b)$ expressed in discrete ticks. Within a tick interval the pool behaves as a constant-product market with \emph{active} liquidity equal to the sum of all positions covering the current price; a swap moves the price along this curve, crossing ticks and changing active liquidity as it goes. Mints and burns add and remove liquidity over ranges. Fees, a fixed fraction of swap input, accrue to in-range liquidity; since December 2025 a protocol share is withheld on mainnet pools.
+\paragraph{Uniswap v3.} In Uniswap v3 \citep{adams2021uniswap}, LPs deposit liquidity $L$ over a price range $[p_a, p_b)$ expressed in discrete ticks. Within a tick interval, the pool behaves as a constant-product market with active liquidity equal to the sum of all positions covering the current price; a swap moves the price along this curve, crossing ticks and changing active liquidity as it goes. Mints and burns add and remove liquidity over ranges. Fees, a fixed fraction of swap input, accrue to in-range liquidity. Uniswap governance turned on a protocol share of v3 fees on Ethereum mainnet in December 2025, first for selected pools, and in February 2026 proposed extending it to the remaining v3 pools \citep{uniswapgov2025,uniswapgov2026}. The share is one quarter of fees on the 0.01\% and 0.05\% tiers and one sixth on the 0.3\% tier. Activation dates differ by pool, so we report all LP results gross of this share.
 
-\paragraph{LP economics.} Loss-versus-rebalancing (LVR)~\citep{milionis2022lvr} measures what an LP loses to arbitrageurs relative to a rebalancing strategy trading at external prices; with fees, the LP's excess return over that strategy is fees minus LVR~\citep{milionis2023fees}. Just-in-time (JIT) liquidity, in which an LP mints immediately before a large swap and burns immediately after, is a distinctive feature of v3 order flow~\citep{wan2022jit}. Impermanent loss in concentrated ranges is analysed by \citet{loesch2021impermanent}.
+\paragraph{LP economics.} Loss-versus-rebalancing (LVR; \citealp{milionis2022lvr}) measures what an LP loses to arbitrageurs relative to a rebalancing strategy trading at external prices; with fees, the LP's excess return over the strategy is fees minus LVR. Just-in-time (JIT) liquidity, where an LP mints immediately before a large swap and burns immediately after, is a documented strategy in Uniswap v3 \citep{wan2022jit}. Impermanent loss in concentrated ranges is analyzed by \citet{loesch2021impermanent}.
 
-\paragraph{Temporal point processes.} Event sequences with marks are classically modelled by Hawkes processes~\citep{hawkes1971}; neural variants replace parametric intensities with recurrent~\citep{mei2017neuralhawkes} or attention-based~\citep{zuo2020transformerhawkes} encoders, or model inter-event times directly without an intensity~\citep{shchur2020intensityfree}. Our clock is in the last category, with a discrete-time (block) parameterisation.
+\paragraph{Temporal point processes.} Event sequences with marks are classically modeled as Hawkes processes \citep{hawkes1971}; neural variants replace parametric intensities with recurrent or attention-based encoders \citep{mei2017neuralhawkes,zuo2020transformerhawkes}, or model inter-event times directly without an intensity \citep{shchur2020intensityfree}. Our timing model falls in the last category with a discrete-time (block) parameterization.
 
-\paragraph{Generative market simulators.} Limit-order-book simulators range from agent-based platforms such as ABIDES~\citep{byrd2020abides} to learned generators of order flow~\citep{coletta2021realistic,nagy2023lob}, typically evaluated against stylized facts of returns~\citep{cont2001stylized}. To our knowledge, learned generators of AMM order flow that keep the AMM's mechanics exact have not been studied. % CHECK: confirm with a literature search before claiming novelty.
+\paragraph{Generative market simulators.} Limit-order-book simulators range from agent-based platforms such as ABIDES \citep{byrd2020abides} to learned generators of order flow, such as neural Hawkes processes conditioned on the state of the book \citep{shi2022sdpnhp}, which are often checked against stylized facts of returns \citep{cont2001stylized}. For AMMs, \citet{palit2022shuffled} replays randomly shuffled historical Uniswap events through the AMM's mechanics to study price formation without trader rationality; like us it separates order flow from mechanics, but it does not learn a generator. To our knowledge, learned generators of AMM order flow that keep the AMM's mechanics exact have not been explored.
 
-% ===================================================================== 3
-\section{Data}\label{sec:data}
+\paragraph{Likelihood and multi-step error.} Models trained to predict one step ahead from real histories are known to degrade when rolled out on their own outputs: exposure bias in sequence models \citep{bengio2015scheduled,ranzato2016sequence}, compounding error in learned time-series and dynamics models \citep{venkatraman2015improving}, and a mismatch between the training objective and downstream use \citep{lambert2020objective}. Likelihood and sample quality can also disagree for generative models in general \citep{theis2016note}. Neural point processes are nonetheless usually benchmarked on next-event likelihood. We confirm the gap in AMM simulation and identify the mechanism behind it (Section 6.5).
 
-\paragraph{Pools.} We use ten Ethereum Uniswap v3 pools: USDC, USDT, DAI and WBTC paired with WETH at the 0.05\% and 0.3\% fee tiers, and USDC/USDT at 0.01\% and 0.05\%. Pools were chosen by existence at a fixed roster block, not by current activity. The data cover May 2021 to September 2026 and include every Initialize, Swap, Mint and Burn log (Table~\ref{tab:dataset}): 29.4 million events, of which 28.24 million are swaps, 625,526 mints and 516,415 burns.
+\section{Data}
 
-\input{../tables/dataset.tex}
+\paragraph{Pools.} We used ten Ethereum Uniswap v3 pools: USDC, USDT, DAI, and WBTC paired with WETH at the 0.05\% and 0.3\% fee tiers, and USDC/USDT at 0.01\% and 0.05\%. The data covers May 2021-September 2026, including every initialize, swap, mint, and burn (Table 1). This constitutes 29.4 million events comprising 28.24 million swaps, 625,526 mints and 516,415 burns.
 
-\paragraph{Reconciliation.} We replay every pool from its first event with exact integer arithmetic. A Fenwick-tree ledger of liquidity by tick reproduces the active liquidity recorded by the contract at every one of the 28.24 million swaps; the block-header hash chain is checked; owner and range balances never go negative; and all 516,415 burns are confirmed to remove liquidity that exists. The same ledger provides the exact state at any point for simulation.
+\begin{table}[t]
+\centering
+\caption{Pools, event counts and chronological splits (model rows: every event after a pool's first 64, which lack a full history). Held-out pools contribute no training rows.}\label{tab:1}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lrlrrrrlrrr}
+\toprule
+Pool & Fee & Role & Events & Swaps & Mints & Burns & Dates & Train & Val & Test \\
+\midrule
+USDC/WETH & 0.05\% & fit & 12,064,159 & 11,652,190 & 219,779 & 192,190 & 2021-05-05 -- 2026-09-15 & 8,416,528 & 1,833,866 & 1,813,701 \\
+USDT/WETH & 0.05\% & fit & 7,064,516 & 6,965,286 & 52,348 & 46,882 & 2021-05-05 -- 2026-09-15 & 4,746,323 & 1,139,022 & 1,179,107 \\
+WBTC/WETH & 0.05\% & fit & 2,390,754 & 2,330,001 & 33,297 & 27,456 & 2021-05-05 -- 2026-09-15 & 1,298,702 & 538,585 & 553,403 \\
+DAI/WETH & 0.05\% & fit & 1,985,785 & 1,976,002 & 5,231 & 4,552 & 2021-05-05 -- 2026-09-15 & 1,160,931 & 376,088 & 448,702 \\
+USDC/USDT & 0.01\% & fit & 1,960,944 & 1,908,221 & 27,508 & 25,215 & 2021-11-13 -- 2026-09-15 & 1,089,657 & 482,479 & 388,744 \\
+USDT/WETH & 0.3\% & fit & 1,539,097 & 1,333,943 & 115,486 & 89,668 & 2021-05-05 -- 2026-09-15 & 796,809 & 311,711 & 430,513 \\
+USDC/WETH & 0.3\% & fit & 1,177,154 & 984,031 & 110,214 & 82,909 & 2021-05-04 -- 2026-09-15 & 795,457 & 183,125 & 198,508 \\
+DAI/WETH & 0.3\% & fit & 414,307 & 392,844 & 12,347 & 9,116 & 2021-05-04 -- 2026-09-15 & 275,445 & 69,620 & 69,178 \\
+WBTC/WETH & 0.3\% & held out & 479,419 & 404,556 & 42,471 & 32,392 & 2021-05-04 -- 2026-09-15 & --- & 88,503 & 66,414 \\
+USDC/USDT & 0.05\% & held out & 305,855 & 292,975 & 6,845 & 6,035 & 2021-05-04 -- 2026-09-15 & --- & 16,849 & 18,163 \\
+Total &  &  & 29,381,990 & 28,240,049 & 625,526 & 516,415 &  &  &  &  \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-\paragraph{Representation.} Each pool is expressed in an economic base/quote orientation (e.g.\ WETH priced in USDC). Swap sizes are measured relative to the pool's virtual base reserve, liquidity amounts relative to active liquidity, and ranges relative to the current tick in units of tick spacing. Each event is summarised by twelve features with validity masks. Pool metadata (fee tier, tick spacing and token decimals) enters as five features.
+\paragraph{Reconciliation.} We replay every pool from its first event with exact integer arithmetic. A Fenwick-tree ledger of liquidity by tick reproduces the active liquidity recorded by the contract at every one of its 28.24 million swaps.
 
-\paragraph{Liquidity profile.} For every event we also record the liquidity profile just before it: the active liquidity at 17 log-price offsets between $-4\%$ and $+4\%$ of the current price, as $\log(1+L(\text{offset})/L(\text{now}))/4$. During training the profile is read from the reconciled ledger; during simulation it is recomputed from the simulated book after every event. The two computations agree exactly on real data.
+\paragraph{Liquidity profile.} For every event we also record the liquidity profile just before it: the active liquidity at 17 log-price offsets between $-4\%$ and $+4\%$ of the current price, as $\log\bigl(1 + L_{\mathrm{offset}}/L_{\mathrm{now}}\bigr)/4$, scaled so that typical values fall roughly between 0 and 1. During training the profile is read from the reconciled ledger. During simulation it is computed from the simulated book after every event.
 
-\paragraph{Splits.} Splits are chronological by block: training until 2 February 2025, validation until 14 November 2025, and test until 15 September 2026. Eight pools are used for fitting; WBTC/WETH 0.3\% and USDC/USDT 0.05\% are held out entirely and contribute validation and test data only. All scalers are fitted on training rows.
+\paragraph{Splits.} Splits are chronological: training until 2 February 2025, validation until 14 November 2025, and test until 15 September 2026. Eight pools are used for fitting while two are used for validation and test only: WBTC/WETH (0.3\% fee) and USDC/USDT (0.05\% fee).
 
-% ===================================================================== 4
-\section{Model}\label{sec:model}
+\section{Model}
 
-Figure~\ref{fig:architecture} summarises the model and the sampling loop.
+Figure 1 summarizes the model and the sampling loop.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig1_architecture.pdf}
-\caption{DEX-Net. A Transformer encoder reads the last 64 events, pool metadata and (in the depth-aware model) the liquidity profile, and parameterises distributions over the next event's timing, type and marks. A sampled event is applied by exact Uniswap v3 mechanics; the resulting state yields the next liquidity profile and the event joins the history.}
-\label{fig:architecture}
+\caption{DEX-Net. A transformer encoder reads the last 64 events, pool metadata and the liquidity profile (omitted in the no-profile model), and parameterizes distributions over the next event's timing, type and marks. A sampled event is applied by exact Uniswap v3 mechanics. The state after a model step yields the next liquidity profile and the event joins the history.}\label{fig:1}
 \end{figure}
 
-\paragraph{Event space.} The next event is a sell, buy, mint or burn, arriving after a gap of $d\in\{0,1,2,\dots\}$ blocks, where $d=0$ means the same block as the previous event.
+\paragraph{Event space.} Events may be a sell, buy, mint or burn. They may arrive after a gap of $d \in \{0, 1, 2, \dots\}$ blocks, where $d = 0$ means the same block as the previous event.
 
-\paragraph{Clock.} A logit gives the probability of another event in the same block; otherwise the gap $d\geq1$ follows a three-component geometric mixture, $P(d)=\sum_k \pi_k(1-e^{-r_k})e^{-(d-1)r_k}$, with mixture weights and rates output by the network.
+\paragraph{Clock.} A logit gives the probability of another event in the same block. Otherwise the gap $d \geq 1$ follows a three-component geometric mixture, $P(d) = \sum_k \pi_k \bigl(1 - e^{-r_k}\bigr)\, e^{-(d-1) r_k}$, with mixture weights $\pi_k$ and rates $r_k$ output by the network.
 
-\paragraph{Type and marks.} The event type is a four-way categorical conditioned on the gap. Marks are conditioned on gap and type:
-\begin{itemize}
-\item \emph{Swap size}: a rational-quadratic spline flow~\citep{durkan2019spline} on the log of the base amount relative to the virtual base reserve. Buys are truncated at the exact amount the pool's liquidity can supply.
-\item \emph{Mint range}: discretized logistic mixtures~\citep{salimans2017pixelcnnpp} over the lower tick (relative to the current tick, on an asinh scale) and the width (log scale), on the pool's tick grid. Interval endpoints are computed in double precision: in single precision, far from the current tick, the two edges of a one-tick interval can round to the same number.
-\item \emph{Mint amount}: a spline flow on $\log(L/L_{\text{active}})$.
-\item \emph{Burn}: the same range model, normalised over the ranges that actually hold liquidity, followed by a full-burn indicator and a spline flow for partial fractions.
-\end{itemize}
+\paragraph{Type and marks.} The event type is a four-way categorical conditioned on the gap. Marks are conditioned on the gap and type:
 
-\paragraph{Encoder.} A Transformer~\citep{vaswani2017attention} reads the last 64 events (features, masks and event-type embeddings) and a query token carrying pool metadata. In the depth-aware model the liquidity profile is projected and added to the query token. The headline model has width 128 and 4 layers (956,527 parameters); the reference model is identical without the profile (954,351); a small depth-aware model has width 64 and 2 layers (148,975).
+\begin{enumerate}
+\item Swap size: a rational-quadratic spline flow \citep{durkan2019spline} on the log of the base amount relative to the virtual base reserve. The base token is the pool's economic base asset (e.g., WETH in USDC/WETH), and the virtual base reserve is $L/\sqrt{P}$, the amount of base the pool would hold at the current price if its active liquidity extended over all prices. A buy removes base from the pool, so its size is truncated at the exact amount the pool's liquidity can supply. A sell adds base, which the pool can absorb up to its lowest initialized tick, so sells are not truncated; an oversized sell ends the path as a failure.
+\item Mint range: discretized logistic mixtures over the lower tick (relative to the current tick on an asinh scale) and the width (log scale), on the pool's tick grid.
+\item Mint amount: a spline flow on $\log(L/L_{\mathrm{active}})$.
+\item Burn: the same range model, normalized over the ranges that actually hold liquidity (the simulator tracks liquidity per range, summed over owners, alongside the tick-level ledger), followed by a full-burn indicator and a spline flow for partial fractions.
+\end{enumerate}
 
-\paragraph{Exact simulation.} To simulate, we sample an event, apply it to the replicated pool with exact tick-crossing swap arithmetic or exact liquidity updates, compute its features from the before and after states, and append it to the history. A sampled event that is infeasible (for example, a burn of liquidity that does not exist) ends the path and is recorded as a failure; it is never repaired.
+\paragraph{Encoder.} A transformer reads the last 64 events (features, masks, and event-type embeddings) and a query token carrying pool metadata. DEX-Net projects the liquidity profile and adds it to the query token; it has width 128 and 4 layers (956,527 parameters). The no-profile model is identical but without the liquidity profile (954,351 parameters), and DEX-Net-small has width 64 and 2 layers (148,975 parameters).
 
-\paragraph{Training.} We minimise next-event negative log-likelihood (NLL), the sum of the clock, type and mark terms, with AdamW~\citep{loshchilov2019adamw} (learning rate $10^{-4}$, weight decay 0.01, 1,000-update warm-up then cosine decay to 10\%, gradient clipping at 1), batches of 1,024 events, and a pool-balanced schedule (202 million examples): in each of three epochs every fitting pool contributes the same number of examples, equal to the largest pool's training rows (8.4 million), so smaller pools are revisited in fresh shuffled passes (from 3 passes over the largest pool to 92 over the smallest). Validation NLL on 8,192 fixed rows per seen pool is computed after each of 97 rounds, and the checkpoint with the lowest seen-pool macro NLL is kept; there is no early stopping. Each of the 15 final runs took 11--14 hours, with three or four runs sharing each of four A100 GPUs.
+\paragraph{Exact simulation.} To simulate we sample an event, apply it to the replicated pool with the protocol's exact swap arithmetic \citep{adams2021uniswap} or exact liquidity updates, compute its features from the before and after states, and append it to the history. If a sampled event is impossible (a swap larger than the pool's liquidity can absorb, a mint above the protocol's per-tick liquidity limit, or a state with zero active liquidity), the path ends and is reported as a failure. Failures are rare: within 512 events at most 0.3\% of the no-profile model's paths fail (held-out pools), and 0.02\% or fewer of DEX-Net's. When scoring, failed paths are dropped from their ensemble and every anchor is kept.
 
-% ===================================================================== 5
-\section{Evaluation setup}\label{sec:setup}
+\paragraph{Training.} We minimize next-event negative log-likelihood (NLL), the sum of the clock, type and mark terms, with AdamW (learning rate $10^{-4}$, weight decay 0.01, 1,000 update warm-up then cosine decay to 10\%, and gradient clipping at 1). Each batch of 1,024 holds 256 events from each of 4 different pools, and every pool contributes the same number of examples. Because the pools have a different number of events, some were cycled through more than others (3 to 92 cycles). We calculate the validation score every 2,048 batches (one round) until we hit 3 cycles (epochs) through the largest pool. The best performing checkpoint (lowest seen-pool macro validation NLL) was kept.
 
-\paragraph{Model families.} We train five families with three seeds each (260930--260932), all with identical code, schedules (one per seed, shared across families) and hardware: the reference model; the depth-aware model; the small depth-aware model; and two history ablations of the depth-aware model that see only the last 8 events or no events at all.
+\section{Evaluation setup}
 
-\paragraph{Next-event likelihood.} NLL is reported in nats per event on 32,768 fixed rows per pool from the test period, as a macro average over seen pools and over held-out pools.
+We train five families with three seeds each: DEX-Net, the same model without the liquidity profile (the no-profile model), DEX-Net-small, and two history ablations of DEX-Net.
 
-\paragraph{Point-process baselines.} For the clock and type terms we fit two baselines by maximum likelihood on the same event space, scored on the same rows: an \emph{unconditional} renewal model (constant same-block probability, a three-component geometric mixture for gaps, constant type frequencies), and a four-type discrete-time \emph{Hawkes} process~\citep{hawkes1971} over the same last 64 events, with exponential kernels at two learned time scales, a closed-form per-block hazard for gaps, and type probabilities proportional to type intensities. Both are fitted per seen pool; held-out pools use one fit on pooled seen-pool data.
+\paragraph{Next-event likelihood.} A macro averaged NLL is reported in nats per event on 32,768 fixed samples per pool from the test period.
 
-\paragraph{Rollouts.} Start points (\emph{anchors}) are spaced uniformly in event index within each split, never chosen by outcome, with non-overlapping outcome windows; at each we reconstruct the exact pool state and position inventory from the raw logs. There are 610 test anchors (512 in seen pools, 98 in held-out pools) and 607 validation anchors (512 and 95). Each model seed draws 32 paths per anchor. At 32, 128 and 512 events we score four endpoints---price return (bp), log change in active liquidity, elapsed blocks and traded volume relative to the initial reserve---with the energy score~\citep{gneiting2007scoring}, an unbiased ensemble estimator on scaled endpoints, and report price CRPS where useful. Model families are compared by paired bootstrap over anchors.
+\paragraph{Point-process baselines.} For the clock and type terms we fit two baselines by maximum likelihood on the same event space, scored on the same rows. We fit an unconditional renewal model (constant same-block probability, a three component geometric mixture for gaps, constant type frequencies), and a four-type discrete time Hawkes process over the same last 64 events, with exponential kernels at two learned time scales, a closed-form per-block hazard for inter event block gaps, and type probabilities proportional to type intensities (the expected rate of each event type: a base rate plus a decaying boost from each of the last 64 events). Both are fitted per seen pool; for held-out pools, we fit one model on pooled seen-pool data.
 
-\paragraph{History-based forecasters.} Each anchor also carries two baselines built from the pool's own history, scored identically: \emph{recent}, 256 endpoint windows of the same length drawn from the events just before the anchor; and \emph{expanding}, 256 windows drawn from all prior history.
+\paragraph{Rollouts.} Start points (anchors) are spaced uniformly in event index space within each split such that we can rollout up to 512 events without overlapping with another anchor. We take up to 64 anchors per pool and split (fewer where the period is too short for 64 non-overlapping windows), giving 610 test anchors (512 on seen pools, 98 on held-out pools) and 607 validation anchors (512 and 95); scores average over anchors, so each anchor counts equally. Each model seed draws 32 paths per anchor. At 32, 128 and 512 events we score four endpoints (at 512 events, traded volume contributes most to the score): price return (bp), log change in active liquidity, log elapsed blocks, and traded volume relative to the initial virtual reserve (log scale). Each endpoint is divided by a fixed scale (10 bp, 0.1, 1 and 0.001), set before evaluation to put the endpoints on a comparable footing, and the four are scored jointly with the energy score \citep{gneiting2007scoring} using the fair ensemble estimator \citep{ferro2014fair}, which removes the penalty a finite ensemble pays for its size and so makes ensembles of different sizes (32 paths, 256 baseline windows) comparable. For single quantities (one endpoint, or an LP outcome in Section 6.6) we use the CRPS, the energy score's one-dimensional case, with the same correction. The correction assumes exchangeable ensemble members; history windows overlap and are serially dependent, so for the history baselines it is approximate. Model families are compared via paired bootstrap across anchors; these confidence intervals reflect variation across anchors, not across training seeds.
 
-% ===================================================================== 6
-\section{Results}\label{sec:results}
+\paragraph{History-based forecasters.} Two history-based forecasters use the pool's own past instead of a model. We create an ensemble of 256 past h-event windows from the same pool, all ending before the anchor and computed with the same endpoint definitions as simulated paths. 1) Recent windows start at evenly spaced points within the last 32h events; 2) expanding windows start at points drawn uniformly from the pool's entire prior history. Both are scored identically to the model.
+
+\section{Results}
 
 \subsection{Next-event likelihood}
 
-Table~\ref{tab:nll_by_pool} reports NLL by pool. The reference model is best on aggregate (seen 5.534, held-out 7.649); the depth-aware model is marginally worse (+0.008 seen, s.e.\ 0.004; +0.018 held-out, s.e.\ 0.011). The small depth-aware model (64$\times$2) is worse than the large depth-aware model by 0.078 nats per event on seen pools (s.e.\ 0.007) and 0.130 on held-out pools (s.e.\ 0.020). History matters a great deal: with only the last eight events the depth-aware model loses 0.18 nats per event on seen pools and 0.29 on held-out pools, far beyond seed-to-seed variation; with no history it loses 1.04 on seen pools.
+Table 2 reports NLL by pool. The no-profile model is best on aggregate (seen 5.534, held-out 7.649). DEX-Net is slightly worse (+0.008 seen, s.e. 0.004; +0.018 held-out, s.e. 0.011). Standard errors of differences combine the seed-to-seed spread of both models, $\sqrt{s_1^2/3 + s_2^2/3}$, treating each model's three seeds as independent. DEX-Net-small (64\ensuremath{\times}2) is worse than DEX-Net by 0.078 nats per event on seen pools (s.e. 0.007) and 0.130 on held-out pools (s.e. 0.020).
 
-The no-history model fails on held-out pools (23.6 $\pm$ 9.8). The failure is concentrated in one component and one pool: event timing in USDC/USDT 0.05\%, where the clock NLL reaches 12--47 nats instead of 1--2. Without history the model cannot tell how active an unseen pool is. Its validation NLL is also lowest after very few training rounds (rounds 2, 3 and 16 of 97 across seeds), after which it learns the training period's average activity at the expense of transfer to later periods.
+History length matters. Limiting DEX-Net to the last 8 events worsens NLL (+0.180 seen, s.e. 0.004; +0.286 held-out, s.e. 0.029), and removing history entirely worsens it further (+1.042 seen, s.e. 0.014).
 
-\input{../tables/nll_by_pool.tex}
+The no-history model fails on held-out pools (23.6 \ensuremath{\pm} 9.8). The failure is concentrated in one component and one pool: event timing in USDC/USDT 0.05\%, where the clock NLL reaches 12--47 nats instead of 1--2. Without history the model presumably cannot tell how active an unseen pool is. Its lowest validation NLL occurs after very few training rounds (validation rounds 2, 3 and 16 of 97 across seeds), after which it learns the training period's average activity at the expense of transfer to later periods.
 
-Table~\ref{tab:point_process_baselines} compares the clock and type terms with the point-process baselines. A converged Hawkes fit improves on the unconditional baseline substantially (3.50 to 3.23 nats on seen pools, 7.25 to 5.52 on held-out pools), and the neural model improves on Hawkes by a further 0.14 and 0.39. Most of the gain is in event type (0.67 against 0.74 on seen pools) and, on held-out pools, in timing (4.45 against 4.73). Marks have no point-process analogue; the no-history ablation is the corresponding comparison for them.
+\begin{table}[t]
+\centering
+\caption{Next-event NLL (nats/event) on the test period, mean \ensuremath{\pm} s.d. over 3 seeds; 32,768 fixed examples per pool.}\label{tab:2}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lrrrrr}
+\toprule
+Pool & DEX-Net & No profile & DEX-Net-small & DEX-Net, 8 events & DEX-Net, no history \\
+\midrule
+USDC/WETH 0.05\% & 4.792 \ensuremath{\pm} 0.005 & 4.775 \ensuremath{\pm} 0.006 & 4.887 \ensuremath{\pm} 0.009 & 4.974 \ensuremath{\pm} 0.006 & 5.476 \ensuremath{\pm} 0.030 \\
+USDT/WETH 0.05\% & 4.461 \ensuremath{\pm} 0.003 & 4.454 \ensuremath{\pm} 0.009 & 4.584 \ensuremath{\pm} 0.005 & 4.640 \ensuremath{\pm} 0.008 & 5.125 \ensuremath{\pm} 0.007 \\
+WBTC/WETH 0.05\% & 4.998 \ensuremath{\pm} 0.007 & 4.988 \ensuremath{\pm} 0.009 & 5.099 \ensuremath{\pm} 0.051 & 5.115 \ensuremath{\pm} 0.012 & 6.047 \ensuremath{\pm} 0.046 \\
+DAI/WETH 0.05\% & 4.715 \ensuremath{\pm} 0.002 & 4.704 \ensuremath{\pm} 0.004 & 4.823 \ensuremath{\pm} 0.009 & 4.895 \ensuremath{\pm} 0.005 & 5.506 \ensuremath{\pm} 0.052 \\
+USDC/USDT 0.01\% & 5.902 \ensuremath{\pm} 0.001 & 5.904 \ensuremath{\pm} 0.003 & 5.952 \ensuremath{\pm} 0.008 & 6.030 \ensuremath{\pm} 0.006 & 6.531 \ensuremath{\pm} 0.091 \\
+USDT/WETH 0.3\% & 7.260 \ensuremath{\pm} 0.039 & 7.244 \ensuremath{\pm} 0.027 & 7.310 \ensuremath{\pm} 0.039 & 7.564 \ensuremath{\pm} 0.029 & 9.204 \ensuremath{\pm} 0.063 \\
+USDC/WETH 0.3\% & 6.603 \ensuremath{\pm} 0.009 & 6.598 \ensuremath{\pm} 0.012 & 6.623 \ensuremath{\pm} 0.011 & 6.839 \ensuremath{\pm} 0.009 & 8.083 \ensuremath{\pm} 0.035 \\
+DAI/WETH 0.3\% & 5.606 \ensuremath{\pm} 0.006 & 5.602 \ensuremath{\pm} 0.005 & 5.684 \ensuremath{\pm} 0.002 & 5.720 \ensuremath{\pm} 0.003 & 6.696 \ensuremath{\pm} 0.083 \\
+WBTC/WETH 0.3\% (held out) & 7.075 \ensuremath{\pm} 0.027 & 7.070 \ensuremath{\pm} 0.022 & 7.206 \ensuremath{\pm} 0.031 & 7.274 \ensuremath{\pm} 0.009 & 8.723 \ensuremath{\pm} 0.041 \\
+USDC/USDT 0.05\% (held out) & 8.259 \ensuremath{\pm} 0.041 & 8.228 \ensuremath{\pm} 0.018 & 8.389 \ensuremath{\pm} 0.031 & 8.631 \ensuremath{\pm} 0.093 & 38.377 \ensuremath{\pm} 19.626 \\
+Macro, seen pools & 5.542 \ensuremath{\pm} 0.005 & 5.534 \ensuremath{\pm} 0.005 & 5.620 \ensuremath{\pm} 0.010 & 5.722 \ensuremath{\pm} 0.004 & 6.583 \ensuremath{\pm} 0.024 \\
+Macro, held-out pools & 7.667 \ensuremath{\pm} 0.019 & 7.649 \ensuremath{\pm} 0.003 & 7.797 \ensuremath{\pm} 0.028 & 7.953 \ensuremath{\pm} 0.046 & 23.550 \ensuremath{\pm} 9.794 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-\input{../tables/point_process_baselines.tex}
+Table 3 compares the clock and type terms with the point-process baselines. A Hawkes fit improves on the unconditional baseline substantially (3.50 to 3.23 nats on seen pools, 7.25 to 5.52 on held-out pools), and DEX-Net improves on Hawkes by a further 0.14 and 0.39. On seen pools the gain splits evenly between timing (2.42 against 2.50) and event type (0.67 against 0.74); on held-out pools most of it is in timing (4.46 against 4.73). Marks have no point-process analogue; the no-history ablation is the corresponding comparison for them.
+
+\begin{table}[t]
+\centering
+\caption{Clock and event-type NLL (nats/event, macro over pools) on the same evaluation rows. Point-process baselines are fitted per seen pool; held-out pools use one fit on pooled seen-pool data. Neural rows are 3-seed means.}\label{tab:3}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{lrrrrrr}
+\toprule
+Model & Clock (seen) & Type (seen) & Sum (seen) & Clock (held out) & Type (held out) & Sum (held out) \\
+\midrule
+Unconditional (renewal + type frequencies) & 2.606 & 0.896 & 3.503 & 6.285 & 0.964 & 7.250 \\
+4-type Hawkes, 2 time scales & 2.495 & 0.736 & 3.231 & 4.730 & 0.784 & 5.515 \\
+DEX-Net & 2.422 & 0.669 & 3.091 & 4.456 & 0.668 & 5.124 \\
+No profile (neural) & 2.421 & 0.667 & 3.088 & 4.451 & 0.667 & 5.119 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \subsection{Rollouts}
 
-Figure~\ref{fig:cones} shows forecast cones at four randomly drawn test anchors, and Table~\ref{tab:rollout_energy} reports energy scores for all models and baselines.
+Figure 2 shows forecast cones at four randomly drawn test anchors, and Table 4 reports energy scores for all models and baselines.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig2_forecast_cones.pdf}
-\caption{Forecast cones of cumulative return at four test anchors drawn at random (two held-out, two seen), from 96 paths per model (3 seeds $\times$ 32). Axes are scaled to the depth-aware model and the realised path; where the reference model's 5--95\% band leaves the axis its extent is printed in the panel title.}
-\label{fig:cones}
+\caption{Forecast cones of cumulative return at four test anchors drawn at random (two held-out, two seen), from 96 paths per model (3 seeds \ensuremath{\times} 32). Axes are scaled to DEX-Net and the realized path; where the no-profile model's 5--95\% band leaves the axis its extent is printed in the panel title.}\label{fig:2}
 \end{figure}
 
-\input{../tables/rollout_energy.tex}
+\begin{table}[t]
+\centering
+\caption{Rollout energy score (lower is better) at 32/128/512 events on all anchors; a seed's forecast is the ensemble of its paths that reached the horizon (failed paths, at most 0.3\%, are dropped); models are the mean of 3 seeds \ensuremath{\times} 32 paths; best per row in bold.}\label{tab:4}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Period & Pools & Events & Anchors & DEX-Net & No profile & DEX-Net-small & Recent & Expanding \\
+\midrule
+Test & held out & 32 & 98 & \textbf{2.75} & 3.43 & 3.01 & 3.15 & 3.61 \\
+Test & held out & 128 & 98 & 6.38 & 12.46 & \textbf{6.30} & 6.48 & 7.23 \\
+Test & held out & 512 & 98 & \textbf{16.63} & 60.30 & 16.64 & 17.00 & 17.76 \\
+\midrule
+Test & seen & 32 & 512 & \textbf{3.00} & \textbf{3.00} & 3.01 & 3.57 & 4.10 \\
+Test & seen & 128 & 512 & 7.88 & \textbf{7.84} & 8.23 & 8.00 & 10.82 \\
+Test & seen & 512 & 512 & 26.29 & 26.61 & 31.44 & \textbf{21.92} & 32.81 \\
+\midrule
+Validation & held out & 32 & 95 & 6.64 & 7.24 & \textbf{6.24} & 6.93 & 7.28 \\
+Validation & held out & 128 & 95 & 11.81 & 15.71 & 11.24 & \textbf{11.09} & 12.97 \\
+Validation & held out & 512 & 95 & 33.03 & 80.30 & 31.74 & \textbf{31.47} & 34.43 \\
+\midrule
+Validation & seen & 32 & 512 & \textbf{5.30} & 5.33 & 5.35 & 6.22 & 6.51 \\
+Validation & seen & 128 & 512 & \textbf{12.11} & 12.23 & 12.49 & 14.36 & 15.32 \\
+Validation & seen & 512 & 512 & \textbf{37.94} & 39.27 & 41.38 & 44.12 & 46.05 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-\paragraph{Held-out pools.} Here the liquidity profile changes the picture. In the test period the depth-aware model's 512-event energy is 16.55 against 37.24 for the reference model, a paired difference of $-18.5$ (95\% CI $-27.3$ to $-10.8$); the validation period shows the same ($-19.4$, CI $-36.6$ to $-5.6$), and in the test period the improvement is significant at every horizon (Table~\ref{tab:depth_vs_reference}). In the test period a depth-aware model (the 128$\times$4 model, or the 64$\times$2 model at 128 events) is the best forecaster at every horizon, slightly ahead of the recent-history baseline. In the validation period the recent baseline is ahead by 6.5\% at 128 events and 5\% at 512. We therefore describe the model as matching the strongest simple forecaster on unseen pools, while avoiding the reference model's failure.
+\paragraph{Held-out pools.} Here the liquidity profile changes the picture. In the test period DEX-Net's 512-event energy is 16.63 against 60.30 for the no-profile model, a paired difference of \ensuremath{-}43.7 (95\% CI \ensuremath{-}79.0 to \ensuremath{-}21.8); the validation period shows the same (\ensuremath{-}47.3, CI \ensuremath{-}69.1 to \ensuremath{-}28.8), and in the test period the improvement is significant at every horizon (Table 5). Against the strongest history baseline (recent windows), DEX-Net is ahead at every horizon in the test period, though no difference is significant (512 events: \ensuremath{-}0.37, CI \ensuremath{-}2.49 to +1.64); in the validation period the recent baseline is slightly ahead at 128 and 512 events, again not significantly (512 events: +1.56, CI \ensuremath{-}3.20 to +7.22). We therefore describe DEX-Net as matching the strongest simple forecaster on unseen pools, while avoiding the no-profile model's failure. The aggregate is dominated by one pool. On the held-out stablecoin pool (USDC/USDT 0.05\%) the no-profile model collapses (512-event energy 127.5 against 7.6 for DEX-Net in test; 168.5 against 17.3 in validation), while on WBTC/WETH 0.3\% the two are close (24.6 against 21.4 in test; 37.6 against 40.6 in validation, where the no-profile model is slightly better). Against the recent baseline the pools also differ: DEX-Net is better on WBTC/WETH (21.4 against 23.1 in test; 40.6 against 44.8 in validation) and worse on the stablecoin pool (7.6 against 5.6; 17.3 against 4.1), whose nearly static price the recent past predicts well. Confidence intervals that also resample training seeds are wider but keep these conclusions (test, 512 events: DEX-Net minus the no-profile model \ensuremath{-}43.7, CI \ensuremath{-}89.5 to \ensuremath{-}13.2).
 
-\paragraph{Seen pools.} On seen pools the two 128$\times$4 models are close, with the depth-aware model ahead at 512 events in validation ($-1.34$, CI $-2.59$ to $-0.17$). In the validation period it beats both history baselines at every horizon (512 events: 37.95 against 44.16 for the recent baseline). In the test period, however, the recent baseline wins at 512 events (21.93 against 25.71). % CHECK: the test period includes the December 2025 protocol-fee switch; whether this shift explains the gap is untested.
+\paragraph{Seen pools.} On seen pools the two 128\ensuremath{\times}4 models are close, with DEX-Net ahead at 512 events in validation (\ensuremath{-}1.34, CI \ensuremath{-}2.58 to \ensuremath{-}0.23). In the validation period it beats both history baselines at every horizon (512 events: 37.94 against 44.12 for the recent baseline). In the test period, however, the recent baseline wins at 512 events (21.92 against 26.29; difference +4.37, CI +2.44 to +6.40). This loss is concentrated in the two DAI/WETH pools (+14.5 and +19.2) and in the traded-volume endpoint (scaled CRPS 21.3 against 16.4, while price return is close at 10.7 against 10.1); resampling pools as well as anchors gives a confidence interval that includes zero (+4.37, CI \ensuremath{-}0.25 to +9.77). The 512-event comparison with the recent baseline reverses between the validation and test periods, which suggests that DEX-Net's accuracy relative to the baseline depends on market conditions; the Market conditions analysis below relates this to how volatile each period was relative to the pools' history (Table 6).
 
-\paragraph{Capacity.} The small depth-aware model matches the large one on held-out pools but is clearly worse on seen pools at long horizons (+5.3 at 512 events, CI 4.4 to 6.4).
+\paragraph{Capacity.} DEX-Net-small matches DEX-Net on held-out pools but is clearly worse on seen pools at long horizons (+5.15 at 512 events in the test period, CI 4.08 to 6.31).
 
-\input{../tables/depth_vs_reference.tex}
+\begin{table}[t]
+\centering
+\caption{DEX-Net minus the no-profile model: paired energy difference with 95\% bootstrap CI over the Table 4 anchors; share of paths losing more than 63\% of active liquidity; 5--95\% return-spread ratio (simulated / realized).}\label{tab:5}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Period & Pools & Events & $\Delta$ energy [95\% CI] & Collapse real & Collapse DEX-Net & Collapse no profile & Spread DEX-Net & Spread no profile \\
+\midrule
+test & seen & 32 & -0.00 [-0.04, +0.03] & 1.0\% & 0.8\% & 0.8\% & 1.08\ensuremath{\times} & 1.06\ensuremath{\times} \\
+test & seen & 128 & +0.04 [-0.07, +0.15] & 1.2\% & 1.6\% & 1.6\% & 1.25\ensuremath{\times} & 1.24\ensuremath{\times} \\
+test & seen & 512 & -0.32 [-0.98, +0.35] & 1.6\% & 3.1\% & 3.9\% & 1.37\ensuremath{\times} & 1.46\ensuremath{\times} \\
+\midrule
+test & held out & 32 & -0.68 [-1.57, -0.11] & 3.1\% & 4.0\% & 5.2\% & 0.95\ensuremath{\times} & 1.07\ensuremath{\times} \\
+test & held out & 128 & -6.08 [-14.20, -1.53] & 2.0\% & 8.3\% & 13.0\% & 1.05\ensuremath{\times} & 1.29\ensuremath{\times} \\
+test & held out & 512 & -43.66 [-78.95, -21.84] & 5.1\% & 15.2\% & 24.2\% & 1.01\ensuremath{\times} & 1.78\ensuremath{\times} \\
+\midrule
+val & seen & 32 & -0.03 [-0.08, +0.02] & 2.0\% & 2.3\% & 2.3\% & 1.17\ensuremath{\times} & 1.16\ensuremath{\times} \\
+val & seen & 128 & -0.12 [-0.35, +0.07] & 3.1\% & 3.2\% & 3.3\% & 1.02\ensuremath{\times} & 1.02\ensuremath{\times} \\
+val & seen & 512 & -1.34 [-2.58, -0.23] & 3.5\% & 6.0\% & 6.8\% & 1.12\ensuremath{\times} & 1.21\ensuremath{\times} \\
+\midrule
+val & held out & 32 & -0.60 [-1.69, +0.03] & 4.2\% & 4.6\% & 5.7\% & 0.93\ensuremath{\times} & 1.01\ensuremath{\times} \\
+val & held out & 128 & -3.90 [-7.90, -1.22] & 4.2\% & 9.5\% & 14.8\% & 0.99\ensuremath{\times} & 1.13\ensuremath{\times} \\
+val & held out & 512 & -47.27 [-69.07, -28.81] & 8.4\% & 19.9\% & 30.6\% & 0.80\ensuremath{\times} & 1.77\ensuremath{\times} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-\paragraph{Path reweighting.} A post-hoc reweighting of simulated paths, fitted only on seen-pool validation rollouts (a bounded weight per path from its endpoints relative to its ensemble, with a penalty on divergence from uniform weights), improves the depth-aware model's 512-event energy by 1.65 on seen pools (CI 1.19 to 2.18) and 1.92 on held-out pools (CI 0.92 to 3.23). Reweighted, the model is ahead of the recent baseline on held-out pools at 512 events (17.35 against 17.57) but not on seen pools (27.2 against 22.6). Reweighting changes only weights, not paths, and we treat it as an optional calibration layer rather than part of the model. % Note: reweight-depth.json scores the finite weighted distribution with a V-statistic, so its absolute values differ from Table 4; compare within that file only.
+\paragraph{Path reweighting.} A post-hoc reweighting of simulated paths, fitted only on seen-pool validation rollouts (described in Appendix A), improves DEX-Net's 512-event energy on test anchors by 1.07 on seen pools (CI 0.74 to 1.45) and 1.14 on held-out pools (CI 0.46 to 2.10). Weighted ensembles are scored with a weighted analogue of the fair estimator that reduces to it for uniform weights (Appendix A), which puts these figures on the scale of Table 4; because the weights depend on the sampled paths, it carries no unbiasedness guarantee and serves as a practical adjustment. These comparisons use the anchors on which all of a seed's paths completed, so baseline differences can differ from Table 4 by a few hundredths. Reweighted, DEX-Net beats the recent baseline on held-out pools at 32 events (\ensuremath{-}0.48, CI \ensuremath{-}0.95 to \ensuremath{-}0.11) and is ahead, though not significantly, at 512 events (\ensuremath{-}1.59, CI \ensuremath{-}3.54 to +0.33); on seen pools it is still behind at 512 events (+3.22, CI +1.46 to +5.14). Reweighting changes only weights, not paths, and we treat it as an optional calibration layer rather than part of the model.
 
-\subsection{Liquidity behaviour}
+\paragraph{Market conditions.} To see where DEX-Net beats the recent baseline, we split anchors into thirds by recent volatility relative to the pool's long-run volatility: the 5--95\% width of 512-event returns in the recent windows divided by that in all earlier history, a quantity known at the anchor. DEX-Net's advantage grows with volatility in three of the four period and pool groups (Table 6); on held-out test pools no third differs significantly. On seen pools it loses by 7.2 in the calmest third of test anchors but ties in the most volatile third, and in validation its advantage grows from 2.3 (calm, not significant) to 11.4 (volatile). The recent baseline does well when the near future resembles the recent past, while DEX-Net, which models how order flow evolves from the current pool state, holds up better when volatility is elevated. This is not only shrinkage toward long-run behavior: against an equal blend of recent and long-run windows, which shrinks by construction, DEX-Net's advantage in the most volatile third remains in validation (seen pools \ensuremath{-}8.98, CI \ensuremath{-}15.70 to \ensuremath{-}4.29; held-out pools \ensuremath{-}6.36, CI \ensuremath{-}11.17 to \ensuremath{-}1.68), though not in the test period (seen pools \ensuremath{-}0.25, CI \ensuremath{-}2.04 to +1.45). The test period was calmer relative to each pool's history than the validation period (on seen pools the middle third spans ratios of 0.59--0.85 in test against 0.72--0.98 in validation), which is consistent with the reversal between periods. The analysis is post hoc and should be read as suggestive; because the ratio is known at the anchor, it could drive a forecast that leans on DEX-Net when recent volatility is elevated.
 
-\paragraph{Liquidity collapse and swap-size tails.} The reference model's long-horizon failures on held-out pools come from paths in which simulated liquidity thins and then collapses. One-step swap sizes are close to calibrated (for example, the predicted share of swaps larger than 1\% of the virtual reserve is 0.043\% against 0.038\% observed on seen test pools); the error is state-dependent. Once a path's active liquidity is low, swaps sized relative to the virtual reserve move the price far more, which thins liquidity further. On held-out pools, 24.2\% of the reference model's paths lose more than 63\% of their active liquidity within 512 events, against 5.1\% of real outcomes; the depth-aware model reduces this to 15.2\%. Swaps that move the price by more than 100 bp make up 0.97\% of the reference model's simulated swaps on held-out pools, 0.20\% of the depth-aware model's, and 0.03\% of real swaps; for moves above 500 bp the shares are 0.48\%, 0.066\% and 0.018\%. The liquidity profile removes most of the excess, but not all of it.
+\begin{table}[t]
+\centering
+\caption{DEX-Net minus the recent baseline (512-event energy, mean over anchors with 95\% bootstrap CI; negative favors DEX-Net), by thirds of recent volatility relative to the pool's long-run volatility.}\label{tab:6}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{llrrr}
+\toprule
+Period & Pools & Calm third & Middle third & Volatile third \\
+\midrule
+Test & seen & +7.17 [+3.40, +11.80] & +5.47 [+2.41, +8.51] & +0.48 [\ensuremath{-}1.96, +2.85] \\
+\midrule
+Test & held out & +1.64 [\ensuremath{-}1.36, +4.88] & \ensuremath{-}1.58 [\ensuremath{-}5.35, +1.40] & \ensuremath{-}1.21 [\ensuremath{-}5.43, +2.83] \\
+\midrule
+Validation & seen & \ensuremath{-}2.30 [\ensuremath{-}5.57, +0.41] & \ensuremath{-}4.80 [\ensuremath{-}8.83, \ensuremath{-}1.12] & \ensuremath{-}11.43 [\ensuremath{-}19.87, \ensuremath{-}5.65] \\
+\midrule
+Validation & held out & +11.00 [+2.12, +24.66] & \ensuremath{-}0.56 [\ensuremath{-}8.29, +7.77] & \ensuremath{-}5.82 [\ensuremath{-}11.30, \ensuremath{-}0.57] \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-\paragraph{Just-in-time liquidity.} We apply the definitions of an earlier study in our research code to simulated paths and to the real test-period event stream identically (Figure~\ref{fig:jit}). A strict JIT pair is a mint, swap and burn that are consecutive, in one block, and share the same range and liquidity amount; a large mint adds more than ten times the active liquidity. The model learns the pattern: it generates strict JIT pairs, and its share of large mints is close to real (seen pools: 7.5\% of mints against 9.0\%). But JIT is too rare (1.8 pairs per 1,000 events against 4.6 on seen pools; 1.2 against 6.4 on held-out pools), too large relative to the deposit (median swap of 0.74\% of the deposit against 0.12\%), and too sticky (10.5\% of large mints are not removed within 64 events, against 0.5\%). Liquidity conditioning helps with the last of these (the reference model leaves 15.2\% unremoved).
+\paragraph{Exploratory follow-up.} Motivated by this pattern, we refit the reweighting with weights conditioned on the same volatility ratio. Because the choice was made after seeing the results above, this is exploratory. On the held-back part of the validation data it scores worse than the global reweighting (reweighting objective, the mean over horizons of the weighted energy score relative to uniform weights, lower is better: 0.656 against 0.645, uniform weights 0.663). On test anchors it closes the 512-event energy gap on seen pools (+0.52 against the recent baseline, CI \ensuremath{-}0.88 to +1.97, from +3.22 with global weights), but its LP P\&L forecasts become unstable across anchors (seen pools at 512 events: +8.97, CI \ensuremath{-}3.38 to +31.23). We therefore keep the global reweighting; a regime-aware calibration that stays stable remains open.
+
+\subsection{Liquidity behavior}
+
+\paragraph{Liquidity collapse and swap-size tails.} The no-profile model's long-horizon failures on held-out pools come from paths in which simulated liquidity thins and then collapses. One-step swap sizes are close to calibrated (for example, the predicted share of swaps larger than 1\% of the virtual reserve is 0.043\% against 0.038\% observed on seen test pools); the error is state-dependent. Because swap sizes are relative to the current virtual reserve, a swap's price impact within a range of constant liquidity does not depend on how much liquidity there is; the amplification comes from what lies beyond the current tick. When nearby ticks hold much less liquidity than the current one, a swap that crosses them moves the price far further than its size suggests, and each crossing thins the active liquidity for the next swap. The liquidity profile is exactly this information. On held-out pools, 24.2\% of the no-profile model's paths lose more than 63\% of their active liquidity within 512 events (a fall of more than 1 in log active liquidity, since $1 - 1/e \approx 63\%$), against 5.1\% of real outcomes; DEX-Net reduces this to 15.2\%. Almost all of this is on the stablecoin pool (no-profile 68\%, DEX-Net 42\%, real 15\% in the test period); on WBTC/WETH collapse is rare for every model. Swaps that move the price by more than 100 bp make up 0.97\% of the no-profile model's simulated swaps on held-out pools, 0.20\% of DEX-Net's, and 0.03\% of real swaps; for moves above 500 bp the shares are 0.48\%, 0.066\% and 0.018\%. The liquidity profile removes most of the excess, but not all of it.
+
+\paragraph{Just-in-time liquidity.} We use the following definitions, applied identically to simulated paths and the real test-period event stream (Figure 3). A strict JIT pair is a mint, swap and burn that are consecutive, in one block, and share the same range and liquidity amount; a large mint adds more than ten times the active liquidity. The model learns the pattern: it generates strict JIT pairs, and its share of large mints is close to real (seen pools: 7.5\% of mints against 9.0\%). But JIT is too rare (1.8 pairs per 1,000 events against 4.6 on seen pools; 1.2 against 6.4 on held-out pools), with deposits too small for the swap they accompany (median swap of 0.74\% of the deposit against 0.12\%), and too sticky (10.5\% of large mints are not removed within 64 events, against 0.5\%). The liquidity profile helps with the last of these (the no-profile model leaves 15.2\% unremoved). Removal is measured only for large mints followed by at least 64 events (in simulation, mints within the first 32 of 96 events), and the same rule is applied to the real stream.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{fig4_jit.pdf}
-\caption{JIT liquidity, real against the final models, on seen and held-out pools: strict JIT pairs per 1,000 events, median ratio of the paired swap's notional to the minted deposit (log scale), and the share of large mints not removed within 64 events. Bars are seed means; whiskers show the range over three seeds. Simulated: 12 test anchors per pool, 32 paths of 96 events per seed. Real: the full test-period event stream.}
-\label{fig:jit}
+\includegraphics[width=\linewidth]{fig3_jit.pdf}
+\caption{JIT liquidity, real against the final models, on seen and held-out pools: strict JIT pairs per 1,000 events, median ratio of the paired swap's notional to the minted deposit (log scale), and the share of large mints not removed within 64 events. Bars are seed means; whiskers show the range over three seeds. Simulated: 12 test anchors per pool, 32 paths of 96 events per seed. Real: the full test-period event stream.}\label{fig:3}
 \end{figure}
 
 \subsection{Stylized facts, calibration and skew}
 
-Figure~\ref{fig:stylized} compares simulated and realised event sequences. The event mix is close; the same-block share is slightly low on seen pools (0.18 against 0.23). On seen pools the width of the simulated return distribution is within about 12\% of realised up to 32 events and widens to about 1.4 times realised at 512 events. On held-out pools, the depth-aware model stays within roughly 0.9--1.3 times realised at every horizon, while the reference model reaches about 5 times at 512 events. Volatility clustering is too strong in every model: the autocorrelation of absolute per-event returns exceeds the realised value at every lag (seen pools, lag 1: 0.21 against 0.17). PIT histograms (Figure~\ref{fig:pit}, Appendix) show no gross miscalibration of the return forecast but visible deviations at individual horizons.
+Figure 4 compares simulated and realized event sequences. The event mix is close; the same-block share is low on seen pools (0.18 against 0.23). On seen pools the width of the simulated return distribution is within about 12\% of realized up to 32 events and widens to about 1.4 times realized at 512 events. On held-out test pools, DEX-Net's spread stays within roughly 0.9--1.3 times realized at every horizon. Figure 4 computes this ratio per seed and averages seeds; for the no-profile model one seed's ratio is about 10\ensuremath{\times} at 512 events, so its average (about 5\ensuremath{\times}) is far above the pooled ratio of Table 5 (1.78\ensuremath{\times}), which we treat as primary. Volatility clustering is too strong in every model: the autocorrelation of absolute per-event returns exceeds the realized value at every lag (seen pools, lag 1: 0.21 against 0.17). PIT histograms (Figure S1, Appendix A) show no gross miscalibration of the return forecast but visible deviations at individual horizons.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{fig3_stylized_facts.pdf}
-\caption{Stylized facts after test anchors, seen (top) and held-out (bottom) pools. Left: width of the 5--95\% range of cumulative return, simulated over realised, by horizon (shaded: seed range). Centre: autocorrelation of absolute per-event return. Right: event mix and same-block share.}
-\label{fig:stylized}
+\includegraphics[width=\linewidth]{fig4_stylized_facts.pdf}
+\caption{Stylized facts after test anchors, seen (top) and held-out (bottom) pools. Left: width of the 5--95\% range of cumulative return, simulated over realized, by horizon (shaded: seed range). Center: autocorrelation of absolute per-event return. Right: event mix and same-block share.}\label{fig:4}
 \end{figure}
 
-Predicted asymmetry is not directionally informative. We measure skew as the quantile skew of the forecast return, estimated from different paths from those used to set the tail thresholds to avoid a spurious negative relation. The correlation between predicted skew and realised tail asymmetry lies between $-0.12$ and $0.00$ at every horizon and pool group, with every confidence interval including zero. Restricting attention to the 20\% of anchors where the model is most confident does not help. On held-out pools, anchors with the most negative predicted skew were followed by upside breakouts 65--86\% of the time (19 anchors per group; small samples). Predicted skew follows the preceding trend (correlation 0.07--0.20 between the prior move and predicted skew), but realised outcomes after strong trends show no consistent direction, so this carried-over momentum is not rewarded.
+Predicted asymmetry is not directionally informative. For each forecast we take the 10th, 50th and 90th percentiles (q10, q50, q90) of the simulated return; its quantile skew is (q90 + q10 \ensuremath{-} 2 q50)/(q90 \ensuremath{-} q10), positive when the upside tail is longer. A breakout is a realized return above the forecast's q90 (upside) or below its q10 (downside), and an anchor's realized tail asymmetry is +1 for an upside breakout, \ensuremath{-}1 for a downside one and 0 otherwise. Skew and the q10/q90 thresholds are estimated from different paths, to avoid a spurious negative relation. The correlation between predicted skew and realized tail asymmetry lies between \ensuremath{-}0.12 and 0.00 at every horizon and pool group, with every confidence interval including zero. Restricting attention to the anchors with the most extreme predicted skew (top or bottom 20\%) does not help. On held-out pools, where 52--63\% of all breakouts are upward, anchors in the bottom 20\% of predicted skew were followed by upside breakouts 65--86\% of the time (19 anchors per group; small samples). Predicted skew follows the preceding trend (correlation 0.07--0.20 between the prior move and predicted skew), but realized outcomes after strong trends show no consistent direction, so this carried-over momentum is not rewarded.
 
-\subsection{Likelihood is not simulation quality}\label{sec:nll-vs-sim}
+\subsection{Likelihood is not simulation quality}
 
-Figure~\ref{fig:nllsim} places each model family by next-event NLL and 512-event energy. On held-out pools the ordering by likelihood is reversed: the reference model has the best NLL but by far the worst rollouts, and the small depth-aware model has much worse NLL than the reference model but rollouts as good as the large depth-aware model. The failures that matter for simulation are rare and state-dependent---thin liquidity, oversized swaps in a depleted book---so they carry little weight in an average one-step likelihood but compound over a rollout. Model selection for simulators should therefore use rollout scores, or at least check them.
+Figure 5 places each model family by next-event NLL and 512-event energy. On held-out pools, likelihood does not predict rollout quality: the no-profile model has the best NLL but by far the worst rollouts, and DEX-Net-small has much worse NLL than the no-profile model but rollouts as good as DEX-Net. The failures that matter for simulation are rare and state-dependent (thin liquidity, oversized swaps in a depleted book), so they carry little weight in an average one-step likelihood but compound over a rollout. Model selection for simulators should therefore use rollout scores, or at least check them. The general pattern is known (Section 2). Training conditions only on real histories, which keep the model on-distribution (exposure bias; \citealp{bengio2015scheduled}; \citealp{ranzato2016sequence}), so the liquidity profile adds little to one-step likelihood; it matters once a rollout drifts into states that real histories rarely show. What is specific to AMMs is the feedback loop: liquidity thins, sampled swaps become oversized relative to it, and liquidity thins further. Neural point-process models are usually compared by next-event likelihood, and for simulators that comparison should be checked against rollouts.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig5_nll_vs_rollout.pdf}
-\caption{Next-event NLL against 512-event energy on test anchors for the three rollout-evaluated families; large points are seed means with standard deviations, small points are individual seeds; dotted lines are the history-based forecasters.}
-\label{fig:nllsim}
+\caption{Next-event NLL against 512-event energy on test anchors for the three rollout-evaluated families; large points are seed means with standard deviations, small points are individual seeds; dotted lines are the history-based forecasters.}\label{fig:5}
 \end{figure}
 
-% ===================================================================== 7
-\section{An economic lens: what must an LP simulator get right?}\label{sec:economics}
+\subsection{LP-facing evaluation}
 
-\paragraph{Fees against LVR.} For marginal in-range liquidity, an LP's excess return over a rebalancing strategy is fees minus LVR, which we measure swap by swap against Binance ETH/USDT one-second prices. On synthetic pools the measurement recovers the theoretical $\sigma^2/8$ rate. We apply it to the four WETH/stablecoin pools on Ethereum and to the six WETH/USDC pools on Arbitrum and Base, using 61 million swaps that we verified against on-chain price checkpoints, over 380 common days from September 2025 (Figure~\ref{fig:fees}). Fees approximately equal LVR: excluding the 0.01\% pools, the ratio ranges from 0.77 (Ethereum USDC/WETH 0.05\%) to 1.06 (Base 0.3\%); the 0.01\% pools on Arbitrum and Base are at 0.47 and 0.81. LVR itself is similar everywhere, around 1.3--1.5 bp per day for marginal in-range liquidity, consistent with competition pushing fees towards LVR. A passive in-range LP therefore earns roughly nothing over rebalancing, and any value must come from \emph{when} liquidity is provided.
+To test the simulator on what an LP earns, we place a hypothetical marginal position over \ensuremath{\pm}1\% around the price at each anchor. For every simulated path, the realized path and each history window we compute the position's fee income, its divergence loss (value against holding its initial tokens) and their sum, its P\&L against holding, in bp of the initial position value. A marginal position's fee per unit of liquidity depends only on the price path: a swap that moves $\sqrt{P}$ from $a$ to $b$ within the range pays $\frac{f}{1-f}\,|b - a|$ in quote when the price rises and $\frac{f}{1-f}\,|1/b - 1/a|$ in base when it falls, where $f$ is the fee tier; because $\sqrt{P}$ moves monotonically within a swap, each swap's start and end prices suffice. Results are gross of any protocol fee share. We use holding the initial tokens, not a rebalancing strategy, as the benchmark: LVR requires an external price, which the simulator does not produce. Forecasts are scored by CRPS (Table 7).
+
+DEX-Net's fee-income forecasts are better than the recent baseline's in 10 of 12 horizon, period and pool-group cells, tied in one and slightly worse in one (seen test pools at 512 events: CRPS 14.7 against 14.3). For P\&L it is better at short horizons on seen pools (test, 32 events: \ensuremath{-}0.16, CI \ensuremath{-}0.31 to \ensuremath{-}0.02; validation, 32 and 128 events), ties the recent baseline elsewhere, and is slightly worse at 512 events in the test period (seen: +3.76, CI +1.40 to +6.87; held-out: +3.31, CI +0.13 to +7.85). The shortfall comes from the divergence component, consistent with the too-wide long-horizon price spread on seen pools (Section 6.4), and DEX-Net's 90\% P\&L intervals cover only 69--81\% of held-out outcomes at 512 events. Without the liquidity profile the model is far worse on held-out pools (+82.2 against the recent baseline at 512 events in the test period). A narrower \ensuremath{\pm}0.2\% position gives qualitatively the same results.
+
+With the path reweighting of Section 6.2, which was fitted on validation endpoints only and is therefore out of sample here, DEX-Net's P\&L forecasts beat the recent baseline on seen test pools at every horizon (32 events: \ensuremath{-}0.23, CI \ensuremath{-}0.38 to \ensuremath{-}0.08; 128 events: \ensuremath{-}0.58, CI \ensuremath{-}1.03 to \ensuremath{-}0.14; 512 events: \ensuremath{-}5.15, CI \ensuremath{-}11.66 to \ensuremath{-}0.52), and the 512-event shortfall on held-out pools disappears (\ensuremath{-}0.51, CI \ensuremath{-}5.18 to +4.36). The gain comes from the divergence component (seen pools, 512 events: CRPS 24.5 against 29.0 for the recent baseline), that is, from correcting the too-wide long-horizon price spread. Held-out 90\% P\&L intervals remain too narrow (81--83\% coverage).
+
+\begin{table}[t]
+\centering
+\caption{LP-facing evaluation, \ensuremath{\pm}1\% position. CRPS (bp of position value, lower is better) of P\&L versus holding; DEX-Net minus the recent baseline with 95\% bootstrap CI; DEX-Net 90\%-interval coverage of the realized P\&L; fee-income CRPS for DEX-Net / recent baseline; real median fee income in bp. Gross of any protocol fee share.}\label{tab:7}
+\begin{adjustbox}{max width=\linewidth}
+\begin{tabular}{llrrrrrrrrrrr}
+\toprule
+Period & Pools & Events & Anchors & Real fee & DEX-Net & No profile & DEX-Net-small & Recent & Expanding & DEX-Net \ensuremath{-} recent & Coverage & Fee CRPS \\
+\midrule
+Test & held out & 32 & 98 & 3.0 & 2.50 & 3.12 & 2.63 & \textbf{2.48} & 2.81 & +0.03 [-0.27, +0.29] & 83\% & 2.1 / 2.3 \\
+Test & held out & 128 & 98 & 15.1 & 12.11 & 22.99 & 12.23 & \textbf{11.66} & 12.17 & +0.45 [-0.53, +1.52] & 82\% & 5.6 / 5.8 \\
+Test & held out & 512 & 98 & 37.5 & 38.61 & 117.50 & 41.41 & \textbf{35.30} & 36.27 & +3.31 [+0.13, +7.85] & 81\% & 18.2 / 18.2 \\
+\midrule
+Test & seen & 32 & 512 & 1.9 & \textbf{3.96} & 3.99 & 4.20 & 4.12 & 4.52 & -0.16 [-0.31, -0.02] & 89\% & 1.5 / 1.7 \\
+Test & seen & 128 & 512 & 8.3 & 14.88 & \textbf{14.86} & 16.63 & 15.09 & 15.67 & -0.22 [-0.67, +0.21] & 89\% & 4.8 / 4.9 \\
+Test & seen & 512 & 512 & 24.4 & 41.70 & 40.39 & 53.05 & \textbf{37.94} & 39.54 & +3.76 [+1.40, +6.87] & 86\% & 14.7 / 14.3 \\
+\midrule
+Validation & held out & 32 & 95 & 6.9 & 5.95 & 6.57 & \textbf{5.73} & 5.78 & 6.19 & +0.17 [-0.66, +1.06] & 84\% & 2.7 / 3.4 \\
+Validation & held out & 128 & 95 & 17.0 & 17.37 & 23.20 & 16.71 & 17.12 & \textbf{16.59} & +0.24 [-1.32, +1.91] & 86\% & 8.4 / 8.8 \\
+Validation & held out & 512 & 95 & 37.6 & 65.97 & 114.01 & 66.02 & \textbf{63.76} & 65.02 & +2.21 [-1.51, +6.38] & 69\% & 26.4 / 26.9 \\
+\midrule
+Validation & seen & 32 & 512 & 3.2 & 8.78 & \textbf{8.71} & 8.99 & 9.21 & 9.42 & -0.43 [-0.79, -0.14] & 87\% & 1.8 / 2.3 \\
+Validation & seen & 128 & 512 & 11.7 & \textbf{20.95} & 21.15 & 21.69 & 21.71 & 21.86 & -0.76 [-1.44, -0.12] & 86\% & 6.0 / 6.7 \\
+Validation & seen & 512 & 512 & 29.4 & 52.01 & 54.43 & 57.84 & 51.62 & \textbf{51.09} & +0.39 [-1.10, +1.85] & 82\% & 18.5 / 19.3 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{Limitations}
+
+\begin{itemize}
+\item \textbf{Single-pool histories.} The model sees one pool's history; cross-pool and centralized-exchange information, which drives arbitrage flow, is absent.
+\item \textbf{Simulating the pool, not interventions.} DEX-Net simulates the pool's order flow; it does not model how that flow would respond to a new participant. The LP evaluation does not add the hypothetical position to the simulated pool, so its results apply only to positions too small to change the flow, and using the simulator to test strategies large enough to move the pool would be an untested counterfactual.
+\item \textbf{Scope.} All pools are high-volume Ethereum mainnet pairs (eight for training, two held out); long-tail pools, layer-2 deployments and Uniswap v4 are untested. Held-out evidence rests on two pools, and the liquidity profile's largest effect is on one of them.
+\item \textbf{Remaining failures.} Skew is not directionally informative; swap-size tails are still heavier than real; 15\% of held-out paths still collapse against 5\% of real outcomes (42\% against 15\% on the stablecoin pool); volatility clustering is too strong; JIT is too rare, with deposits too small for the swaps they accompany, and too sticky; without reweighting, long-horizon LP P\&L forecasts trail a recent-history baseline slightly, and 90\% P\&L intervals are too narrow on held-out pools even with it.
+\item \textbf{Baselines.} On the seen-pool test period, the recent-history forecaster is better at 512 events; on held-out pools the two are statistically indistinguishable. We do not evaluate price-only or agent-based simulators directly.
+\end{itemize}
+
+\section{Conclusion}
+
+Learning only the stochastic part of AMM order flow, and computing the rest exactly, gives a simulator whose every state is valid and inspectable. The key to stable long rollouts is giving the model the pool's liquidity profile: active liquidity at 17 price offsets within \ensuremath{\pm}4\% of the current price, read from the reconciled ledger in training and recomputed from the simulated book after every sampled event. On a held-out stablecoin pool it reduces liquidity collapse from 68\% to 42\% of 512-event paths (real: 15\%) and cuts the energy score from 127 to 7.6; across both held-out pools it cuts price moves above 100 bp from 0.97\% to 0.20\% of swaps (real: 0.03\%), and narrows the 512-event price spread from about 1.8 times realized to 1.01 times in the test period and 0.80 times in validation. Next-event likelihood barely moves (0.018 nats on held-out pools) while rollouts change a great deal, and the model with the best likelihood has the worst rollouts, so rollout scores, not likelihood, should guide model selection for simulators. The remaining failures (heavy swap-size tails, directionless skew, too-rare JIT, too-narrow long-horizon P\&L intervals) point to three next steps: training on the model's own multi-step rollouts so that compounding errors are penalized directly (an earlier attempt, before the liquidity profile, gave little benefit), selecting checkpoints by rollout scores rather than likelihood, and post-hoc calibration of simulated paths, of which the path reweighting in Section 6.2 is a first example; it already turns the LP P\&L comparison with the recent-history baseline in DEX-Net's favor on seen pools.
+
+\paragraph{Code and data.} Code and model weights (Apache-2.0) and the reconciled dataset (CC BY 4.0) are available at \url{https://github.com/Claybarn/DEX-Net} (private until release).
+
+\appendix
+
+\renewcommand{\thefigure}{S\arabic{figure}}\renewcommand{\theHfigure}{S\arabic{figure}}\setcounter{figure}{0}
+
+\section{Supplementary results}
 
 \begin{figure}[t]
 \centering
-\begin{minipage}{.49\linewidth}\centering\includegraphics[width=\linewidth]{fig6_fees_vs_lvr.pdf}\end{minipage}\hfill
-\begin{minipage}{.49\linewidth}\centering\includegraphics[width=\linewidth]{fig7_timing_ceiling.pdf}\end{minipage}
-\caption{Left: fees divided by LVR (CEX markouts 12 seconds after the swap's block) over 380 common days, with 95\% confidence intervals over days. Right: perfect-foresight value of entering and leaving a 2\%-wide, \$100,000 position, by decision interval, after gas (\$15 on Ethereum, \$0.10 on layer 2s) and the swap needed to rebalance.}
-\label{fig:fees}
+\includegraphics[width=\linewidth]{figS1_pit.pdf}
+\caption{Probability integral transform (PIT) of the realized return under each model's forecast, pooled over three seeds; a calibrated forecast gives a uniform histogram (density 1).}\label{fig:S1}
 \end{figure}
 
-\paragraph{The value of timing.} An upper bound on that value comes from a perfect-foresight policy that holds liquidity only in intervals where fees exceed LVR, paying gas and a rebalancing swap at each entry. The bound falls steeply with the decision interval (Figure~\ref{fig:fees}, right). For Ethereum USDC/WETH 0.05\%, where always staying in range loses 27 bp per day on this position, perfect timing would earn 23.5 bp per day at block resolution, 15.5 at one-minute intervals, 9.7 hourly and 6.0 daily. On Arbitrum's 0.01\% pool it falls from 62.6 per block to 0.4 per day. Most of the attainable value therefore lies at horizons of minutes and below, which is the regime where an event-level simulator, rather than a horizon-level price forecaster, is the natural tool. We do not claim that our model captures this value: no forecast-driven policy we tested beat its costs. % CHECK: this refers to the earlier gating experiments (gate_experiment.py), not reported in detail here.
+\paragraph{Path reweighting.} Each path $i$ in a seed's ensemble of $n$ paths receives weight \[ w_i = 0.9\,\mathrm{softmax}_i(s_i) + 0.1/n \quad\text{with score}\quad s_i = 2\tanh\bigl(c^{\top} x_i/\sqrt{k}\bigr). \] The $k = 25$ features $x_i$ are the signed and absolute deviations of each of the four endpoints at each of the three horizons from the ensemble median, scaled by the typical ensemble spread on the fitting data, plus a flag for a failed path. The floor and the bounded score keep every path in the forecast and limit any path's weight. The global model fits one coefficient vector $c$; the conditional model adds a small network of anchor context. We minimize the mean over horizons of the weighted energy score divided by its uniform-weight value, plus $\lambda$ times the KL divergence from uniform weights (Adam, learning rate 0.02, 400 steps, three fitting seeds averaged). The model is fitted on the earliest 75\% (by time) of seen-pool validation anchors, $\lambda \in \{0.001, 0.01, 0.1\}$ is chosen on the latest 25\% ($\lambda = 0.1$ for the global model), and held-out pools are never used. On test anchors, weighted ensembles are scored with the weighted analogue of the fair estimator: \[ \mathbb{E}_w|X - y| - \frac{\sum_{i \neq j} w_i w_j |X_i - X_j|}{2\,(1 - \sum_i w_i^2)} \], which equals the usual fair estimator for uniform weights. The fair correction assumes exchangeable ensemble members; here the weights are learned functions of the paths and of ensemble statistics, so we do not claim the weighted version is unbiased. We use it so that reweighted and unweighted ensembles are scored on the same footing, with identical results when the weights are uniform.
 
-% ===================================================================== 8
-\section{Limitations}\label{sec:limitations}
-
-\begin{itemize}
-\item \textbf{Single-pool histories.} The model sees one pool's history; cross-pool and centralised-exchange information, which drives arbitrage flow, is absent.
-\item \textbf{Small-position overlay.} Simulated paths do not react to the evaluated LP's own liquidity.
-\item \textbf{Scope.} Training uses ten Ethereum pools; only two pools are held out.
-\item \textbf{Remaining failures.} Skew is not directionally informative; swap-size tails are still heavier than real; 15\% of held-out paths still collapse (5\% in reality); volatility clustering is too strong; JIT is too rare, too large and too sticky.
-\item \textbf{Baselines.} On the seen-pool test period, the recent-history forecaster is better at 512 events; on held-out validation pools it is slightly better at 128 and 512 events.
-\end{itemize}
-
-% ===================================================================== 9
-\section{Conclusion}
-
-Learning only the stochastic part of AMM order flow, and computing the rest exactly, gives a simulator whose every state is valid and inspectable. Exact mechanics also turn out to be a source of information: conditioning on the pool's liquidity profile, available for free during simulation, is what makes long rollouts work on unseen pools, even though it slightly worsens next-event likelihood. That divergence is the clearest lesson of this study: for simulators, one-step likelihood is the wrong target on its own. Multi-pool simulation conditioned on external prices is the natural next step.
-
-\paragraph{Code and data.} Code (Apache-2.0) and the reconciled dataset (CC BY 4.0) are available at \url{https://github.com/Claybarn/DEX-Net}. % CHECK: repository is private until release.
+\paragraph{Implementation note.} Interval endpoints of the discretized range distributions are computed in double rather than single precision: in single precision, the two edges of a one-tick interval far from the current tick can round to the same value.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
-
-% ===================================================================== A
-\appendix
-\section{Supplementary results}
-
-\input{../tables/nll_by_head.tex}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\linewidth]{figS1_pit.pdf}
-\caption{Probability integral transform (PIT) of the realised return under each model's forecast, pooled over three seeds; a calibrated forecast gives a uniform histogram (density 1).}
-\label{fig:pit}
-\end{figure}
-
-\section{Reproduction}
-\sloppy
-The final runs are defined by \texttt{paper/final/matrix.json} and trained with \texttt{scripts/run\_matrix.py}; evaluation is \texttt{paper/final/evaluate.sh}, and the JIT and point-process analyses are \texttt{scripts/jit\_analysis.py} and \texttt{scripts/hawkes\_baseline.py}. Figures and tables are generated from the result files by \texttt{paper/figures/make\_figures.py} and \texttt{paper/tables/make\_tables.py}.
 
 \end{document}

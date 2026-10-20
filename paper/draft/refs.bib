@@ -1,117 +1,47 @@
-% Bibliography for the DEX-Net draft.
-% Every entry was written from memory and must be checked against the published
-% version (authors, year, venue, title) before submission. Entries marked VERIFY
-% are the ones I am least sure about.
+% Bibliography for the DEX-Net paper, matching the reference list of the working draft.
 
-@misc{adams2021uniswap,
-  author = {Adams, Hayden and Zinsmeister, Noah and Salem, Moody and Keefer, River and Robinson, Dan},
-  title  = {Uniswap v3 Core},
-  year   = {2021},
-  note   = {Whitepaper}
+@techreport{adams2021uniswap,
+  author      = {Adams, H. and Zinsmeister, N. and Salem, M. and Keefer, R. and Robinson, D.},
+  title       = {{Uniswap v3 Core}},
+  institution = {Uniswap Labs},
+  year        = {2021}
 }
 
-@article{milionis2022lvr,
-  author  = {Milionis, Jason and Moallemi, Ciamac C. and Roughgarden, Tim and Zhang, Anthony Lee},
-  title   = {Automated Market Making and Loss-Versus-Rebalancing},
-  journal = {arXiv preprint arXiv:2208.06046},
-  year    = {2022}
-}
-
-@article{milionis2023fees,
-  author  = {Milionis, Jason and Moallemi, Ciamac C. and Roughgarden, Tim},
-  title   = {Automated Market Making and Arbitrage Profits in the Presence of Fees},
-  journal = {arXiv preprint arXiv:2305.14604},
-  year    = {2023},
-  note    = {VERIFY}
-}
-
-@article{wan2022jit,
-  author  = {Wan, Xin and Adams, Austin},
-  title   = {Just-In-Time Liquidity on Decentralized Exchanges},
-  journal = {arXiv preprint},
-  year    = {2022},
-  note    = {VERIFY: authors, title and identifier}
-}
-
-@article{loesch2021impermanent,
-  author  = {Loesch, Stefan and Hindman, Nate and Richardson, Mark B. and Welch, Nicholas},
-  title   = {Impermanent Loss in {Uniswap} v3},
-  journal = {arXiv preprint arXiv:2111.09192},
-  year    = {2021},
-  note    = {VERIFY}
-}
-
-@article{hawkes1971,
-  author  = {Hawkes, Alan G.},
-  title   = {Spectra of Some Self-Exciting and Mutually Exciting Point Processes},
-  journal = {Biometrika},
-  volume  = {58},
+@article{angeris2021analysis,
+  author  = {Angeris, G. and Kao, H.-T. and Chiang, R. and Noyes, C. and Chitra, T.},
+  title   = {An Analysis of {Uniswap} Markets},
+  journal = {Cryptoeconomic Systems},
+  volume  = {1},
   number  = {1},
-  pages   = {83--90},
-  year    = {1971}
+  year    = {2021}
 }
 
-@inproceedings{mei2017neuralhawkes,
-  author    = {Mei, Hongyuan and Eisner, Jason},
-  title     = {The Neural {Hawkes} Process: A Neurally Self-Modulating Multivariate Point Process},
+@inproceedings{bengio2015scheduled,
+  author    = {Bengio, S. and Vinyals, O. and Jaitly, N. and Shazeer, N.},
+  title     = {Scheduled Sampling for Sequence Prediction with Recurrent Neural Networks},
   booktitle = {Advances in Neural Information Processing Systems},
-  year      = {2017}
+  year      = {2015}
 }
 
-@inproceedings{zuo2020transformerhawkes,
-  author    = {Zuo, Simiao and Jiang, Haoming and Li, Zichong and Zhao, Tuo and Zha, Hongyuan},
-  title     = {Transformer {Hawkes} Process},
-  booktitle = {International Conference on Machine Learning},
+@article{bollerslev1986garch,
+  author  = {Bollerslev, T.},
+  title   = {Generalized Autoregressive Conditional Heteroskedasticity},
+  journal = {Journal of Econometrics},
+  volume  = {31},
+  number  = {3},
+  pages   = {307--327},
+  year    = {1986}
+}
+
+@inproceedings{byrd2020abides,
+  author    = {Byrd, D. and Hybinette, M. and Balch, T. H.},
+  title     = {{ABIDES}: Towards High-Fidelity Multi-Agent Market Simulation},
+  booktitle = {ACM SIGSIM Conference on Principles of Advanced Discrete Simulation},
   year      = {2020}
-}
-
-@inproceedings{shchur2020intensityfree,
-  author    = {Shchur, Oleksandr and Bilo{\v{s}}, Marin and G{\"u}nnemann, Stephan},
-  title     = {Intensity-Free Learning of Temporal Point Processes},
-  booktitle = {International Conference on Learning Representations},
-  year      = {2020}
-}
-
-@inproceedings{vaswani2017attention,
-  author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, {\L}ukasz and Polosukhin, Illia},
-  title     = {Attention Is All You Need},
-  booktitle = {Advances in Neural Information Processing Systems},
-  year      = {2017}
-}
-
-@inproceedings{durkan2019spline,
-  author    = {Durkan, Conor and Bekasov, Artur and Murray, Iain and Papamakarios, George},
-  title     = {Neural Spline Flows},
-  booktitle = {Advances in Neural Information Processing Systems},
-  year      = {2019}
-}
-
-@inproceedings{salimans2017pixelcnnpp,
-  author    = {Salimans, Tim and Karpathy, Andrej and Chen, Xi and Kingma, Diederik P.},
-  title     = {{PixelCNN}++: Improving the {PixelCNN} with Discretized Logistic Mixture Likelihood and Other Modifications},
-  booktitle = {International Conference on Learning Representations},
-  year      = {2017}
-}
-
-@inproceedings{loshchilov2019adamw,
-  author    = {Loshchilov, Ilya and Hutter, Frank},
-  title     = {Decoupled Weight Decay Regularization},
-  booktitle = {International Conference on Learning Representations},
-  year      = {2019}
-}
-
-@article{gneiting2007scoring,
-  author  = {Gneiting, Tilmann and Raftery, Adrian E.},
-  title   = {Strictly Proper Scoring Rules, Prediction, and Estimation},
-  journal = {Journal of the American Statistical Association},
-  volume  = {102},
-  number  = {477},
-  pages   = {359--378},
-  year    = {2007}
 }
 
 @article{cont2001stylized,
-  author  = {Cont, Rama},
+  author  = {Cont, R.},
   title   = {Empirical Properties of Asset Returns: Stylized Facts and Statistical Issues},
   journal = {Quantitative Finance},
   volume  = {1},
@@ -120,34 +50,158 @@
   year    = {2001}
 }
 
-@inproceedings{byrd2020abides,
-  author    = {Byrd, David and Hybinette, Maria and Balch, Tucker Hybinette},
-  title     = {{ABIDES}: Towards High-Fidelity Multi-Agent Market Simulation},
-  booktitle = {ACM SIGSIM Conference on Principles of Advanced Discrete Simulation},
-  year      = {2020},
-  note      = {VERIFY}
+@article{dinosse2026dynamic,
+  author  = {Di Nosse, D. M. and Lillo, F.},
+  title   = {Mitigating Adverse Selection in Concentrated Liquidity {AMMs} with Dynamic Fees: An Agent-Based Model Approach},
+  journal = {arXiv preprint arXiv:2606.23070},
+  year    = {2026}
 }
 
-@inproceedings{coletta2021realistic,
-  author    = {Coletta, Andrea and Prata, Matteo and Conti, Michele and Mercanti, Emanuele and Bartolini, Novella and Moulin, Aymeric and Vyetrenko, Svitlana and Balch, Tucker},
-  title     = {Towards Realistic Market Simulations: A Generative Adversarial Networks Approach},
-  booktitle = {ACM International Conference on AI in Finance},
-  year      = {2021},
-  note      = {VERIFY}
+@inproceedings{durkan2019spline,
+  author    = {Durkan, C. and Bekasov, A. and Murray, I. and Papamakarios, G.},
+  title     = {Neural Spline Flows},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2019}
 }
 
-@article{nagy2023lob,
-  author  = {Nagy, Peer and Frey, Sascha and Sapora, Silvia and Li, Kang and Calinescu, Anisoara and Zohren, Stefan and Foerster, Jakob},
-  title   = {Generative {AI} for End-to-End Limit Order Book Modelling: A Token-Level Autoregressive Generative Model of Message Flow Using a Deep State Space Network},
-  journal = {arXiv preprint arXiv:2309.00638},
-  year    = {2023},
-  note    = {VERIFY}
+@article{ferro2014fair,
+  author  = {Ferro, C. A. T.},
+  title   = {Fair Scores for Ensemble Forecasts},
+  journal = {Quarterly Journal of the Royal Meteorological Society},
+  volume  = {140},
+  number  = {683},
+  pages   = {1917--1923},
+  year    = {2014}
 }
 
-@inproceedings{angeris2020oracles,
-  author = {Angeris, Guillermo and Chitra, Tarun},
-  title  = {Improved Price Oracles: Constant Function Market Makers},
-  booktitle = {ACM Conference on Advances in Financial Technologies},
-  year   = {2020},
-  note   = {VERIFY; cited for CFMM arbitrage background}
+@article{gneiting2007scoring,
+  author  = {Gneiting, T. and Raftery, A. E.},
+  title   = {Strictly Proper Scoring Rules, Prediction, and Estimation},
+  journal = {Journal of the American Statistical Association},
+  volume  = {102},
+  number  = {477},
+  pages   = {359--378},
+  year    = {2007}
+}
+
+@article{hawkes1971,
+  author  = {Hawkes, A. G.},
+  title   = {Spectra of Some Self-Exciting and Mutually Exciting Point Processes},
+  journal = {Biometrika},
+  volume  = {58},
+  number  = {1},
+  pages   = {83--90},
+  year    = {1971}
+}
+
+@inproceedings{lambert2020objective,
+  author    = {Lambert, N. and Amos, B. and Yadan, O. and Calandra, R.},
+  title     = {Objective Mismatch in Model-Based Reinforcement Learning},
+  booktitle = {Learning for Dynamics and Control (L4DC)},
+  year      = {2020}
+}
+
+@article{loesch2021impermanent,
+  author  = {Loesch, S. and Hindman, N. and Richardson, M. B. and Welch, N.},
+  title   = {Impermanent Loss in {Uniswap} v3},
+  journal = {arXiv preprint arXiv:2111.09192},
+  year    = {2021}
+}
+
+@inproceedings{mei2017neuralhawkes,
+  author    = {Mei, H. and Eisner, J.},
+  title     = {The Neural {Hawkes} Process: A Neurally Self-Modulating Multivariate Point Process},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2017}
+}
+
+@article{milionis2022lvr,
+  author  = {Milionis, J. and Moallemi, C. C. and Roughgarden, T. and Zhang, A. L.},
+  title   = {Automated Market Making and Loss-Versus-Rebalancing},
+  journal = {arXiv preprint arXiv:2208.06046},
+  year    = {2022}
+}
+
+@article{palit2022shuffled,
+  author  = {Palit, I.},
+  title   = {A Shuffled Replay of Events on {Uniswap}},
+  journal = {Frontiers in Blockchain},
+  volume  = {5},
+  pages   = {745101},
+  year    = {2022},
+  doi     = {10.3389/fbloc.2022.745101}
+}
+
+@inproceedings{ranzato2016sequence,
+  author    = {Ranzato, M. and Chopra, S. and Auli, M. and Zaremba, W.},
+  title     = {Sequence Level Training with Recurrent Neural Networks},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2016}
+}
+
+@inproceedings{shchur2020intensityfree,
+  author    = {Shchur, O. and Bilo{\v{s}}, M. and G{\"u}nnemann, S.},
+  title     = {Intensity-Free Learning of Temporal Point Processes},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2020}
+}
+
+@inproceedings{shi2022sdpnhp,
+  author    = {Shi, Z. and Cartlidge, J.},
+  title     = {State Dependent Parallel Neural {Hawkes} Process for Limit Order Book Event Stream Prediction and Simulation},
+  booktitle = {Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+  pages     = {1607--1615},
+  year      = {2022}
+}
+
+@inproceedings{theis2016note,
+  author    = {Theis, L. and van den Oord, A. and Bethge, M.},
+  title     = {A Note on the Evaluation of Generative Models},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2016}
+}
+
+@misc{uniswapgov2025,
+  author       = {{Uniswap Governance}},
+  title        = {{UNIfication} Proposal},
+  year         = {2025},
+  howpublished = {\url{https://gov.uniswap.org/t/unification-proposal/25881}}
+}
+
+@misc{uniswapgov2026,
+  author       = {{Uniswap Governance}},
+  title        = {Temp Check: Protocol Fee Expansion, Eight More Chains and Remaining Mainnet v3 Pools},
+  year         = {2026},
+  howpublished = {\url{https://gov.uniswap.org/t/temp-check-protocol-fee-expansion-eight-more-chains-and-remaining-mainnet-v3-pools/26035}}
+}
+
+@inproceedings{venkatraman2015improving,
+  author    = {Venkatraman, A. and Hebert, M. and Bagnell, J. A.},
+  title     = {Improving Multi-Step Prediction of Learned Time Series Models},
+  booktitle = {AAAI Conference on Artificial Intelligence},
+  year      = {2015}
+}
+
+@misc{wan2022jit,
+  author       = {Wan, X. and Adams, A.},
+  title        = {Just-in-Time Liquidity on the {Uniswap} Protocol},
+  year         = {2022},
+  howpublished = {SSRN 4382303}
+}
+
+@article{wiese2020quantgans,
+  author  = {Wiese, M. and Knobloch, R. and Korn, R. and Kretschmer, P.},
+  title   = {Quant {GANs}: Deep Generation of Financial Time Series},
+  journal = {Quantitative Finance},
+  volume  = {20},
+  number  = {9},
+  pages   = {1419--1440},
+  year    = {2020}
+}
+
+@inproceedings{zuo2020transformerhawkes,
+  author    = {Zuo, S. and Jiang, H. and Li, Z. and Zhao, T. and Zha, H.},
+  title     = {Transformer {Hawkes} Process},
+  booktitle = {International Conference on Machine Learning},
+  year      = {2020}
 }
