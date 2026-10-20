@@ -190,7 +190,7 @@ assets/     logo (light and dark variants) and social preview image
 
 ## Data
 
-The reconciled per-pool event data, the Arbitrum and Base swap collections, and the reference checkpoints will be released with the paper under **CC BY 4.0**. Everything comes from public blockchain records. Binance prices aren't redistributed; `scripts.fetch_binance` downloads them from Binance's public archive and checks them against its published checksums.
+The reconciled per-pool event data and the Arbitrum and Base swap collections will be released with the paper under **CC BY 4.0**, and the reference checkpoints under **Apache-2.0**. Everything comes from public blockchain records. Binance prices aren't redistributed; `scripts.fetch_binance` downloads them from Binance's public archive and checks them against its published checksums.
 
 ## Citation
 
@@ -205,4 +205,4 @@ The reconciled per-pool event data, the Arbitrum and Base swap collections, and 
 
 ## License
 
-Code is released under the [Apache License 2.0](LICENSE). Data is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Code and model weights are released under the [Apache License 2.0](LICENSE). Data is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
