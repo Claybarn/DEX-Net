@@ -18,7 +18,7 @@ ROOT=Path(__file__).resolve().parents[1];RES=ROOT/'results';OUT=ROOT/'figures'
 FINAL=RES/'final'
 # Okabe-Ito colours, one per family throughout the paper.
 COL=dict(depth='#0072B2',reference='#E69F00',small='#009E73',real='#000000',recent='#999999',expanding='#CC79A7')
-NAME=dict(depth='Depth-aware 128×4',reference='Reference 128×4',small='Depth-aware 64×2',recent='Recent baseline',expanding='Expanding baseline')
+NAME=dict(depth='DEX-Net',reference='No profile',small='DEX-Net-small',recent='Recent baseline',expanding='Expanding baseline')
 FAM=dict(depth='depth',reference='reference',small='depth-small')
 SEEDS=(260930,260931,260932)
 plt.rcParams.update({'font.size':8,'axes.titlesize':8,'axes.labelsize':8,'legend.fontsize':7,'xtick.labelsize':7,'ytick.labelsize':7,
@@ -86,15 +86,15 @@ def fig2(cones):
             x=np.arange(1+min(map(len,paths))-1);m=np.array([p[:len(x)] for p in paths])
             lo,hi=np.percentile(m,[5,95],0);c=COL[fam];bands[fam]=(lo,hi)
             if fam=='depth':
-                ax.fill_between(x,lo,hi,color=c,alpha=.18,lw=0,label='Depth-aware 5–95%')
-                q25,q75=np.percentile(m,[25,75],0);ax.fill_between(x,q25,q75,color=c,alpha=.3,lw=0,label='Depth-aware 25–75%')
+                ax.fill_between(x,lo,hi,color=c,alpha=.18,lw=0,label='DEX-Net 5–95%')
+                q25,q75=np.percentile(m,[25,75],0);ax.fill_between(x,q25,q75,color=c,alpha=.3,lw=0,label='DEX-Net 25–75%')
             else:
-                ax.plot(x,lo,ls,color=c,lw=.9,label='Reference 5–95%');ax.plot(x,hi,ls,color=c,lw=.9)
-        real=np.r_[0.,r['actual_trace']['return_bp']];ax.plot(np.arange(len(real)),real,color='k',lw=1,label='Realised')
-        # Axis from the depth-aware band and the realised path; reference beyond it is reported, not drawn off-scale.
+                ax.plot(x,lo,ls,color=c,lw=.9,label='No profile 5–95%');ax.plot(x,hi,ls,color=c,lw=.9)
+        real=np.r_[0.,r['actual_trace']['return_bp']];ax.plot(np.arange(len(real)),real,color='k',lw=1,label='Realized')
+        # Axis from the depth-aware band and the realized path; reference beyond it is reported, not drawn off-scale.
         lim=1.3*max(np.abs(bands['depth'][0]).max(),np.abs(bands['depth'][1]).max(),np.abs(real).max())
         ax.set_ylim(-lim,lim);rlo,rhi=bands['reference']
-        note=f"\nreference to {rlo.min():+,.0f} / {rhi.max():+,.0f} bp" if rlo.min()<-lim or rhi.max()>lim else '\n'
+        note=f"\nno profile to {rlo.min():+,.0f} / {rhi.max():+,.0f} bp" if rlo.min()<-lim or rhi.max()>lim else '\n'
         held='held-out' if r['split'].startswith('heldout') else 'seen'
         ax.set_title(f"{r['pool']} ({held})\nrow {r['row']}{note}",fontsize=6.3);ax.set_xlabel('events after anchor')
         ax.axhline(0,color='#bbbbbb',lw=.5,zorder=0)
@@ -122,7 +122,7 @@ def fig3():
         if row==1:ax.set_xlabel('events after anchor')
         # (b) volatility clustering
         ax=axes[row,1];lags=list(real['abs_return_acf'])
-        ax.plot([int(l) for l in lags],[real['abs_return_acf'][l] for l in lags],'ks-',ms=3,lw=1,label='Realised')
+        ax.plot([int(l) for l in lags],[real['abs_return_acf'][l] for l in lags],'ks-',ms=3,lw=1,label='Realized')
         for fam,d in data.items():
             g=d['groups'][group];v=np.array([[g[f'{fam}{s}']['abs_return_acf'][l] for l in lags] for s in SEEDS])
             ax.plot([int(l) for l in lags],v.mean(0),'o-',ms=2.5,color=COL[fam],label=NAME[fam])
@@ -134,18 +134,18 @@ def fig3():
         for fam,d in data.items():
             g=d['groups'][group];vals[fam]=list(np.mean([g[f'{fam}{s}']['mix']+[g[f'{fam}{s}']['same_block']] for s in SEEDS],0))
         for i,(k,v) in enumerate(vals.items()):
-            ax.bar(np.arange(5)+(i-1)*w,v,w,color=COL[k],label='Realised' if k=='real' else NAME[k])
+            ax.bar(np.arange(5)+(i-1)*w,v,w,color=COL[k],label='Realized' if k=='real' else NAME[k])
         ax.set_xticks(range(5));ax.set_xticklabels(labels)
         if row==0:ax.set_title('Event mix and same-block share');ax.legend(frameon=False,loc='upper right',fontsize=6,bbox_to_anchor=(1,1.02))
         ax.set_ylim(0,.62)
-    fig.tight_layout();save(fig,'fig3_stylized_facts')
+    fig.tight_layout();save(fig,'fig4_stylized_facts')
 
 
 
 # ---------------------------------------------------------------- Figure 4
 def fig4():
     d=load(FINAL/'jit.json')['groups'];fams=dict(real=['real'],depth=[f'depth{s}' for s in SEEDS],reference=[f'reference{s}' for s in SEEDS])
-    label=dict(real='Realised',depth=NAME['depth'],reference=NAME['reference'])
+    label=dict(real='Realized',depth=NAME['depth'],reference=NAME['reference'])
     fig,axes=plt.subplots(1,3,figsize=(7.2,2.4));w=.26
     def vals(g,f,fn):return np.array([v for v in (fn(d[g][l]['all']) for l in fams[f]) if v is not None])
     panels=((lambda s:s['pairs_per_1000_events'],'Strict JIT pairs per 1,000 events',False),
@@ -164,7 +164,7 @@ def fig4():
     axes[2].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1,decimals=0));axes[1].yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     fig.legend(*axes[0].get_legend_handles_labels(),loc='lower center',ncol=3,frameon=False,fontsize=6.5,bbox_to_anchor=(.5,-.08))
     fig.suptitle('JIT liquidity: the model learns the pattern but makes it too rare, too large relative to the deposit, and too sticky (bars: seed range)',fontsize=7.5,y=1.04)
-    fig.tight_layout();save(fig,'fig4_jit')
+    fig.tight_layout();save(fig,'fig3_jit')
 
 # ---------------------------------------------------------------- Figure 5
 def fig5():
@@ -219,21 +219,21 @@ def figS1():
     for col,h in enumerate(('32','128','512')):
         for row,group in enumerate(('seen','heldout')):
             ax=axes[row,col]
-            for f,fam in (('reference','reference'),('depth','depth')):
+            for f,fam in (('depth','depth'),('reference','reference')):
                 c=load(FINAL/f'calibration-{fam}.json')['cells'][f'{group}:{h}']['forecasters']
                 hist=np.sum([c[f'{fam}{s}']['pit_histogram'] for s in SEEDS],0);hist=hist/hist.sum()*10
                 ax.step(np.arange(11)/10,np.r_[hist,hist[-1]],where='post',color=COL[f],lw=1.1,label=NAME[f])
             ax.axhline(1,color='k',lw=.6);ax.set_ylim(0,2.2)
             if row==0:ax.set_title(f'{h} events')
             if col==0:ax.set_ylabel(f'{"Seen" if group=="seen" else "Held-out"}\ndensity')
-            if row==1:ax.set_xlabel('PIT of realised return')
+            if row==1:ax.set_xlabel('PIT of realized return')
     axes[0,0].legend(frameon=False,fontsize=6);fig.suptitle('Calibration of the return forecast (PIT; uniform = calibrated; 3 seeds pooled)',fontsize=8,y=1.02)
     fig.tight_layout();save(fig,'figS1_pit')
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__.splitlines()[0]);p.add_argument('--cones',type=Path);a=p.parse_args()
-    fig1();fig3();fig4();fig5();fig6();fig7();figS1()
+    fig1();fig3();fig4();fig5();figS1()
     if a.cones:fig2(a.cones)
 
 
