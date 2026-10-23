@@ -1,0 +1,156 @@
+{
+ "method": "Rollout energy for several model families and the history baselines on every anchor.\n\nEach seed's forecast at an anchor is the ensemble of its paths that reached the horizon\n(a path ends early only if it sampled an infeasible event; such failures are rare and\nreported separately, per family). This equals the model's distribution conditioned on\nstaying valid, the same as redrawing failed paths. Each family's score at an anchor is\nthe mean over its seeds of the unbiased ensemble energy; baselines are scored on the\nsame anchors, so differences are paired and bootstrapped over anchors. An anchor is\nskipped only if some seed has fewer than --min-paths completed paths.\n\n  python -m scripts.rollout_table --rollouts depth=eval/final/rollouts-test-depth       --rollouts reference=eval/final/rollouts-test-reference --out results/rollout-table-test.json\n",
+ "families": [
+  "depth",
+  "single"
+ ],
+ "cells": {
+  "seen:32": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 6.246673673554458,
+    "single": 6.217964774218482,
+    "recent": 7.161460779179705,
+    "expanding": 7.956506941042432
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 6.2354950164264915,
+     "depth260931": 6.128978056645374,
+     "depth260932": 6.3755479475915084
+    },
+    "single": {
+     "single260930": 6.240547334318228,
+     "single260931": 5.771179882361724,
+     "single260932": 6.642167105975492
+    }
+   },
+   "differences": {
+    "single-depth": {
+     "mean": -0.028708899335976187,
+     "ci95": [
+      -0.37080514913039947,
+      0.2371216279144454
+     ]
+    },
+    "single-recent": {
+     "mean": -0.9434960049612231,
+     "ci95": [
+      -1.6841521067379426,
+      -0.23467776764239523
+     ]
+    },
+    "single-expanding": {
+     "mean": -1.73854216682395,
+     "ci95": [
+      -2.370685842655066,
+      -1.0891404972551306
+     ]
+    }
+   }
+  },
+  "seen:128": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 18.049758710769353,
+    "single": 19.45579396095806,
+    "recent": 16.280215268999836,
+    "expanding": 20.55049428476314
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 18.08171523318887,
+     "depth260931": 17.53583515975587,
+     "depth260932": 18.531725739363313
+    },
+    "single": {
+     "single260930": 20.77767960883418,
+     "single260931": 16.483716253459676,
+     "single260932": 21.105986020580332
+    }
+   },
+   "differences": {
+    "single-depth": {
+     "mean": 1.4060352501887112,
+     "ci95": [
+      -0.009090942149331876,
+      2.4337702126201464
+     ]
+    },
+    "single-recent": {
+     "mean": 3.175578691958226,
+     "ci95": [
+      0.9266361020726497,
+      5.813365959797667
+     ]
+    },
+    "single-expanding": {
+     "mean": -1.0947003238050776,
+     "ci95": [
+      -3.612889083352227,
+      1.9000388984277983
+     ]
+    }
+   }
+  },
+  "seen:512": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.00016276041666666666,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 62.22789417156613,
+    "single": 76.57427140736931,
+    "recent": 47.77834794529534,
+    "expanding": 64.42290433431393
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 57.37968132125316,
+     "depth260931": 60.677677869407475,
+     "depth260932": 68.62632332403774
+    },
+    "single": {
+     "single260930": 91.94371511274737,
+     "single260931": 48.00823691932669,
+     "single260932": 89.77086219003385
+    }
+   },
+   "differences": {
+    "single-depth": {
+     "mean": 14.346377235803175,
+     "ci95": [
+      9.004735367772671,
+      18.543745005500245
+     ]
+    },
+    "single-recent": {
+     "mean": 28.795923462073965,
+     "ci95": [
+      20.215131317776386,
+      37.8730045990389
+     ]
+    },
+    "single-expanding": {
+     "mean": 12.151367073055372,
+     "ci95": [
+      6.829170661738276,
+      19.332581863721263
+     ]
+    }
+   }
+  }
+ }
+}

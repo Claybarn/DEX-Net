@@ -1,0 +1,156 @@
+{
+ "method": "Rollout energy for several model families and the history baselines on every anchor.\n\nEach seed's forecast at an anchor is the ensemble of its paths that reached the horizon\n(a path ends early only if it sampled an infeasible event; such failures are rare and\nreported separately, per family). This equals the model's distribution conditioned on\nstaying valid, the same as redrawing failed paths. Each family's score at an anchor is\nthe mean over its seeds of the unbiased ensemble energy; baselines are scored on the\nsame anchors, so differences are paired and bootstrapped over anchors. An anchor is\nskipped only if some seed has fewer than --min-paths completed paths.\n\n  python -m scripts.rollout_table --rollouts depth=eval/final/rollouts-test-depth       --rollouts reference=eval/final/rollouts-test-reference --out results/rollout-table-test.json\n",
+ "families": [
+  "depth",
+  "single"
+ ],
+ "cells": {
+  "seen:32": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 2.336459945565705,
+    "single": 2.3834888659495572,
+    "recent": 2.666483134824917,
+    "expanding": 2.901079433058791
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 2.3058515111190245,
+     "depth260931": 2.382741306187171,
+     "depth260932": 2.320787019390919
+    },
+    "single": {
+     "single260930": 2.5311830955418015,
+     "single260931": 2.3178910040562233,
+     "single260932": 2.301392498250647
+    }
+   },
+   "differences": {
+    "single-depth": {
+     "mean": 0.047028920383852535,
+     "ci95": [
+      -0.08037402408683982,
+      0.21693971619274732
+     ]
+    },
+    "single-recent": {
+     "mean": -0.2829942688753599,
+     "ci95": [
+      -0.8821014790367833,
+      0.15211437082585852
+     ]
+    },
+    "single-expanding": {
+     "mean": -0.5175905671092333,
+     "ci95": [
+      -1.135379522083354,
+      -0.01617613874653618
+     ]
+    }
+   }
+  },
+  "seen:128": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 5.122631574561059,
+    "single": 5.099486247843334,
+    "recent": 6.112419116224592,
+    "expanding": 7.374844372141968
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 5.046568060241237,
+     "depth260931": 5.25746639229045,
+     "depth260932": 5.063860271151491
+    },
+    "single": {
+     "single260930": 5.245479517913593,
+     "single260931": 5.08299404456382,
+     "single260932": 4.96998518105259
+    }
+   },
+   "differences": {
+    "single-depth": {
+     "mean": -0.023145326717725026,
+     "ci95": [
+      -0.332273721799868,
+      0.2683734792752007
+     ]
+    },
+    "single-recent": {
+     "mean": -1.0129328683812577,
+     "ci95": [
+      -2.1931694751421253,
+      -0.07191176768340422
+     ]
+    },
+    "single-expanding": {
+     "mean": -2.2753581242986343,
+     "ci95": [
+      -3.92524619589839,
+      -1.0483381232336932
+     ]
+    }
+   }
+  },
+  "seen:512": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 15.092164727471102,
+    "single": 16.0086949587201,
+    "recent": 18.58334550044971,
+    "expanding": 21.261042915800378
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 15.06008561930003,
+     "depth260931": 15.182801140422523,
+     "depth260932": 15.033607422690748
+    },
+    "single": {
+     "single260930": 15.14420401940752,
+     "single260931": 17.11204382894136,
+     "single260932": 15.769837027811416
+    }
+   },
+   "differences": {
+    "single-depth": {
+     "mean": 0.9165302312489956,
+     "ci95": [
+      -0.0049261207994856305,
+      1.8384300159457105
+     ]
+    },
+    "single-recent": {
+     "mean": -2.5746505417296146,
+     "ci95": [
+      -5.977032556033954,
+      0.48614771206645707
+     ]
+    },
+    "single-expanding": {
+     "mean": -5.25234795708028,
+     "ci95": [
+      -9.138495109557525,
+      -1.9846768579036986
+     ]
+    }
+   }
+  }
+ }
+}
