@@ -1,0 +1,61 @@
+{
+ "method": "Training rows aligned to just-in-time (JIT) liquidity, for oversampled fine-tuning.\n\nRows are absolute event rows of each seen pool's training split (a row's target is that\nevent; its history ends just before it). Two sets:\n\n  history          rows whose history ends with a large mint, one or two events back\n                   (large: minted liquidity > 10x the active liquidity before it). The\n                   rows are chosen from the history alone, so oversampling them shifts\n                   which situations the model practices, not what it predicts in them.\n  history_outcome  history plus the rows of every strict JIT pair: the mint, the swap and\n                   the burn (consecutive, one block, same range). These are chosen by\n                   their outcome, so oversampling them deliberately raises the model's\n                   JIT rate; it is a calibration choice, not an unbiased refit.\n\nRanges come from the training targets (lower = anchor + offset, width), as in\ndexnet.training_data. Burn amounts are not compared (the per-event features hold amounts\nrelative to active liquidity only), so a pair is a same-block, same-range mint-swap-burn.\n\n  python -m scripts.jit_rows --data data/prepared --context data/context --out data/jit-rows\n",
+ "pools": {
+  "DAI-WETH-3000": {
+   "train_events": 275445,
+   "large_mints": 468,
+   "strict_pairs": 511,
+   "history_rows": 936,
+   "history_outcome_rows": 1635
+  },
+  "DAI-WETH-500": {
+   "train_events": 1160931,
+   "large_mints": 680,
+   "strict_pairs": 639,
+   "history_rows": 1360,
+   "history_outcome_rows": 2243
+  },
+  "USDC-USDT-100": {
+   "train_events": 1089657,
+   "large_mints": 781,
+   "strict_pairs": 1519,
+   "history_rows": 1562,
+   "history_outcome_rows": 4784
+  },
+  "USDC-WETH-3000": {
+   "train_events": 795457,
+   "large_mints": 2889,
+   "strict_pairs": 4431,
+   "history_rows": 5778,
+   "history_outcome_rows": 13374
+  },
+  "USDC-WETH-500": {
+   "train_events": 8416528,
+   "large_mints": 44413,
+   "strict_pairs": 49193,
+   "history_rows": 88823,
+   "history_outcome_rows": 149001
+  },
+  "USDT-WETH-3000": {
+   "train_events": 796809,
+   "large_mints": 2172,
+   "strict_pairs": 4460,
+   "history_rows": 4344,
+   "history_outcome_rows": 13484
+  },
+  "USDT-WETH-500": {
+   "train_events": 4746323,
+   "large_mints": 7818,
+   "strict_pairs": 9312,
+   "history_rows": 15634,
+   "history_outcome_rows": 28613
+  },
+  "WBTC-WETH-500": {
+   "train_events": 1298702,
+   "large_mints": 3615,
+   "strict_pairs": 5311,
+   "history_rows": 7229,
+   "history_outcome_rows": 16161
+  }
+ }
+}

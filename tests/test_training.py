@@ -28,6 +28,13 @@ class FullPooledTests(unittest.TestCase):
             again=CoverageSchedule(a)
             for i in range(7,len(left)):
                 self.assertEqual(left[i][0],again[i][0]);np.testing.assert_array_equal(left[i][1],again[i][1])
+    def test_special_rows_fill_the_head_of_every_batch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sizes={'large':40,'small':9};special={'large':np.array([3,5]),'small':np.array([7])}
+            spec=make_schedule(Path(tmp),sizes,epochs=2,batch_size=8,seed=3,special=special,share=.25);s=CoverageSchedule(Path(tmp))
+            self.assertEqual(spec['special_rows'],{'large':2,'small':1})
+            for i in range(len(s)):
+                name,rows=s[i];self.assertTrue(set(rows[:2])<=set(special[name].tolist()));self.assertTrue((rows<sizes[name]).all())
     def test_embedding_unknown_is_neutral_and_never_fitted(self):
         torch.manual_seed(11);base=PooledEventModel(SCALERS).eval()
         embedded=PooledEventModel(SCALERS,pool_count=8,pool_dropout=0).eval()

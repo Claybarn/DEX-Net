@@ -1,0 +1,303 @@
+{
+ "method": "Forecast blend: a mixture of the model's paths and the recent-history baseline's windows.\n\nAt each anchor and horizon the blended forecast is the mixture alpha * model + (1 - alpha) * recent.\nIts energy score (scaled endpoints, as in Table 4) is exact for a two-component mixture:\n\n  E(alpha) = alpha a_M + (1 - alpha) a_B - 1/2 [alpha^2 S_MM + 2 alpha (1 - alpha) S_MB + (1 - alpha)^2 S_BB]\n\nwith a_M = mean |M - y|, S_MM the fair (off-diagonal) mean |M - M'|, S_MB the mean over all\nmodel/baseline pairs, and likewise for B; it reduces to the fair model and baseline scores at\nalpha = 1 and 0. A seed's forecast is its completed paths; terms are averaged over seeds.\n\nalpha is fitted per horizon on the --fit rollouts (seen pools only) by minimizing the mean\nscore (a convex quadratic), either globally or per third of the regime ratio of\nscripts.regime_analysis (recent 5-95% width of h-event returns over the expanding one, known\nat the anchor; thirds from the fit anchors). It is then applied unchanged to the --eval\nrollouts, seen and held-out pools, with paired bootstrap CIs over anchors.\n\n  python -m scripts.blend_eval --fit eval/final/rollouts-val-depth --eval eval/final/rollouts-test-depth --out results/blend-test.json\n",
+ "fit": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/rollouts-val-depth",
+ "eval": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/rollouts-test-depth",
+ "alphas": {
+  "32": {
+   "global_alpha": 0.91142667497507,
+   "regime_thresholds": [
+    0.6768319229610894,
+    0.995380502638221
+   ],
+   "regime_alpha": [
+    0.9519898093759112,
+    1.0,
+    0.8035438514307977
+   ]
+  },
+  "128": {
+   "global_alpha": 0.873541239168634,
+   "regime_thresholds": [
+    0.6770248265283416,
+    0.9795494596724212
+   ],
+   "regime_alpha": [
+    0.7873411481746575,
+    0.9549101833984384,
+    0.8728033459708707
+   ]
+  },
+  "512": {
+   "global_alpha": 0.8153742203982526,
+   "regime_thresholds": [
+    0.7130424238761819,
+    0.9840327527640073
+   ],
+   "regime_alpha": [
+    0.6703634401416624,
+    0.7374230096592562,
+    0.9561613946405594
+   ]
+  }
+ },
+ "cells": {
+  "seen:32": {
+   "anchors": 512,
+   "energy": {
+    "model": 3.0000256827955365,
+    "recent": 3.5709701421921523,
+    "blend": 2.992040529690205,
+    "blend_regime": 2.9952821943803025
+   },
+   "differences": {
+    "blend-model": {
+     "mean": -0.007985153105331677,
+     "relative": -0.0026616949151884632,
+     "ci95": [
+      -0.02630350618654618,
+      0.008006617508301355
+     ]
+    },
+    "blend-recent": {
+     "mean": -0.5789296125019471,
+     "relative": -0.1621211013953068,
+     "ci95": [
+      -0.8502225924117411,
+      -0.3632940771193165
+     ]
+    },
+    "blend_regime-model": {
+     "mean": -0.004743488415234377,
+     "relative": -0.0015811492689669965,
+     "ci95": [
+      -0.020544523861427702,
+      0.010842139844073609
+     ]
+    },
+    "blend_regime-recent": {
+     "mean": -0.5756879478118497,
+     "relative": -0.16121331875893133,
+     "ci95": [
+      -0.8509211725263678,
+      -0.3560232793645998
+     ]
+    }
+   }
+  },
+  "heldout:32": {
+   "anchors": 98,
+   "energy": {
+    "model": 2.753804386890073,
+    "recent": 3.149281195209712,
+    "blend": 2.7306918467924746,
+    "blend_regime": 2.7289682448093417
+   },
+   "differences": {
+    "blend-model": {
+     "mean": -0.02311254009759841,
+     "relative": -0.008392949117093923,
+     "ci95": [
+      -0.05028936251254349,
+      0.0032081970190742065
+     ]
+    },
+    "blend-recent": {
+     "mean": -0.4185893484172372,
+     "relative": -0.1329158377644849,
+     "ci95": [
+      -0.912764125977875,
+      -0.03111744931785473
+     ]
+    },
+    "blend_regime-model": {
+     "mean": -0.024836142080731646,
+     "relative": -0.009018847598241937,
+     "ci95": [
+      -0.05951083241470825,
+      0.0031011407621518283
+     ]
+    },
+    "blend_regime-recent": {
+     "mean": -0.4203129504003705,
+     "relative": -0.13346313788673342,
+     "ci95": [
+      -0.9220295580011758,
+      -0.022702448966841437
+     ]
+    }
+   }
+  },
+  "seen:128": {
+   "anchors": 512,
+   "energy": {
+    "model": 7.878248267063508,
+    "recent": 7.995826662302023,
+    "blend": 7.6674055352041295,
+    "blend_regime": 7.640797563193813
+   },
+   "differences": {
+    "blend-model": {
+     "mean": -0.2108427318593793,
+     "relative": -0.0267626412258226,
+     "ci95": [
+      -0.3342620993262744,
+      -0.12518351387874938
+     ]
+    },
+    "blend-recent": {
+     "mean": -0.32842112709789406,
+     "relative": -0.04107406788172427,
+     "ci95": [
+      -0.7591233102628727,
+      0.15227856886004507
+     ]
+    },
+    "blend_regime-model": {
+     "mean": -0.2374507038696948,
+     "relative": -0.030140038219206917,
+     "ci95": [
+      -0.36701706703242387,
+      -0.14384148160293894
+     ]
+    },
+    "blend_regime-recent": {
+     "mean": -0.35502909910820957,
+     "relative": -0.04440180035193454,
+     "ci95": [
+      -0.7867028850902852,
+      0.1339404357468382
+     ]
+    }
+   }
+  },
+  "heldout:128": {
+   "anchors": 98,
+   "energy": {
+    "model": 6.37977256361125,
+    "recent": 6.476214296659838,
+    "blend": 6.216364644038247,
+    "blend_regime": 6.198284074064741
+   },
+   "differences": {
+    "blend-model": {
+     "mean": -0.16340791957300205,
+     "relative": -0.02561343965536375,
+     "ci95": [
+      -0.28025001640158403,
+      -0.07597400052824628
+     ]
+    },
+    "blend-recent": {
+     "mean": -0.25984965262159104,
+     "relative": -0.0401236958381088,
+     "ci95": [
+      -0.9357921466818669,
+      0.3260480645781326
+     ]
+    },
+    "blend_regime-model": {
+     "mean": -0.18148848954650829,
+     "relative": -0.028447485821309168,
+     "ci95": [
+      -0.3607350557981644,
+      -0.060004311414565824
+     ]
+    },
+    "blend_regime-recent": {
+     "mean": -0.27793022259509736,
+     "relative": -0.0429155382857609,
+     "ci95": [
+      -0.9416157295072775,
+      0.2993367637424638
+     ]
+    }
+   }
+  },
+  "seen:512": {
+   "anchors": 512,
+   "energy": {
+    "model": 26.286746685475933,
+    "recent": 21.91602944248818,
+    "blend": 24.08888002150463,
+    "blend_regime": 23.08622979863005
+   },
+   "differences": {
+    "blend-model": {
+     "mean": -2.1978666639713094,
+     "relative": -0.08361120873073594,
+     "ci95": [
+      -2.7728859722978623,
+      -1.7142543214080153
+     ]
+    },
+    "blend-recent": {
+     "mean": 2.1728505790164427,
+     "relative": 0.09914435389487018,
+     "ci95": [
+      0.6590932086146918,
+      3.700965598415451
+     ]
+    },
+    "blend_regime-model": {
+     "mean": -3.200516886845884,
+     "relative": -0.12175401258818565,
+     "ci95": [
+      -4.15315615030884,
+      -2.4389739583681456
+     ]
+    },
+    "blend_regime-recent": {
+     "mean": 1.1702003561418683,
+     "relative": 0.05339472458789563,
+     "ci95": [
+      -0.12622113905782237,
+      2.4386428683416765
+     ]
+    }
+   }
+  },
+  "heldout:512": {
+   "anchors": 98,
+   "energy": {
+    "model": 16.63324271386499,
+    "recent": 17.003606006455694,
+    "blend": 15.936327870723586,
+    "blend_regime": 15.736874860536574
+   },
+   "differences": {
+    "blend-model": {
+     "mean": -0.6969148431414085,
+     "relative": -0.041898916232400094,
+     "ci95": [
+      -1.0946929461523698,
+      -0.326329514643881
+     ]
+    },
+    "blend-recent": {
+     "mean": -1.0672781357321115,
+     "relative": -0.0627677526359351,
+     "ci95": [
+      -2.917466616166768,
+      0.5741850318988548
+     ]
+    },
+    "blend_regime-model": {
+     "mean": -0.8963678533284196,
+     "relative": -0.05389014449847673,
+     "ci95": [
+      -1.4958595108825745,
+      -0.35996632717687205
+     ]
+    },
+    "blend_regime-recent": {
+     "mean": -1.2667311459191226,
+     "relative": -0.07449779449360257,
+     "ci95": [
+      -3.054072065030859,
+      0.31420226762442643
+     ]
+    }
+   }
+  }
+ }
+}

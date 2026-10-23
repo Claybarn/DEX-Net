@@ -55,6 +55,10 @@ def main():
     if plan.get('learned_transitions'):config['learned_transitions']=True
     model=(LearnedTransitionModel if plan.get('learned_transitions') else PooledEventModel)(scalers,**config).cuda();optimizer=torch.optim.AdamW(model.parameters(),lr=plan['learning_rate'],weight_decay=.01)
     best=math.inf
+    if a.round==1 and plan.get('init_checkpoint'):
+        start=torch.load(plan['init_checkpoint'],map_location='cpu',weights_only=False)
+        if {k:start['model_config'].get(k) for k in config}!=config:raise ValueError('Fine-tuning checkpoint configuration differs')
+        model.load_state_dict(start['model'])
     if a.round>1:
         ck=torch.load(a.out/f'round-{a.round-1}.pt',map_location='cpu',weights_only=False)
         if ck['protocol_sha256']!=digest:raise ValueError('Resume protocol mismatch')
@@ -139,7 +143,7 @@ def main():
     score_sets=(lambda m,sets,limit,device:evaluate_fast(m,sets,limit,device,workers=plan.get('loader_workers',6))) if plan.get('static') else evaluate
     result['validation']=score_sets(model,attach_ids(load_sets(plan,'val'),plan),256 if a.smoke else 8192,'cuda')
     score=float(np.mean([v['loss']['joint'] for v in result['validation'].values()]));result['validation_macro_joint']=score
-    improved=score<best;best=min(best,score)
+    improved=score<best or bool(plan.get('select_final'));best=min(best,score)
     checkpoint=dict(model=model.state_dict(),optimizer=optimizer.state_dict(),model_config=config,round=a.round,
         scalers=scalers,pool_ids=plan['pool_ids'],best_validation=best,protocol_sha256=digest)
     atomic_save(checkpoint,a.out/f'round-{a.round}.pt')
@@ -154,7 +158,7 @@ def main():
         chosen=torch.load(a.out/'best.pt',map_location='cpu',weights_only=False);model.load_state_dict(chosen['model'])
         for split in ['test','heldout_val','heldout_test']:
             dump(a.out/(split+'.json'),score_sets(model,attach_ids(load_sets(plan,split),plan),32768,'cuda'))
-        dump(a.out/'COMPLETE.json',dict(selected_round=chosen['round'],selection='Seen-pool validation macro joint NLL',epochs=plan['epochs'],examples=len(schedule)*micro))
+        dump(a.out/'COMPLETE.json',dict(selected_round=chosen['round'],selection='Final round (fixed budget)' if plan.get('select_final') else 'Seen-pool validation macro joint NLL',epochs=plan['epochs'],examples=len(schedule)*micro))
 
 
 if __name__=='__main__':main()
