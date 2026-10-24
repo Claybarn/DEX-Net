@@ -1,0 +1,4342 @@
+{
+ "method": "Just-in-time (JIT) liquidity: simulated versus real, with identical definitions.\n\nSimulated sequences start at test anchors from scripts.prepare_anchors (per-pool subset,\nevenly spaced) and run for --horizon events with a frozen model; real sequences are\nthe full test-period event streams of the same pools. Both are reduced to the same\nevent records (raw token units) and measured identically:\n\n  large mint      minted liquidity > 10x the active liquidity before it\n  strict JIT pair consecutive Mint, Swap, Burn in one block with the same range and\n                  the same liquidity amount\n  swap/deposit    quote notional of the paired swap / quote value of the minted\n                  position at the mint price\n  pair swap size  the paired swap's quote notional relative to the median swap of the\n                  same pool and source\n  removal         for large mints with 64 later events observed: share whose\n                  same-range burns return >= 99% of the minted liquidity within\n                  64 events (not owner attribution)\n\nThese follow the definitions of the original JIT study in the research code.\n\n  python -m scripts.jit_analysis --anchors eval/anchors-test --data data/prepared       --model depth=runs/depth/training/best.pt --model reference=runs/ref/training/best.pt       --out results/jit.json\n",
+ "anchors": 120,
+ "paths": 32,
+ "horizon": 96,
+ "models": {
+  "depth260930": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/depth-seed260930.pt",
+  "depth260931": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/depth-seed260931.pt",
+  "depth260932": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/depth-seed260932.pt",
+  "ctrl260930": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-ctrl-seed260930.pt",
+  "ctrl260931": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-ctrl-seed260931.pt",
+  "ctrl260932": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-ctrl-seed260932.pt",
+  "hist260930": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-hist-seed260930.pt",
+  "hist260931": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-hist-seed260931.pt",
+  "hist260932": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-hist-seed260932.pt",
+  "histout260930": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-histout-seed260930.pt",
+  "histout260931": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-histout-seed260931.pt",
+  "histout260932": "/home/clayton/code/FlowProject-experiments/dexnet-paper-20261016/final/ck/ft-histout-seed260932.pt"
+ },
+ "groups": {
+  "heldout": {
+   "real": {
+    "all": {
+     "events": 84577,
+     "mints": 4992,
+     "large_mints": 126,
+     "large_share_of_mints": 0.025240384615384616,
+     "pairs": 543,
+     "pairs_per_1000_events": 6.420185156721095,
+     "large_mints_paired": 122,
+     "swap_deposit": {
+      "n": 543,
+      "q0.1": 8.849889692247949e-05,
+      "q0.5": 0.00048771573764583585,
+      "q0.9": 0.005697218258200583
+     },
+     "pair_swap_over_pool_median": {
+      "n": 543,
+      "q0.1": 0.10478394180603212,
+      "q0.5": 0.8568985793306658,
+      "q0.9": 24.304328338876495
+     },
+     "removal": {
+      "large_mints_followed": 126,
+      "recovered_within_64": 1.0,
+      "unremoved_after_64": 0.0,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 18163,
+      "mints": 376,
+      "large_mints": 89,
+      "large_share_of_mints": 0.23670212765957446,
+      "pairs": 272,
+      "pairs_per_1000_events": 14.975499642129604,
+      "large_mints_paired": 88,
+      "swap_deposit": {
+       "n": 272,
+       "q0.1": 9.536183103402703e-05,
+       "q0.5": 0.0009582764545370492,
+       "q0.9": 0.013671331173872332
+      },
+      "pair_swap_over_pool_median": {
+       "n": 272,
+       "q0.1": 0.86200292465649,
+       "q0.5": 6.71290196436477,
+       "q0.9": 46.452695936962314
+      },
+      "removal": {
+       "large_mints_followed": 89,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 66414,
+      "mints": 4616,
+      "large_mints": 37,
+      "large_share_of_mints": 0.008015597920277296,
+      "pairs": 271,
+      "pairs_per_1000_events": 4.080464962206763,
+      "large_mints_paired": 34,
+      "swap_deposit": {
+       "n": 271,
+       "q0.1": 8.219119132400086e-05,
+       "q0.5": 0.0002889588830184365,
+       "q0.9": 0.0014933283925703251
+      },
+      "pair_swap_over_pool_median": {
+       "n": 271,
+       "q0.1": 0.05725868855718562,
+       "q0.5": 0.21973079823336653,
+       "q0.9": 0.8568985793306658
+      },
+      "removal": {
+       "large_mints_followed": 37,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "depth260930": {
+    "all": {
+     "events": 73728,
+     "mints": 2697,
+     "large_mints": 70,
+     "large_share_of_mints": 0.025954764553207266,
+     "pairs": 116,
+     "pairs_per_1000_events": 1.5733506944444444,
+     "large_mints_paired": 40,
+     "swap_deposit": {
+      "n": 116,
+      "q0.1": 0.0008358513941133044,
+      "q0.5": 0.009782202359657939,
+      "q0.9": 0.3796767822782885
+     },
+     "pair_swap_over_pool_median": {
+      "n": 116,
+      "q0.1": 0.4020981928527849,
+      "q0.5": 2.612852433021682,
+      "q0.9": 88.32428580447805
+     },
+     "removal": {
+      "large_mints_followed": 27,
+      "recovered_within_64": 0.8148148148148148,
+      "unremoved_after_64": 0.18518518518518523,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1201,
+      "large_mints": 33,
+      "large_share_of_mints": 0.027477102414654453,
+      "pairs": 22,
+      "pairs_per_1000_events": 0.5967881944444444,
+      "large_mints_paired": 9,
+      "swap_deposit": {
+       "n": 22,
+       "q0.1": 0.0037364522602818897,
+       "q0.5": 0.19663315155856265,
+       "q0.9": 0.8304284693672102
+      },
+      "pair_swap_over_pool_median": {
+       "n": 22,
+       "q0.1": 5.115178651324553,
+       "q0.5": 88.32428580447805,
+       "q0.9": 341.100946677245
+      },
+      "removal": {
+       "large_mints_followed": 12,
+       "recovered_within_64": 0.5833333333333334,
+       "unremoved_after_64": 0.41666666666666663,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1496,
+      "large_mints": 37,
+      "large_share_of_mints": 0.024732620320855617,
+      "pairs": 94,
+      "pairs_per_1000_events": 2.5499131944444446,
+      "large_mints_paired": 31,
+      "swap_deposit": {
+       "n": 94,
+       "q0.1": 0.000662978647678677,
+       "q0.5": 0.0056048038991922365,
+       "q0.9": 0.23539324821409202
+      },
+      "pair_swap_over_pool_median": {
+       "n": 94,
+       "q0.1": 0.3677304532451321,
+       "q0.5": 1.390995104220623,
+       "q0.9": 18.989109696359726
+      },
+      "removal": {
+       "large_mints_followed": 15,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "depth260931": {
+    "all": {
+     "events": 73728,
+     "mints": 3110,
+     "large_mints": 73,
+     "large_share_of_mints": 0.02347266881028939,
+     "pairs": 102,
+     "pairs_per_1000_events": 1.3834635416666667,
+     "large_mints_paired": 40,
+     "swap_deposit": {
+      "n": 102,
+      "q0.1": 0.0011289695929085405,
+      "q0.5": 0.017349078121714656,
+      "q0.9": 0.42702257634408786
+     },
+     "pair_swap_over_pool_median": {
+      "n": 102,
+      "q0.1": 0.5219149950953321,
+      "q0.5": 4.5739541998419355,
+      "q0.9": 44.25185884583484
+     },
+     "removal": {
+      "large_mints_followed": 14,
+      "recovered_within_64": 0.9285714285714286,
+      "unremoved_after_64": 0.0714285714285714,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1391,
+      "large_mints": 48,
+      "large_share_of_mints": 0.03450754852624011,
+      "pairs": 22,
+      "pairs_per_1000_events": 0.5967881944444444,
+      "large_mints_paired": 18,
+      "swap_deposit": {
+       "n": 22,
+       "q0.1": 0.0016601111210454362,
+       "q0.5": 0.012840730444499623,
+       "q0.9": 0.290542221704127
+      },
+      "pair_swap_over_pool_median": {
+       "n": 22,
+       "q0.1": 1.8873851831373978,
+       "q0.5": 17.89741068246668,
+       "q0.9": 179.46596965631105
+      },
+      "removal": {
+       "large_mints_followed": 6,
+       "recovered_within_64": 0.8333333333333334,
+       "unremoved_after_64": 0.16666666666666663,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1719,
+      "large_mints": 25,
+      "large_share_of_mints": 0.014543339150668994,
+      "pairs": 80,
+      "pairs_per_1000_events": 2.170138888888889,
+      "large_mints_paired": 22,
+      "swap_deposit": {
+       "n": 80,
+       "q0.1": 0.0010996550927622837,
+       "q0.5": 0.01741813390387147,
+       "q0.9": 0.4466621079973961
+      },
+      "pair_swap_over_pool_median": {
+       "n": 80,
+       "q0.1": 0.3956158207060189,
+       "q0.5": 2.6552468084949323,
+       "q0.9": 15.483814278075753
+      },
+      "removal": {
+       "large_mints_followed": 8,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "depth260932": {
+    "all": {
+     "events": 73728,
+     "mints": 2412,
+     "large_mints": 43,
+     "large_share_of_mints": 0.01782752902155887,
+     "pairs": 49,
+     "pairs_per_1000_events": 0.6646050347222222,
+     "large_mints_paired": 19,
+     "swap_deposit": {
+      "n": 49,
+      "q0.1": 0.0009385765519842682,
+      "q0.5": 0.014094252189662078,
+      "q0.9": 0.259632712978174
+     },
+     "pair_swap_over_pool_median": {
+      "n": 49,
+      "q0.1": 0.49360463034879076,
+      "q0.5": 6.7800347144185755,
+      "q0.9": 225.60896484738865
+     },
+     "removal": {
+      "large_mints_followed": 14,
+      "recovered_within_64": 0.7857142857142857,
+      "unremoved_after_64": 0.2142857142857143,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 965,
+      "large_mints": 28,
+      "large_share_of_mints": 0.029015544041450778,
+      "pairs": 13,
+      "pairs_per_1000_events": 0.3526475694444444,
+      "large_mints_paired": 8,
+      "swap_deposit": {
+       "n": 13,
+       "q0.1": 0.001770095750310354,
+       "q0.5": 0.1796939197712028,
+       "q0.9": 0.48400505795304777
+      },
+      "pair_swap_over_pool_median": {
+       "n": 13,
+       "q0.1": 18.332495156516025,
+       "q0.5": 105.7949907382402,
+       "q0.9": 383.0818912176576
+      },
+      "removal": {
+       "large_mints_followed": 9,
+       "recovered_within_64": 0.6666666666666666,
+       "unremoved_after_64": 0.33333333333333337,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1447,
+      "large_mints": 15,
+      "large_share_of_mints": 0.010366275051831375,
+      "pairs": 36,
+      "pairs_per_1000_events": 0.9765625,
+      "large_mints_paired": 11,
+      "swap_deposit": {
+       "n": 36,
+       "q0.1": 0.0006848378677936428,
+       "q0.5": 0.008805432669102857,
+       "q0.9": 0.15435191186699632
+      },
+      "pair_swap_over_pool_median": {
+       "n": 36,
+       "q0.1": 0.3785346553932236,
+       "q0.5": 3.083178755267765,
+       "q0.9": 20.4704601595268
+      },
+      "removal": {
+       "large_mints_followed": 5,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "ctrl260930": {
+    "all": {
+     "events": 73728,
+     "mints": 2788,
+     "large_mints": 51,
+     "large_share_of_mints": 0.018292682926829267,
+     "pairs": 93,
+     "pairs_per_1000_events": 1.2613932291666667,
+     "large_mints_paired": 27,
+     "swap_deposit": {
+      "n": 93,
+      "q0.1": 0.0006246354409523887,
+      "q0.5": 0.011483592792832306,
+      "q0.9": 0.5606876918979895
+     },
+     "pair_swap_over_pool_median": {
+      "n": 93,
+      "q0.1": 0.2574407128920489,
+      "q0.5": 2.1927270810727926,
+      "q0.9": 155.61410960756228
+     },
+     "removal": {
+      "large_mints_followed": 24,
+      "recovered_within_64": 0.7916666666666666,
+      "unremoved_after_64": 0.20833333333333337,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1211,
+      "large_mints": 25,
+      "large_share_of_mints": 0.02064409578860446,
+      "pairs": 15,
+      "pairs_per_1000_events": 0.4069010416666667,
+      "large_mints_paired": 8,
+      "swap_deposit": {
+       "n": 15,
+       "q0.1": 0.026805886261481907,
+       "q0.5": 0.22421127096934165,
+       "q0.9": 0.866196119081402
+      },
+      "pair_swap_over_pool_median": {
+       "n": 15,
+       "q0.1": 56.06033629358454,
+       "q0.5": 174.15552478447051,
+       "q0.9": 577.7114382949701
+      },
+      "removal": {
+       "large_mints_followed": 11,
+       "recovered_within_64": 0.6363636363636364,
+       "unremoved_after_64": 0.36363636363636365,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1577,
+      "large_mints": 26,
+      "large_share_of_mints": 0.016487000634115408,
+      "pairs": 78,
+      "pairs_per_1000_events": 2.1158854166666665,
+      "large_mints_paired": 19,
+      "swap_deposit": {
+       "n": 78,
+       "q0.1": 0.0005853985704761273,
+       "q0.5": 0.00850912891462878,
+       "q0.9": 0.3480042697188599
+      },
+      "pair_swap_over_pool_median": {
+       "n": 78,
+       "q0.1": 0.23103588800475552,
+       "q0.5": 1.3704244584862777,
+       "q0.9": 11.569023281627684
+      },
+      "removal": {
+       "large_mints_followed": 13,
+       "recovered_within_64": 0.9230769230769231,
+       "unremoved_after_64": 0.07692307692307687,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "ctrl260931": {
+    "all": {
+     "events": 73728,
+     "mints": 3190,
+     "large_mints": 81,
+     "large_share_of_mints": 0.025391849529780564,
+     "pairs": 111,
+     "pairs_per_1000_events": 1.5055338541666667,
+     "large_mints_paired": 37,
+     "swap_deposit": {
+      "n": 111,
+      "q0.1": 0.0013776480319635835,
+      "q0.5": 0.027145652275927842,
+      "q0.9": 0.437132289063284
+     },
+     "pair_swap_over_pool_median": {
+      "n": 111,
+      "q0.1": 0.7816332894758556,
+      "q0.5": 5.012786515512581,
+      "q0.9": 85.8434591869762
+     },
+     "removal": {
+      "large_mints_followed": 14,
+      "recovered_within_64": 0.8571428571428571,
+      "unremoved_after_64": 0.1428571428571429,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1467,
+      "large_mints": 52,
+      "large_share_of_mints": 0.0354464894342195,
+      "pairs": 35,
+      "pairs_per_1000_events": 0.9494357638888888,
+      "large_mints_paired": 14,
+      "swap_deposit": {
+       "n": 35,
+       "q0.1": 0.002759371278872144,
+       "q0.5": 0.07040892513631573,
+       "q0.9": 0.70671666148981
+      },
+      "pair_swap_over_pool_median": {
+       "n": 35,
+       "q0.1": 3.0540957932909905,
+       "q0.5": 53.737072461467136,
+       "q0.9": 289.7099141285897
+      },
+      "removal": {
+       "large_mints_followed": 5,
+       "recovered_within_64": 0.8,
+       "unremoved_after_64": 0.19999999999999996,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1723,
+      "large_mints": 29,
+      "large_share_of_mints": 0.016831108531630876,
+      "pairs": 76,
+      "pairs_per_1000_events": 2.0616319444444446,
+      "large_mints_paired": 23,
+      "swap_deposit": {
+       "n": 76,
+       "q0.1": 0.0012691235002108415,
+       "q0.5": 0.017563466686782592,
+       "q0.9": 0.3863277944427502
+      },
+      "pair_swap_over_pool_median": {
+       "n": 76,
+       "q0.1": 0.5904673358910288,
+       "q0.5": 2.8835789045883065,
+       "q0.9": 21.534478739870302
+      },
+      "removal": {
+       "large_mints_followed": 9,
+       "recovered_within_64": 0.8888888888888888,
+       "unremoved_after_64": 0.11111111111111116,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "ctrl260932": {
+    "all": {
+     "events": 73728,
+     "mints": 2582,
+     "large_mints": 37,
+     "large_share_of_mints": 0.014329976762199844,
+     "pairs": 61,
+     "pairs_per_1000_events": 0.8273654513888888,
+     "large_mints_paired": 16,
+     "swap_deposit": {
+      "n": 61,
+      "q0.1": 0.0008792788651180368,
+      "q0.5": 0.019362694226725752,
+      "q0.9": 0.28100921433707704
+     },
+     "pair_swap_over_pool_median": {
+      "n": 61,
+      "q0.1": 0.4749992810635249,
+      "q0.5": 4.9373596699221505,
+      "q0.9": 78.29027667605466
+     },
+     "removal": {
+      "large_mints_followed": 13,
+      "recovered_within_64": 0.6153846153846154,
+      "unremoved_after_64": 0.3846153846153846,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1080,
+      "large_mints": 21,
+      "large_share_of_mints": 0.019444444444444445,
+      "pairs": 14,
+      "pairs_per_1000_events": 0.3797743055555556,
+      "large_mints_paired": 6,
+      "swap_deposit": {
+       "n": 14,
+       "q0.1": 0.0014710176809592853,
+       "q0.5": 0.10918086679793614,
+       "q0.9": 0.49809041753086397
+      },
+      "pair_swap_over_pool_median": {
+       "n": 14,
+       "q0.1": 13.959562017125915,
+       "q0.5": 65.6939074600721,
+       "q0.9": 201.70535745471383
+      },
+      "removal": {
+       "large_mints_followed": 8,
+       "recovered_within_64": 0.5,
+       "unremoved_after_64": 0.5,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1502,
+      "large_mints": 16,
+      "large_share_of_mints": 0.010652463382157125,
+      "pairs": 47,
+      "pairs_per_1000_events": 1.2749565972222223,
+      "large_mints_paired": 10,
+      "swap_deposit": {
+       "n": 47,
+       "q0.1": 0.0006786438603198607,
+       "q0.5": 0.01532929305271682,
+       "q0.9": 0.25730820854450587
+      },
+      "pair_swap_over_pool_median": {
+       "n": 47,
+       "q0.1": 0.3573955137787374,
+       "q0.5": 2.849565526180725,
+       "q0.9": 17.424270886550165
+      },
+      "removal": {
+       "large_mints_followed": 5,
+       "recovered_within_64": 0.8,
+       "unremoved_after_64": 0.19999999999999996,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "hist260930": {
+    "all": {
+     "events": 73728,
+     "mints": 2616,
+     "large_mints": 53,
+     "large_share_of_mints": 0.020259938837920488,
+     "pairs": 99,
+     "pairs_per_1000_events": 1.3427734375,
+     "large_mints_paired": 30,
+     "swap_deposit": {
+      "n": 99,
+      "q0.1": 0.0007514416854098425,
+      "q0.5": 0.007935446786587584,
+      "q0.9": 0.6354527174048857
+     },
+     "pair_swap_over_pool_median": {
+      "n": 99,
+      "q0.1": 0.23954043957077772,
+      "q0.5": 3.3632118947228933,
+      "q0.9": 111.86978800565483
+     },
+     "removal": {
+      "large_mints_followed": 22,
+      "recovered_within_64": 0.9090909090909091,
+      "unremoved_after_64": 0.09090909090909094,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1075,
+      "large_mints": 23,
+      "large_share_of_mints": 0.021395348837209303,
+      "pairs": 15,
+      "pairs_per_1000_events": 0.4069010416666667,
+      "large_mints_paired": 7,
+      "swap_deposit": {
+       "n": 15,
+       "q0.1": 0.0033367029241753274,
+       "q0.5": 0.06302270912138679,
+       "q0.9": 2.1299542874368047
+      },
+      "pair_swap_over_pool_median": {
+       "n": 15,
+       "q0.1": 48.125146573004926,
+       "q0.5": 135.37496743955523,
+       "q0.9": 462.9525979805665
+      },
+      "removal": {
+       "large_mints_followed": 6,
+       "recovered_within_64": 0.6666666666666666,
+       "unremoved_after_64": 0.33333333333333337,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1541,
+      "large_mints": 30,
+      "large_share_of_mints": 0.01946787800129786,
+      "pairs": 84,
+      "pairs_per_1000_events": 2.2786458333333335,
+      "large_mints_paired": 23,
+      "swap_deposit": {
+       "n": 84,
+       "q0.1": 0.0006811158746839499,
+       "q0.5": 0.005835169675045479,
+       "q0.9": 0.4960170255300188
+      },
+      "pair_swap_over_pool_median": {
+       "n": 84,
+       "q0.1": 0.22760126737239852,
+       "q0.5": 2.032333006702731,
+       "q0.9": 15.233450764845609
+      },
+      "removal": {
+       "large_mints_followed": 16,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "hist260931": {
+    "all": {
+     "events": 73728,
+     "mints": 2851,
+     "large_mints": 69,
+     "large_share_of_mints": 0.024202034373903895,
+     "pairs": 103,
+     "pairs_per_1000_events": 1.3970269097222223,
+     "large_mints_paired": 34,
+     "swap_deposit": {
+      "n": 103,
+      "q0.1": 0.0010978026125628827,
+      "q0.5": 0.02413714261161109,
+      "q0.9": 0.45357271429605944
+     },
+     "pair_swap_over_pool_median": {
+      "n": 103,
+      "q0.1": 0.755000975943128,
+      "q0.5": 4.589167440218915,
+      "q0.9": 69.40850207221149
+     },
+     "removal": {
+      "large_mints_followed": 16,
+      "recovered_within_64": 0.8125,
+      "unremoved_after_64": 0.1875,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1242,
+      "large_mints": 38,
+      "large_share_of_mints": 0.030595813204508857,
+      "pairs": 23,
+      "pairs_per_1000_events": 0.6239149305555556,
+      "large_mints_paired": 11,
+      "swap_deposit": {
+       "n": 23,
+       "q0.1": 0.0048580708912729625,
+       "q0.5": 0.14164136208750344,
+       "q0.9": 2.9339067268850085
+      },
+      "pair_swap_over_pool_median": {
+       "n": 23,
+       "q0.1": 12.247997756035359,
+       "q0.5": 56.836300995947624,
+       "q0.9": 137.4222447174341
+      },
+      "removal": {
+       "large_mints_followed": 7,
+       "recovered_within_64": 0.7142857142857143,
+       "unremoved_after_64": 0.2857142857142857,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1609,
+      "large_mints": 31,
+      "large_share_of_mints": 0.019266625233064015,
+      "pairs": 80,
+      "pairs_per_1000_events": 2.170138888888889,
+      "large_mints_paired": 23,
+      "swap_deposit": {
+       "n": 80,
+       "q0.1": 0.0009752474201472546,
+       "q0.5": 0.012443275800742178,
+       "q0.9": 0.2539504697417043
+      },
+      "pair_swap_over_pool_median": {
+       "n": 80,
+       "q0.1": 0.5900816301629264,
+       "q0.5": 2.9071695006866265,
+       "q0.9": 21.58589544589367
+      },
+      "removal": {
+       "large_mints_followed": 9,
+       "recovered_within_64": 0.8888888888888888,
+       "unremoved_after_64": 0.11111111111111116,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "hist260932": {
+    "all": {
+     "events": 73728,
+     "mints": 2674,
+     "large_mints": 33,
+     "large_share_of_mints": 0.012341062079281975,
+     "pairs": 56,
+     "pairs_per_1000_events": 0.7595486111111112,
+     "large_mints_paired": 17,
+     "swap_deposit": {
+      "n": 56,
+      "q0.1": 0.0007991206763845707,
+      "q0.5": 0.016337786195826348,
+      "q0.9": 0.18599571973528495
+     },
+     "pair_swap_over_pool_median": {
+      "n": 56,
+      "q0.1": 0.5380547537224705,
+      "q0.5": 4.560506089051649,
+      "q0.9": 75.95186385420394
+     },
+     "removal": {
+      "large_mints_followed": 8,
+      "recovered_within_64": 0.625,
+      "unremoved_after_64": 0.375,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 1196,
+      "large_mints": 14,
+      "large_share_of_mints": 0.011705685618729096,
+      "pairs": 14,
+      "pairs_per_1000_events": 0.3797743055555556,
+      "large_mints_paired": 3,
+      "swap_deposit": {
+       "n": 14,
+       "q0.1": 0.01707979561980884,
+       "q0.5": 0.07064378910943522,
+       "q0.9": 0.8059792959805057
+      },
+      "pair_swap_over_pool_median": {
+       "n": 14,
+       "q0.1": 9.863334720964296,
+       "q0.5": 29.051365360320027,
+       "q0.9": 125.16488790672261
+      },
+      "removal": {
+       "large_mints_followed": 5,
+       "recovered_within_64": 0.4,
+       "unremoved_after_64": 0.6,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 1478,
+      "large_mints": 19,
+      "large_share_of_mints": 0.012855209742895805,
+      "pairs": 42,
+      "pairs_per_1000_events": 1.1393229166666667,
+      "large_mints_paired": 14,
+      "swap_deposit": {
+       "n": 42,
+       "q0.1": 0.0006248436270576094,
+       "q0.5": 0.008127293204693147,
+       "q0.9": 0.08857305599966442
+      },
+      "pair_swap_over_pool_median": {
+       "n": 42,
+       "q0.1": 0.44259159499710937,
+       "q0.5": 2.744825799984781,
+       "q0.9": 16.377691474965715
+      },
+      "removal": {
+       "large_mints_followed": 3,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "histout260930": {
+    "all": {
+     "events": 73728,
+     "mints": 13868,
+     "large_mints": 2958,
+     "large_share_of_mints": 0.2132967983847707,
+     "pairs": 4109,
+     "pairs_per_1000_events": 55.73187934027778,
+     "large_mints_paired": 1730,
+     "swap_deposit": {
+      "n": 4109,
+      "q0.1": 0.0014760140814722253,
+      "q0.5": 0.015025382477438426,
+      "q0.9": 0.36306457440564605
+     },
+     "pair_swap_over_pool_median": {
+      "n": 4109,
+      "q0.1": 0.6546298346414279,
+      "q0.5": 6.174993067187328,
+      "q0.9": 66.36325292983001
+     },
+     "removal": {
+      "large_mints_followed": 583,
+      "recovered_within_64": 0.9571183533447685,
+      "unremoved_after_64": 0.04288164665523153,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36864,
+      "mints": 7278,
+      "large_mints": 1800,
+      "large_share_of_mints": 0.247320692497939,
+      "pairs": 1731,
+      "pairs_per_1000_events": 46.956380208333336,
+      "large_mints_paired": 938,
+      "swap_deposit": {
+       "n": 1731,
+       "q0.1": 0.001498267239714551,
+       "q0.5": 0.012783090246724116,
+       "q0.9": 0.30324427390053815
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1731,
+       "q0.1": 2.7029845345653714,
+       "q0.5": 17.747750164968107,
+       "q0.9": 159.98269298029436
+      },
+      "removal": {
+       "large_mints_followed": 344,
+       "recovered_within_64": 0.9331395348837209,
+       "unremoved_after_64": 0.06686046511627908,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 6590,
+      "large_mints": 1158,
+      "large_share_of_mints": 0.1757207890743551,
+      "pairs": 2378,
+      "pairs_per_1000_events": 64.50737847222223,
+      "large_mints_paired": 792,
+      "swap_deposit": {
+       "n": 2378,
+       "q0.1": 0.0014001453388889922,
+       "q0.5": 0.017131156732359834,
+       "q0.9": 0.4279528139626556
+      },
+      "pair_swap_over_pool_median": {
+       "n": 2378,
+       "q0.1": 0.40816033871978996,
+       "q0.5": 3.051122756266258,
+       "q0.9": 23.127768248385237
+      },
+      "removal": {
+       "large_mints_followed": 239,
+       "recovered_within_64": 0.9916317991631799,
+       "unremoved_after_64": 0.008368200836820106,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "histout260931": {
+    "all": {
+     "events": 73588,
+     "mints": 11765,
+     "large_mints": 1579,
+     "large_share_of_mints": 0.13421164470888228,
+     "pairs": 3230,
+     "pairs_per_1000_events": 43.89302603685383,
+     "large_mints_paired": 937,
+     "swap_deposit": {
+      "n": 3230,
+      "q0.1": 0.0020174698596619966,
+      "q0.5": 0.03264674010528339,
+      "q0.9": 0.7854947755105641
+     },
+     "pair_swap_over_pool_median": {
+      "n": 3230,
+      "q0.1": 0.6415009847051727,
+      "q0.5": 4.9540675158656855,
+      "q0.9": 40.05439101724375
+     },
+     "removal": {
+      "large_mints_followed": 274,
+      "recovered_within_64": 0.9671532846715328,
+      "unremoved_after_64": 0.03284671532846717,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36724,
+      "mints": 5376,
+      "large_mints": 1021,
+      "large_share_of_mints": 0.18991815476190477,
+      "pairs": 1527,
+      "pairs_per_1000_events": 41.58043786079948,
+      "large_mints_paired": 592,
+      "swap_deposit": {
+       "n": 1527,
+       "q0.1": 0.0019508963579312727,
+       "q0.5": 0.025102115472395645,
+       "q0.9": 0.7415499367296389
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1527,
+       "q0.1": 1.1655550228467522,
+       "q0.5": 9.928723152090049,
+       "q0.9": 78.25141692244658
+      },
+      "removal": {
+       "large_mints_followed": 122,
+       "recovered_within_64": 0.9344262295081968,
+       "unremoved_after_64": 0.06557377049180324,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 6389,
+      "large_mints": 558,
+      "large_share_of_mints": 0.08733761151979966,
+      "pairs": 1703,
+      "pairs_per_1000_events": 46.19683159722222,
+      "large_mints_paired": 345,
+      "swap_deposit": {
+       "n": 1703,
+       "q0.1": 0.002231290348643819,
+       "q0.5": 0.041552236091679316,
+       "q0.9": 0.8497186910659972
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1703,
+       "q0.1": 0.4618948460471672,
+       "q0.5": 2.942213753257002,
+       "q0.9": 15.10699213883905
+      },
+      "removal": {
+       "large_mints_followed": 152,
+       "recovered_within_64": 0.993421052631579,
+       "unremoved_after_64": 0.006578947368421018,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "histout260932": {
+    "all": {
+     "events": 73578,
+     "mints": 13073,
+     "large_mints": 1672,
+     "large_share_of_mints": 0.12789719268721794,
+     "pairs": 3489,
+     "pairs_per_1000_events": 47.419065481529806,
+     "large_mints_paired": 1008,
+     "swap_deposit": {
+      "n": 3489,
+      "q0.1": 0.0015556255356697986,
+      "q0.5": 0.013695918894783936,
+      "q0.9": 0.32102173942845175
+     },
+     "pair_swap_over_pool_median": {
+      "n": 3489,
+      "q0.1": 0.5259953109879796,
+      "q0.5": 4.741689925276303,
+      "q0.9": 37.34754422265979
+     },
+     "removal": {
+      "large_mints_followed": 271,
+      "recovered_within_64": 0.9630996309963099,
+      "unremoved_after_64": 0.03690036900369009,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "USDC-USDT-500": {
+      "events": 36714,
+      "mints": 7025,
+      "large_mints": 1347,
+      "large_share_of_mints": 0.19174377224199288,
+      "pairs": 1964,
+      "pairs_per_1000_events": 53.49457972435583,
+      "large_mints_paired": 773,
+      "swap_deposit": {
+       "n": 1964,
+       "q0.1": 0.0016432539409784073,
+       "q0.5": 0.009640891965229305,
+       "q0.9": 0.15656686507039994
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1964,
+       "q0.1": 0.9950875591790547,
+       "q0.5": 8.046755404508817,
+       "q0.9": 59.934242026055784
+      },
+      "removal": {
+       "large_mints_followed": 192,
+       "recovered_within_64": 0.953125,
+       "unremoved_after_64": 0.046875,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-3000": {
+      "events": 36864,
+      "mints": 6048,
+      "large_mints": 325,
+      "large_share_of_mints": 0.053736772486772486,
+      "pairs": 1525,
+      "pairs_per_1000_events": 41.36827256944444,
+      "large_mints_paired": 235,
+      "swap_deposit": {
+       "n": 1525,
+       "q0.1": 0.0014805938661173305,
+       "q0.5": 0.025648265053547604,
+       "q0.9": 0.5531401808260953
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1525,
+       "q0.1": 0.29434087922833563,
+       "q0.5": 2.5536288418674324,
+       "q0.9": 16.32949816185361
+      },
+      "removal": {
+       "large_mints_followed": 79,
+       "recovered_within_64": 0.9873417721518988,
+       "unremoved_after_64": 0.012658227848101222,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   }
+  },
+  "seen": {
+   "real": {
+    "all": {
+     "events": 5082743,
+     "mints": 124735,
+     "large_mints": 11205,
+     "large_share_of_mints": 0.08983044053393194,
+     "pairs": 23265,
+     "pairs_per_1000_events": 4.577252873104149,
+     "large_mints_paired": 10474,
+     "swap_deposit": {
+      "n": 23265,
+      "q0.1": 4.573657647047252e-05,
+      "q0.5": 0.0012090314122535743,
+      "q0.9": 0.06300968616619863
+     },
+     "pair_swap_over_pool_median": {
+      "n": 23265,
+      "q0.1": 0.25340397040191315,
+      "q0.5": 2.0777880310151575,
+      "q0.9": 33.501627408959784
+     },
+     "removal": {
+      "large_mints_followed": 11205,
+      "recovered_within_64": 0.9950022311468094,
+      "unremoved_after_64": 0.004997768853190587,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 69313,
+      "mints": 544,
+      "large_mints": 53,
+      "large_share_of_mints": 0.0974264705882353,
+      "pairs": 52,
+      "pairs_per_1000_events": 0.7502200164471311,
+      "large_mints_paired": 52,
+      "swap_deposit": {
+       "n": 52,
+       "q0.1": 6.348961924335279e-05,
+       "q0.5": 0.00046444965494081146,
+       "q0.9": 0.005173896390932028
+      },
+      "pair_swap_over_pool_median": {
+       "n": 52,
+       "q0.1": 0.047478674015152225,
+       "q0.5": 0.6112926846449613,
+       "q0.9": 3.9691377022624956
+      },
+      "removal": {
+       "large_mints_followed": 53,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 199084,
+      "mints": 9020,
+      "large_mints": 517,
+      "large_share_of_mints": 0.05731707317073171,
+      "pairs": 1153,
+      "pairs_per_1000_events": 5.791525185348898,
+      "large_mints_paired": 481,
+      "swap_deposit": {
+       "n": 1153,
+       "q0.1": 9.653082199469423e-06,
+       "q0.5": 0.00017897338110187371,
+       "q0.9": 0.0020539668252483557
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1153,
+       "q0.1": 0.02807517366883715,
+       "q0.5": 0.41293251286575305,
+       "q0.9": 4.803510771938221
+      },
+      "removal": {
+       "large_mints_followed": 517,
+       "recovered_within_64": 0.9961315280464217,
+       "unremoved_after_64": 0.003868471953578312,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 388745,
+      "mints": 9362,
+      "large_mints": 153,
+      "large_share_of_mints": 0.016342661824396497,
+      "pairs": 3258,
+      "pairs_per_1000_events": 8.3808151873336,
+      "large_mints_paired": 131,
+      "swap_deposit": {
+       "n": 3258,
+       "q0.1": 0.0009158181790041192,
+       "q0.5": 0.004695999009865146,
+       "q0.9": 0.1816525517713982
+      },
+      "pair_swap_over_pool_median": {
+       "n": 3258,
+       "q0.1": 3.432744175802998,
+       "q0.5": 14.150456169164883,
+       "q0.9": 210.4746150605998
+      },
+      "removal": {
+       "large_mints_followed": 153,
+       "recovered_within_64": 0.8888888888888888,
+       "unremoved_after_64": 0.11111111111111116,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 448703,
+      "mints": 342,
+      "large_mints": 255,
+      "large_share_of_mints": 0.7456140350877193,
+      "pairs": 214,
+      "pairs_per_1000_events": 0.47693017430237816,
+      "large_mints_paired": 187,
+      "swap_deposit": {
+       "n": 214,
+       "q0.1": 0.0003296133030068977,
+       "q0.5": 0.0065376179416608655,
+       "q0.9": 0.22549079310622672
+      },
+      "pair_swap_over_pool_median": {
+       "n": 214,
+       "q0.1": 1.456830073370879,
+       "q0.5": 5.844208311532742,
+       "q0.9": 21.796419266565923
+      },
+      "removal": {
+       "large_mints_followed": 255,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 430515,
+      "mints": 50327,
+      "large_mints": 319,
+      "large_share_of_mints": 0.006338545909750234,
+      "pairs": 5491,
+      "pairs_per_1000_events": 12.754491713413005,
+      "large_mints_paired": 304,
+      "swap_deposit": {
+       "n": 5491,
+       "q0.1": 1.6539235580808322e-05,
+       "q0.5": 8.847022615500194e-05,
+       "q0.9": 0.001799792398723358
+      },
+      "pair_swap_over_pool_median": {
+       "n": 5491,
+       "q0.1": 0.5058839350283879,
+       "q0.5": 2.044954213169189,
+       "q0.9": 33.56305272600811
+      },
+      "removal": {
+       "large_mints_followed": 319,
+       "recovered_within_64": 0.9905956112852664,
+       "unremoved_after_64": 0.009404388714733591,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 553499,
+      "mints": 6417,
+      "large_mints": 225,
+      "large_share_of_mints": 0.03506311360448808,
+      "pairs": 299,
+      "pairs_per_1000_events": 0.540199711291258,
+      "large_mints_paired": 205,
+      "swap_deposit": {
+       "n": 299,
+       "q0.1": 0.00016700015496581695,
+       "q0.5": 0.0024930518834115384,
+       "q0.9": 0.1945745927080114
+      },
+      "pair_swap_over_pool_median": {
+       "n": 299,
+       "q0.1": 0.1132367249415063,
+       "q0.5": 1.060441214622688,
+       "q0.9": 20.1157522366199
+      },
+      "removal": {
+       "large_mints_followed": 225,
+       "recovered_within_64": 0.9733333333333334,
+       "unremoved_after_64": 0.026666666666666616,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 1179122,
+      "mints": 11735,
+      "large_mints": 5638,
+      "large_share_of_mints": 0.4804431188751598,
+      "pairs": 6559,
+      "pairs_per_1000_events": 5.562613537869703,
+      "large_mints_paired": 5348,
+      "swap_deposit": {
+       "n": 6559,
+       "q0.1": 0.0002573174620852861,
+       "q0.5": 0.0023836393763444494,
+       "q0.9": 0.07606904171456862
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6559,
+       "q0.1": 0.23644602748429303,
+       "q0.5": 1.7919748085722418,
+       "q0.9": 7.885203793461676
+      },
+      "removal": {
+       "large_mints_followed": 5638,
+       "recovered_within_64": 0.9976942178077333,
+       "unremoved_after_64": 0.0023057821922667365,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 1813762,
+      "mints": 36988,
+      "large_mints": 4045,
+      "large_share_of_mints": 0.10935979236509139,
+      "pairs": 6239,
+      "pairs_per_1000_events": 3.439811838598449,
+      "large_mints_paired": 3766,
+      "swap_deposit": {
+       "n": 6239,
+       "q0.1": 0.00012532710857117218,
+       "q0.5": 0.0015257420460997146,
+       "q0.9": 0.11433003157069353
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6239,
+       "q0.1": 0.2076306934243052,
+       "q0.5": 1.486233440010459,
+       "q0.9": 33.49836989175412
+      },
+      "removal": {
+       "large_mints_followed": 4045,
+       "recovered_within_64": 0.9962917181705809,
+       "unremoved_after_64": 0.003708281829419069,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "depth260930": {
+    "all": {
+     "events": 294912,
+     "mints": 6932,
+     "large_mints": 554,
+     "large_share_of_mints": 0.07991921523369878,
+     "pairs": 586,
+     "pairs_per_1000_events": 1.9870334201388888,
+     "large_mints_paired": 375,
+     "swap_deposit": {
+      "n": 586,
+      "q0.1": 0.0004224443383242962,
+      "q0.5": 0.006927985503199521,
+      "q0.9": 0.16061053099405392
+     },
+     "pair_swap_over_pool_median": {
+      "n": 586,
+      "q0.1": 0.39093375772294986,
+      "q0.5": 4.809402312565579,
+      "q0.9": 68.81331735633461
+     },
+     "removal": {
+      "large_mints_followed": 205,
+      "recovered_within_64": 0.9073170731707317,
+      "unremoved_after_64": 0.09268292682926826,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 122,
+      "large_mints": 28,
+      "large_share_of_mints": 0.22950819672131148,
+      "pairs": 23,
+      "pairs_per_1000_events": 0.6239149305555556,
+      "large_mints_paired": 19,
+      "swap_deposit": {
+       "n": 23,
+       "q0.1": 0.0025617099647450977,
+       "q0.5": 0.047005191176637894,
+       "q0.9": 0.3387525867348085
+      },
+      "pair_swap_over_pool_median": {
+       "n": 23,
+       "q0.1": 0.9927981506645058,
+       "q0.5": 4.803539974233001,
+       "q0.9": 36.91125214454499
+      },
+      "removal": {
+       "large_mints_followed": 10,
+       "recovered_within_64": 0.9,
+       "unremoved_after_64": 0.09999999999999998,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 836,
+      "large_mints": 67,
+      "large_share_of_mints": 0.08014354066985646,
+      "pairs": 71,
+      "pairs_per_1000_events": 1.9259982638888888,
+      "large_mints_paired": 46,
+      "swap_deposit": {
+       "n": 71,
+       "q0.1": 0.0001955664073401934,
+       "q0.5": 0.003198517973006612,
+       "q0.9": 0.08084138137155557
+      },
+      "pair_swap_over_pool_median": {
+       "n": 71,
+       "q0.1": 0.12045009519066582,
+       "q0.5": 0.688706471100791,
+       "q0.9": 4.455629270366314
+      },
+      "removal": {
+       "large_mints_followed": 24,
+       "recovered_within_64": 0.9166666666666666,
+       "unremoved_after_64": 0.08333333333333337,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 380,
+      "large_mints": 10,
+      "large_share_of_mints": 0.02631578947368421,
+      "pairs": 3,
+      "pairs_per_1000_events": 0.08138020833333333,
+      "large_mints_paired": 3,
+      "swap_deposit": {
+       "n": 3,
+       "q0.1": 0.038292078750178114,
+       "q0.5": 0.1293707583049018,
+       "q0.9": 0.7774569788382211
+      },
+      "pair_swap_over_pool_median": {
+       "n": 3,
+       "q0.1": 112.60565124623952,
+       "q0.5": 431.94213877549794,
+       "q0.9": 2901.545742203375
+      },
+      "removal": {
+       "large_mints_followed": 3,
+       "recovered_within_64": 0.0,
+       "unremoved_after_64": 1.0,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2198,
+      "large_mints": 116,
+      "large_share_of_mints": 0.052775250227479524,
+      "pairs": 109,
+      "pairs_per_1000_events": 2.956814236111111,
+      "large_mints_paired": 69,
+      "swap_deposit": {
+       "n": 109,
+       "q0.1": 0.0002770443058952956,
+       "q0.5": 0.0017605507994383587,
+       "q0.9": 0.024402610156787085
+      },
+      "pair_swap_over_pool_median": {
+       "n": 109,
+       "q0.1": 0.18794843216088,
+       "q0.5": 1.505647865887096,
+       "q0.9": 8.713549689998947
+      },
+      "removal": {
+       "large_mints_followed": 31,
+       "recovered_within_64": 0.9354838709677419,
+       "unremoved_after_64": 0.06451612903225812,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1857,
+      "large_mints": 62,
+      "large_share_of_mints": 0.03338718362950996,
+      "pairs": 91,
+      "pairs_per_1000_events": 2.468532986111111,
+      "large_mints_paired": 25,
+      "swap_deposit": {
+       "n": 91,
+       "q0.1": 0.00028293250113350607,
+       "q0.5": 0.0029640385351382284,
+       "q0.9": 0.07751815436148923
+      },
+      "pair_swap_over_pool_median": {
+       "n": 91,
+       "q0.1": 1.1406061349860255,
+       "q0.5": 5.693938458881148,
+       "q0.9": 60.183553943978104
+      },
+      "removal": {
+       "large_mints_followed": 23,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 752,
+      "large_mints": 134,
+      "large_share_of_mints": 0.17819148936170212,
+      "pairs": 125,
+      "pairs_per_1000_events": 3.390842013888889,
+      "large_mints_paired": 104,
+      "swap_deposit": {
+       "n": 125,
+       "q0.1": 0.0008091352375803817,
+       "q0.5": 0.00751219001813775,
+       "q0.9": 0.11398643916148828
+      },
+      "pair_swap_over_pool_median": {
+       "n": 125,
+       "q0.1": 5.021207283883423,
+       "q0.5": 38.33304326557073,
+       "q0.9": 186.89182941801852
+      },
+      "removal": {
+       "large_mints_followed": 44,
+       "recovered_within_64": 0.9318181818181818,
+       "unremoved_after_64": 0.06818181818181823,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 272,
+      "large_mints": 77,
+      "large_share_of_mints": 0.28308823529411764,
+      "pairs": 86,
+      "pairs_per_1000_events": 2.3328993055555554,
+      "large_mints_paired": 59,
+      "swap_deposit": {
+       "n": 86,
+       "q0.1": 0.0010678265432809773,
+       "q0.5": 0.024517733084721677,
+       "q0.9": 0.36093787941981587
+      },
+      "pair_swap_over_pool_median": {
+       "n": 86,
+       "q0.1": 1.5029374480488813,
+       "q0.5": 5.789728208104179,
+       "q0.9": 35.96921606013419
+      },
+      "removal": {
+       "large_mints_followed": 46,
+       "recovered_within_64": 0.8478260869565217,
+       "unremoved_after_64": 0.15217391304347827,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 515,
+      "large_mints": 60,
+      "large_share_of_mints": 0.11650485436893204,
+      "pairs": 78,
+      "pairs_per_1000_events": 2.1158854166666665,
+      "large_mints_paired": 50,
+      "swap_deposit": {
+       "n": 78,
+       "q0.1": 0.003113368278246262,
+       "q0.5": 0.02159768117799156,
+       "q0.9": 0.24442728034216807
+      },
+      "pair_swap_over_pool_median": {
+       "n": 78,
+       "q0.1": 0.9880704891245116,
+       "q0.5": 5.527750649265338,
+       "q0.9": 44.38817092810762
+      },
+      "removal": {
+       "large_mints_followed": 24,
+       "recovered_within_64": 0.9583333333333334,
+       "unremoved_after_64": 0.04166666666666663,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "depth260931": {
+    "all": {
+     "events": 294912,
+     "mints": 7342,
+     "large_mints": 505,
+     "large_share_of_mints": 0.06878234813402342,
+     "pairs": 531,
+     "pairs_per_1000_events": 1.800537109375,
+     "large_mints_paired": 353,
+     "swap_deposit": {
+      "n": 531,
+      "q0.1": 0.00047462268893944055,
+      "q0.5": 0.009717740953826118,
+      "q0.9": 0.15931264735586048
+     },
+     "pair_swap_over_pool_median": {
+      "n": 531,
+      "q0.1": 0.6453375713786106,
+      "q0.5": 7.351568365067294,
+      "q0.9": 80.22376090473949
+     },
+     "removal": {
+      "large_mints_followed": 168,
+      "recovered_within_64": 0.8809523809523809,
+      "unremoved_after_64": 0.11904761904761907,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 858,
+      "large_mints": 55,
+      "large_share_of_mints": 0.0641025641025641,
+      "pairs": 49,
+      "pairs_per_1000_events": 1.3292100694444444,
+      "large_mints_paired": 36,
+      "swap_deposit": {
+       "n": 49,
+       "q0.1": 0.00041310090126455714,
+       "q0.5": 0.003212302790186875,
+       "q0.9": 0.10058673199731763
+      },
+      "pair_swap_over_pool_median": {
+       "n": 49,
+       "q0.1": 0.30518784160904283,
+       "q0.5": 1.382493852021025,
+       "q0.9": 9.672693066987268
+      },
+      "removal": {
+       "large_mints_followed": 18,
+       "recovered_within_64": 0.8888888888888888,
+       "unremoved_after_64": 0.11111111111111116,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 150,
+      "large_mints": 45,
+      "large_share_of_mints": 0.3,
+      "pairs": 43,
+      "pairs_per_1000_events": 1.1664496527777777,
+      "large_mints_paired": 37,
+      "swap_deposit": {
+       "n": 43,
+       "q0.1": 0.001131966096930041,
+       "q0.5": 0.018146818817694886,
+       "q0.9": 0.19996908920126621
+      },
+      "pair_swap_over_pool_median": {
+       "n": 43,
+       "q0.1": 0.70705575376021,
+       "q0.5": 3.651041211870428,
+       "q0.9": 19.430242009404328
+      },
+      "removal": {
+       "large_mints_followed": 16,
+       "recovered_within_64": 0.9375,
+       "unremoved_after_64": 0.0625,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 418,
+      "large_mints": 5,
+      "large_share_of_mints": 0.011961722488038277,
+      "pairs": 2,
+      "pairs_per_1000_events": 0.054253472222222224,
+      "large_mints_paired": 2,
+      "swap_deposit": {
+       "n": 2,
+       "q0.1": 0.14882308896752294,
+       "q0.5": 0.40541341584034823,
+       "q0.9": 0.6620037427131735
+      },
+      "pair_swap_over_pool_median": {
+       "n": 2,
+       "q0.1": 356.08914976968333,
+       "q0.5": 852.5628220523678,
+       "q0.9": 1349.036494335052
+      },
+      "removal": {
+       "large_mints_followed": 2,
+       "recovered_within_64": 0.0,
+       "unremoved_after_64": 1.0,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2211,
+      "large_mints": 100,
+      "large_share_of_mints": 0.045228403437358664,
+      "pairs": 93,
+      "pairs_per_1000_events": 2.5227864583333335,
+      "large_mints_paired": 55,
+      "swap_deposit": {
+       "n": 93,
+       "q0.1": 0.0002330698780712768,
+       "q0.5": 0.0018324627731883484,
+       "q0.9": 0.020026336397710905
+      },
+      "pair_swap_over_pool_median": {
+       "n": 93,
+       "q0.1": 0.16304334467749554,
+       "q0.5": 2.168922740400108,
+       "q0.9": 13.26296690365495
+      },
+      "removal": {
+       "large_mints_followed": 28,
+       "recovered_within_64": 0.9642857142857143,
+       "unremoved_after_64": 0.0357142857142857,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 998,
+      "large_mints": 110,
+      "large_share_of_mints": 0.11022044088176353,
+      "pairs": 95,
+      "pairs_per_1000_events": 2.5770399305555554,
+      "large_mints_paired": 83,
+      "swap_deposit": {
+       "n": 95,
+       "q0.1": 0.0008479443460501446,
+       "q0.5": 0.009533943473852967,
+       "q0.9": 0.10437638363232744
+      },
+      "pair_swap_over_pool_median": {
+       "n": 95,
+       "q0.1": 5.106496457956843,
+       "q0.5": 41.50631811757733,
+       "q0.9": 238.25681001953873
+      },
+      "removal": {
+       "large_mints_followed": 32,
+       "recovered_within_64": 0.78125,
+       "unremoved_after_64": 0.21875,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1795,
+      "large_mints": 47,
+      "large_share_of_mints": 0.02618384401114206,
+      "pairs": 83,
+      "pairs_per_1000_events": 2.2515190972222223,
+      "large_mints_paired": 21,
+      "swap_deposit": {
+       "n": 83,
+       "q0.1": 0.00017852805177796376,
+       "q0.5": 0.0041918522202034555,
+       "q0.9": 0.15399087774678255
+      },
+      "pair_swap_over_pool_median": {
+       "n": 83,
+       "q0.1": 0.7253706164749836,
+       "q0.5": 11.79153481527455,
+       "q0.9": 120.7514310340871
+      },
+      "removal": {
+       "large_mints_followed": 12,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 364,
+      "large_mints": 82,
+      "large_share_of_mints": 0.22527472527472528,
+      "pairs": 85,
+      "pairs_per_1000_events": 2.3057725694444446,
+      "large_mints_paired": 67,
+      "swap_deposit": {
+       "n": 85,
+       "q0.1": 0.001140245408645934,
+       "q0.5": 0.017149446749073108,
+       "q0.9": 0.20945635175008107
+      },
+      "pair_swap_over_pool_median": {
+       "n": 85,
+       "q0.1": 1.9601709960974334,
+       "q0.5": 8.380169775064118,
+       "q0.9": 30.300635706910892
+      },
+      "removal": {
+       "large_mints_followed": 42,
+       "recovered_within_64": 0.8571428571428571,
+       "unremoved_after_64": 0.1428571428571429,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 548,
+      "large_mints": 61,
+      "large_share_of_mints": 0.11131386861313869,
+      "pairs": 81,
+      "pairs_per_1000_events": 2.197265625,
+      "large_mints_paired": 52,
+      "swap_deposit": {
+       "n": 81,
+       "q0.1": 0.0024094675556749164,
+       "q0.5": 0.026958320292335154,
+       "q0.9": 0.32882811000412515
+      },
+      "pair_swap_over_pool_median": {
+       "n": 81,
+       "q0.1": 1.6883932015683651,
+       "q0.5": 10.038714217558882,
+       "q0.9": 56.45128125636466
+      },
+      "removal": {
+       "large_mints_followed": 18,
+       "recovered_within_64": 0.9444444444444444,
+       "unremoved_after_64": 0.05555555555555558,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "depth260932": {
+    "all": {
+     "events": 294912,
+     "mints": 6917,
+     "large_mints": 519,
+     "large_share_of_mints": 0.07503252855284083,
+     "pairs": 509,
+     "pairs_per_1000_events": 1.7259385850694444,
+     "large_mints_paired": 348,
+     "swap_deposit": {
+      "n": 509,
+      "q0.1": 0.000446684640429234,
+      "q0.5": 0.0056561147548986005,
+      "q0.9": 0.1601275334513845
+     },
+     "pair_swap_over_pool_median": {
+      "n": 509,
+      "q0.1": 0.7376167995856433,
+      "q0.5": 7.996025405224816,
+      "q0.9": 90.57423260819486
+     },
+     "removal": {
+      "large_mints_followed": 185,
+      "recovered_within_64": 0.8972972972972973,
+      "unremoved_after_64": 0.10270270270270265,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 107,
+      "large_mints": 28,
+      "large_share_of_mints": 0.2616822429906542,
+      "pairs": 27,
+      "pairs_per_1000_events": 0.732421875,
+      "large_mints_paired": 23,
+      "swap_deposit": {
+       "n": 27,
+       "q0.1": 0.0023433729515203823,
+       "q0.5": 0.050009729403803,
+       "q0.9": 0.29525463589038337
+      },
+      "pair_swap_over_pool_median": {
+       "n": 27,
+       "q0.1": 0.8300922869845436,
+       "q0.5": 2.780913875496164,
+       "q0.9": 14.637839035458596
+      },
+      "removal": {
+       "large_mints_followed": 11,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 872,
+      "large_mints": 66,
+      "large_share_of_mints": 0.07568807339449542,
+      "pairs": 56,
+      "pairs_per_1000_events": 1.5190972222222223,
+      "large_mints_paired": 36,
+      "swap_deposit": {
+       "n": 56,
+       "q0.1": 0.00045234045887485063,
+       "q0.5": 0.004558818727466908,
+       "q0.9": 0.12246959260772983
+      },
+      "pair_swap_over_pool_median": {
+       "n": 56,
+       "q0.1": 0.2401627949158078,
+       "q0.5": 1.0726656224085993,
+       "q0.9": 12.044525882702017
+      },
+      "removal": {
+       "large_mints_followed": 20,
+       "recovered_within_64": 0.9,
+       "unremoved_after_64": 0.09999999999999998,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 378,
+      "large_mints": 9,
+      "large_share_of_mints": 0.023809523809523808,
+      "pairs": 3,
+      "pairs_per_1000_events": 0.08138020833333333,
+      "large_mints_paired": 2,
+      "swap_deposit": {
+       "n": 3,
+       "q0.1": 0.39041525368991714,
+       "q0.5": 1.0913787899814287,
+       "q0.9": 1.1475843396846643
+      },
+      "pair_swap_over_pool_median": {
+       "n": 3,
+       "q0.1": 354.5694256398606,
+       "q0.5": 1050.236153614976,
+       "q0.9": 1403.4512630737993
+      },
+      "removal": {
+       "large_mints_followed": 1,
+       "recovered_within_64": 0.0,
+       "unremoved_after_64": 1.0,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2162,
+      "large_mints": 121,
+      "large_share_of_mints": 0.05596669750231267,
+      "pairs": 101,
+      "pairs_per_1000_events": 2.7398003472222223,
+      "large_mints_paired": 71,
+      "swap_deposit": {
+       "n": 101,
+       "q0.1": 0.00029351100371849165,
+       "q0.5": 0.002030513028945512,
+       "q0.9": 0.02301859376245257
+      },
+      "pair_swap_over_pool_median": {
+       "n": 101,
+       "q0.1": 0.3504228961252909,
+       "q0.5": 2.768025684071364,
+       "q0.9": 14.446439746645117
+      },
+      "removal": {
+       "large_mints_followed": 40,
+       "recovered_within_64": 0.95,
+       "unremoved_after_64": 0.050000000000000044,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 742,
+      "large_mints": 126,
+      "large_share_of_mints": 0.16981132075471697,
+      "pairs": 108,
+      "pairs_per_1000_events": 2.9296875,
+      "large_mints_paired": 97,
+      "swap_deposit": {
+       "n": 108,
+       "q0.1": 0.0008681722181024844,
+       "q0.5": 0.007021842649693204,
+       "q0.9": 0.07808971571028657
+      },
+      "pair_swap_over_pool_median": {
+       "n": 108,
+       "q0.1": 4.633390922631416,
+       "q0.5": 46.79291711805823,
+       "q0.9": 346.00972166431814
+      },
+      "removal": {
+       "large_mints_followed": 40,
+       "recovered_within_64": 0.825,
+       "unremoved_after_64": 0.17500000000000004,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1801,
+      "large_mints": 60,
+      "large_share_of_mints": 0.03331482509716824,
+      "pairs": 78,
+      "pairs_per_1000_events": 2.1158854166666665,
+      "large_mints_paired": 28,
+      "swap_deposit": {
+       "n": 78,
+       "q0.1": 0.00011517003500583997,
+       "q0.5": 0.0017762285734176757,
+       "q0.9": 0.06711991932229061
+      },
+      "pair_swap_over_pool_median": {
+       "n": 78,
+       "q0.1": 0.7395540687965627,
+       "q0.5": 7.198043755721905,
+       "q0.9": 105.15279071499981
+      },
+      "removal": {
+       "large_mints_followed": 23,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 286,
+      "large_mints": 76,
+      "large_share_of_mints": 0.26573426573426573,
+      "pairs": 80,
+      "pairs_per_1000_events": 2.170138888888889,
+      "large_mints_paired": 62,
+      "swap_deposit": {
+       "n": 80,
+       "q0.1": 0.0018619124374181625,
+       "q0.5": 0.0210351036085612,
+       "q0.9": 0.4124316044653385
+      },
+      "pair_swap_over_pool_median": {
+       "n": 80,
+       "q0.1": 2.1298329465247763,
+       "q0.5": 8.923707379704728,
+       "q0.9": 37.599286213781255
+      },
+      "removal": {
+       "large_mints_followed": 34,
+       "recovered_within_64": 0.8529411764705882,
+       "unremoved_after_64": 0.1470588235294118,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 569,
+      "large_mints": 33,
+      "large_share_of_mints": 0.05799648506151142,
+      "pairs": 56,
+      "pairs_per_1000_events": 1.5190972222222223,
+      "large_mints_paired": 29,
+      "swap_deposit": {
+       "n": 56,
+       "q0.1": 0.0029394122538990513,
+       "q0.5": 0.03036296893418724,
+       "q0.9": 0.38575642504877816
+      },
+      "pair_swap_over_pool_median": {
+       "n": 56,
+       "q0.1": 2.0380334056829765,
+       "q0.5": 14.446525249240032,
+       "q0.9": 52.76101997169993
+      },
+      "removal": {
+       "large_mints_followed": 16,
+       "recovered_within_64": 0.875,
+       "unremoved_after_64": 0.125,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "ctrl260930": {
+    "all": {
+     "events": 294912,
+     "mints": 7155,
+     "large_mints": 543,
+     "large_share_of_mints": 0.07589098532494759,
+     "pairs": 571,
+     "pairs_per_1000_events": 1.9361707899305556,
+     "large_mints_paired": 369,
+     "swap_deposit": {
+      "n": 571,
+      "q0.1": 0.00043275204443337994,
+      "q0.5": 0.007422988638724411,
+      "q0.9": 0.16072939376186596
+     },
+     "pair_swap_over_pool_median": {
+      "n": 571,
+      "q0.1": 0.4530908356631133,
+      "q0.5": 4.906687372882351,
+      "q0.9": 54.22505455352112
+     },
+     "removal": {
+      "large_mints_followed": 197,
+      "recovered_within_64": 0.8984771573604061,
+      "unremoved_after_64": 0.10152284263959388,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 809,
+      "large_mints": 76,
+      "large_share_of_mints": 0.09394313967861558,
+      "pairs": 69,
+      "pairs_per_1000_events": 1.8717447916666667,
+      "large_mints_paired": 52,
+      "swap_deposit": {
+       "n": 69,
+       "q0.1": 0.00022943067191156692,
+       "q0.5": 0.0036968614293725562,
+       "q0.9": 0.04797862972220563
+      },
+      "pair_swap_over_pool_median": {
+       "n": 69,
+       "q0.1": 0.1284554307289814,
+       "q0.5": 1.1009485393712517,
+       "q0.9": 4.661622720035327
+      },
+      "removal": {
+       "large_mints_followed": 22,
+       "recovered_within_64": 0.9545454545454546,
+       "unremoved_after_64": 0.045454545454545414,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 115,
+      "large_mints": 27,
+      "large_share_of_mints": 0.23478260869565218,
+      "pairs": 27,
+      "pairs_per_1000_events": 0.732421875,
+      "large_mints_paired": 22,
+      "swap_deposit": {
+       "n": 27,
+       "q0.1": 0.0005464203098476953,
+       "q0.5": 0.025003522803682114,
+       "q0.9": 0.3681090914798926
+      },
+      "pair_swap_over_pool_median": {
+       "n": 27,
+       "q0.1": 0.9308121359126619,
+       "q0.5": 4.704510502625956,
+       "q0.9": 28.739297969049456
+      },
+      "removal": {
+       "large_mints_followed": 8,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 353,
+      "large_mints": 10,
+      "large_share_of_mints": 0.028328611898016998,
+      "pairs": 3,
+      "pairs_per_1000_events": 0.08138020833333333,
+      "large_mints_paired": 2,
+      "swap_deposit": {
+       "n": 3,
+       "q0.1": 0.06347233507923944,
+       "q0.5": 0.21039256274746837,
+       "q0.9": 0.4888022934893707
+      },
+      "pair_swap_over_pool_median": {
+       "n": 3,
+       "q0.1": 77.24330826145176,
+       "q0.5": 81.69453699042374,
+       "q0.9": 249.5385699456896
+      },
+      "removal": {
+       "large_mints_followed": 3,
+       "recovered_within_64": 0.0,
+       "unremoved_after_64": 1.0,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2277,
+      "large_mints": 109,
+      "large_share_of_mints": 0.04787000439174352,
+      "pairs": 117,
+      "pairs_per_1000_events": 3.173828125,
+      "large_mints_paired": 69,
+      "swap_deposit": {
+       "n": 117,
+       "q0.1": 0.00022175922843276343,
+       "q0.5": 0.0016274604866969174,
+       "q0.9": 0.06804917048511053
+      },
+      "pair_swap_over_pool_median": {
+       "n": 117,
+       "q0.1": 0.23039862870247618,
+       "q0.5": 1.4722837163156566,
+       "q0.9": 13.219964012077877
+      },
+      "removal": {
+       "large_mints_followed": 33,
+       "recovered_within_64": 0.9696969696969697,
+       "unremoved_after_64": 0.030303030303030276,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 856,
+      "large_mints": 127,
+      "large_share_of_mints": 0.1483644859813084,
+      "pairs": 107,
+      "pairs_per_1000_events": 2.902560763888889,
+      "large_mints_paired": 89,
+      "swap_deposit": {
+       "n": 107,
+       "q0.1": 0.0009146290556357138,
+       "q0.5": 0.010330734463641418,
+       "q0.9": 0.09914241185480771
+      },
+      "pair_swap_over_pool_median": {
+       "n": 107,
+       "q0.1": 6.539981048573792,
+       "q0.5": 31.541365070854027,
+       "q0.9": 196.91119654706884
+      },
+      "removal": {
+       "large_mints_followed": 40,
+       "recovered_within_64": 0.85,
+       "unremoved_after_64": 0.15000000000000002,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1933,
+      "large_mints": 57,
+      "large_share_of_mints": 0.029487842731505433,
+      "pairs": 80,
+      "pairs_per_1000_events": 2.170138888888889,
+      "large_mints_paired": 25,
+      "swap_deposit": {
+       "n": 80,
+       "q0.1": 0.00020957397951726893,
+       "q0.5": 0.0020468170437427167,
+       "q0.9": 0.07577710375582919
+      },
+      "pair_swap_over_pool_median": {
+       "n": 80,
+       "q0.1": 0.7474961213737068,
+       "q0.5": 2.991495068627196,
+       "q0.9": 22.508596052772837
+      },
+      "removal": {
+       "large_mints_followed": 19,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 299,
+      "large_mints": 86,
+      "large_share_of_mints": 0.28762541806020064,
+      "pairs": 90,
+      "pairs_per_1000_events": 2.44140625,
+      "large_mints_paired": 68,
+      "swap_deposit": {
+       "n": 90,
+       "q0.1": 0.0011879076237577588,
+       "q0.5": 0.022484683426480724,
+       "q0.9": 0.1622282695449554
+      },
+      "pair_swap_over_pool_median": {
+       "n": 90,
+       "q0.1": 1.3743241342333943,
+       "q0.5": 5.832360397960322,
+       "q0.9": 32.245869528644185
+      },
+      "removal": {
+       "large_mints_followed": 47,
+       "recovered_within_64": 0.8297872340425532,
+       "unremoved_after_64": 0.17021276595744683,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 513,
+      "large_mints": 51,
+      "large_share_of_mints": 0.09941520467836257,
+      "pairs": 78,
+      "pairs_per_1000_events": 2.1158854166666665,
+      "large_mints_paired": 42,
+      "swap_deposit": {
+       "n": 78,
+       "q0.1": 0.0036274208047330277,
+       "q0.5": 0.038473207357530584,
+       "q0.9": 0.4853163364275708
+      },
+      "pair_swap_over_pool_median": {
+       "n": 78,
+       "q0.1": 1.29240935819968,
+       "q0.5": 8.86167774396689,
+       "q0.9": 38.24488042209179
+      },
+      "removal": {
+       "large_mints_followed": 25,
+       "recovered_within_64": 0.96,
+       "unremoved_after_64": 0.040000000000000036,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "ctrl260931": {
+    "all": {
+     "events": 294912,
+     "mints": 7726,
+     "large_mints": 535,
+     "large_share_of_mints": 0.06924669945638105,
+     "pairs": 547,
+     "pairs_per_1000_events": 1.8547905815972223,
+     "large_mints_paired": 377,
+     "swap_deposit": {
+      "n": 547,
+      "q0.1": 0.0005525964490197341,
+      "q0.5": 0.008044044026189417,
+      "q0.9": 0.15561835723595535
+     },
+     "pair_swap_over_pool_median": {
+      "n": 547,
+      "q0.1": 0.653518224291433,
+      "q0.5": 6.710127964457096,
+      "q0.9": 67.56538154309924
+     },
+     "removal": {
+      "large_mints_followed": 191,
+      "recovered_within_64": 0.8952879581151832,
+      "unremoved_after_64": 0.10471204188481675,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 973,
+      "large_mints": 64,
+      "large_share_of_mints": 0.065775950668037,
+      "pairs": 52,
+      "pairs_per_1000_events": 1.4105902777777777,
+      "large_mints_paired": 41,
+      "swap_deposit": {
+       "n": 52,
+       "q0.1": 0.0004199752446664075,
+       "q0.5": 0.003328943167095061,
+       "q0.9": 0.14535668276617364
+      },
+      "pair_swap_over_pool_median": {
+       "n": 52,
+       "q0.1": 0.19002231237141104,
+       "q0.5": 1.4628278129855998,
+       "q0.9": 15.29178903381679
+      },
+      "removal": {
+       "large_mints_followed": 20,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 146,
+      "large_mints": 49,
+      "large_share_of_mints": 0.3356164383561644,
+      "pairs": 41,
+      "pairs_per_1000_events": 1.1121961805555556,
+      "large_mints_paired": 37,
+      "swap_deposit": {
+       "n": 41,
+       "q0.1": 0.0010277606523882135,
+       "q0.5": 0.019780890501227114,
+       "q0.9": 0.14910147763418416
+      },
+      "pair_swap_over_pool_median": {
+       "n": 41,
+       "q0.1": 1.2725178136004036,
+       "q0.5": 4.069431596791173,
+       "q0.9": 23.765956315940088
+      },
+      "removal": {
+       "large_mints_followed": 18,
+       "recovered_within_64": 0.8888888888888888,
+       "unremoved_after_64": 0.11111111111111116,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 401,
+      "large_mints": 7,
+      "large_share_of_mints": 0.017456359102244388,
+      "pairs": 1,
+      "pairs_per_1000_events": 0.027126736111111112,
+      "large_mints_paired": 1,
+      "swap_deposit": {
+       "n": 1,
+       "q0.1": 0.869306276819522,
+       "q0.5": 0.869306276819522,
+       "q0.9": 0.869306276819522
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1,
+       "q0.1": 1416.5859332601985,
+       "q0.5": 1416.5859332601985,
+       "q0.9": 1416.5859332601985
+      },
+      "removal": {
+       "large_mints_followed": 2,
+       "recovered_within_64": 0.0,
+       "unremoved_after_64": 1.0,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2276,
+      "large_mints": 82,
+      "large_share_of_mints": 0.03602811950790861,
+      "pairs": 91,
+      "pairs_per_1000_events": 2.468532986111111,
+      "large_mints_paired": 48,
+      "swap_deposit": {
+       "n": 91,
+       "q0.1": 0.0004066706103632508,
+       "q0.5": 0.0025702746498439365,
+       "q0.9": 0.03920564133984405
+      },
+      "pair_swap_over_pool_median": {
+       "n": 91,
+       "q0.1": 0.28127678061409317,
+       "q0.5": 2.020453178293658,
+       "q0.9": 13.616340523159552
+      },
+      "removal": {
+       "large_mints_followed": 24,
+       "recovered_within_64": 0.9583333333333334,
+       "unremoved_after_64": 0.04166666666666663,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 975,
+      "large_mints": 115,
+      "large_share_of_mints": 0.11794871794871795,
+      "pairs": 99,
+      "pairs_per_1000_events": 2.685546875,
+      "large_mints_paired": 84,
+      "swap_deposit": {
+       "n": 99,
+       "q0.1": 0.0013052943722827387,
+       "q0.5": 0.008641230850073825,
+       "q0.9": 0.12615978729003208
+      },
+      "pair_swap_over_pool_median": {
+       "n": 99,
+       "q0.1": 6.156821233354383,
+       "q0.5": 43.743443535303896,
+       "q0.9": 252.95475300466822
+      },
+      "removal": {
+       "large_mints_followed": 41,
+       "recovered_within_64": 0.8536585365853658,
+       "unremoved_after_64": 0.14634146341463417,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 2042,
+      "large_mints": 55,
+      "large_share_of_mints": 0.02693437806072478,
+      "pairs": 79,
+      "pairs_per_1000_events": 2.1430121527777777,
+      "large_mints_paired": 24,
+      "swap_deposit": {
+       "n": 79,
+       "q0.1": 0.00012574221874375299,
+       "q0.5": 0.001701674920065523,
+       "q0.9": 0.03570031419393177
+      },
+      "pair_swap_over_pool_median": {
+       "n": 79,
+       "q0.1": 0.4175486054400822,
+       "q0.5": 6.211299083853167,
+       "q0.9": 59.893024102124336
+      },
+      "removal": {
+       "large_mints_followed": 19,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 357,
+      "large_mints": 93,
+      "large_share_of_mints": 0.2605042016806723,
+      "pairs": 96,
+      "pairs_per_1000_events": 2.6041666666666665,
+      "large_mints_paired": 79,
+      "swap_deposit": {
+       "n": 96,
+       "q0.1": 0.0009988236124648232,
+       "q0.5": 0.021742442849989614,
+       "q0.9": 0.20305790771566687
+      },
+      "pair_swap_over_pool_median": {
+       "n": 96,
+       "q0.1": 1.6077963443619305,
+       "q0.5": 7.837596042074972,
+       "q0.9": 33.00221625145781
+      },
+      "removal": {
+       "large_mints_followed": 45,
+       "recovered_within_64": 0.8444444444444444,
+       "unremoved_after_64": 0.15555555555555556,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 556,
+      "large_mints": 70,
+      "large_share_of_mints": 0.12589928057553956,
+      "pairs": 88,
+      "pairs_per_1000_events": 2.3871527777777777,
+      "large_mints_paired": 63,
+      "swap_deposit": {
+       "n": 88,
+       "q0.1": 0.0022348885866054673,
+       "q0.5": 0.020576270196169748,
+       "q0.9": 0.3792930975132959
+      },
+      "pair_swap_over_pool_median": {
+       "n": 88,
+       "q0.1": 1.6272984165912308,
+       "q0.5": 8.592421326615128,
+       "q0.9": 38.91778681980454
+      },
+      "removal": {
+       "large_mints_followed": 22,
+       "recovered_within_64": 0.9090909090909091,
+       "unremoved_after_64": 0.09090909090909094,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "ctrl260932": {
+    "all": {
+     "events": 294912,
+     "mints": 7616,
+     "large_mints": 567,
+     "large_share_of_mints": 0.0744485294117647,
+     "pairs": 559,
+     "pairs_per_1000_events": 1.8954806857638888,
+     "large_mints_paired": 361,
+     "swap_deposit": {
+      "n": 559,
+      "q0.1": 0.0006082825726720729,
+      "q0.5": 0.00797218189787623,
+      "q0.9": 0.18218525792621185
+     },
+     "pair_swap_over_pool_median": {
+      "n": 559,
+      "q0.1": 0.8823404263924556,
+      "q0.5": 8.863513587381325,
+      "q0.9": 96.27538248958736
+     },
+     "removal": {
+      "large_mints_followed": 194,
+      "recovered_within_64": 0.9123711340206185,
+      "unremoved_after_64": 0.08762886597938147,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 965,
+      "large_mints": 82,
+      "large_share_of_mints": 0.0849740932642487,
+      "pairs": 61,
+      "pairs_per_1000_events": 1.6547309027777777,
+      "large_mints_paired": 43,
+      "swap_deposit": {
+       "n": 61,
+       "q0.1": 0.0004024382488592751,
+       "q0.5": 0.004102244817602149,
+       "q0.9": 0.15375777526760867
+      },
+      "pair_swap_over_pool_median": {
+       "n": 61,
+       "q0.1": 0.2627133676690575,
+       "q0.5": 1.1478919619534735,
+       "q0.9": 9.83934732449424
+      },
+      "removal": {
+       "large_mints_followed": 28,
+       "recovered_within_64": 0.9285714285714286,
+       "unremoved_after_64": 0.0714285714285714,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 135,
+      "large_mints": 36,
+      "large_share_of_mints": 0.26666666666666666,
+      "pairs": 36,
+      "pairs_per_1000_events": 0.9765625,
+      "large_mints_paired": 28,
+      "swap_deposit": {
+       "n": 36,
+       "q0.1": 0.002920826278989095,
+       "q0.5": 0.03423873603058662,
+       "q0.9": 0.42290313254689527
+      },
+      "pair_swap_over_pool_median": {
+       "n": 36,
+       "q0.1": 0.8962344323770651,
+       "q0.5": 3.1568051579302,
+       "q0.9": 25.609016568293725
+      },
+      "removal": {
+       "large_mints_followed": 12,
+       "recovered_within_64": 0.9166666666666666,
+       "unremoved_after_64": 0.08333333333333337,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 422,
+      "large_mints": 20,
+      "large_share_of_mints": 0.04739336492890995,
+      "pairs": 8,
+      "pairs_per_1000_events": 0.2170138888888889,
+      "large_mints_paired": 7,
+      "swap_deposit": {
+       "n": 8,
+       "q0.1": 0.15733622817998055,
+       "q0.5": 0.604342046671557,
+       "q0.9": 1.1445064253171757
+      },
+      "pair_swap_over_pool_median": {
+       "n": 8,
+       "q0.1": 149.63063654310298,
+       "q0.5": 433.957813474261,
+       "q0.9": 1453.4939522626178
+      },
+      "removal": {
+       "large_mints_followed": 1,
+       "recovered_within_64": 0.0,
+       "unremoved_after_64": 1.0,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2246,
+      "large_mints": 129,
+      "large_share_of_mints": 0.057435440783615316,
+      "pairs": 123,
+      "pairs_per_1000_events": 3.3365885416666665,
+      "large_mints_paired": 76,
+      "swap_deposit": {
+       "n": 123,
+       "q0.1": 0.0003646830286799072,
+       "q0.5": 0.0030323465168743207,
+       "q0.9": 0.04306755386086759
+      },
+      "pair_swap_over_pool_median": {
+       "n": 123,
+       "q0.1": 0.4025120850435994,
+       "q0.5": 3.5924977601532153,
+       "q0.9": 40.787545368999794
+      },
+      "removal": {
+       "large_mints_followed": 43,
+       "recovered_within_64": 0.9534883720930233,
+       "unremoved_after_64": 0.046511627906976716,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 840,
+      "large_mints": 129,
+      "large_share_of_mints": 0.15357142857142858,
+      "pairs": 105,
+      "pairs_per_1000_events": 2.8483072916666665,
+      "large_mints_paired": 91,
+      "swap_deposit": {
+       "n": 105,
+       "q0.1": 0.0010598731751486228,
+       "q0.5": 0.007896007354784745,
+       "q0.9": 0.1227468918361806
+      },
+      "pair_swap_over_pool_median": {
+       "n": 105,
+       "q0.1": 7.855740969047827,
+       "q0.5": 36.44764781955609,
+       "q0.9": 365.283839370673
+      },
+      "removal": {
+       "large_mints_followed": 38,
+       "recovered_within_64": 0.868421052631579,
+       "unremoved_after_64": 0.13157894736842102,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 2016,
+      "large_mints": 46,
+      "large_share_of_mints": 0.022817460317460316,
+      "pairs": 84,
+      "pairs_per_1000_events": 2.2786458333333335,
+      "large_mints_paired": 20,
+      "swap_deposit": {
+       "n": 84,
+       "q0.1": 0.0003231588381621135,
+       "q0.5": 0.003621301562677361,
+       "q0.9": 0.05595945620930396
+      },
+      "pair_swap_over_pool_median": {
+       "n": 84,
+       "q0.1": 1.5655136460435257,
+       "q0.5": 7.6875002991529975,
+       "q0.9": 129.76698376329716
+      },
+      "removal": {
+       "large_mints_followed": 21,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 277,
+      "large_mints": 75,
+      "large_share_of_mints": 0.27075812274368233,
+      "pairs": 76,
+      "pairs_per_1000_events": 2.0616319444444446,
+      "large_mints_paired": 56,
+      "swap_deposit": {
+       "n": 76,
+       "q0.1": 0.001403538215352349,
+       "q0.5": 0.01619043104044615,
+       "q0.9": 0.3807941934074588
+      },
+      "pair_swap_over_pool_median": {
+       "n": 76,
+       "q0.1": 2.063522251714316,
+       "q0.5": 9.984701107978236,
+       "q0.9": 38.76224283137748
+      },
+      "removal": {
+       "large_mints_followed": 30,
+       "recovered_within_64": 0.8666666666666667,
+       "unremoved_after_64": 0.1333333333333333,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 715,
+      "large_mints": 50,
+      "large_share_of_mints": 0.06993006993006994,
+      "pairs": 66,
+      "pairs_per_1000_events": 1.7903645833333333,
+      "large_mints_paired": 40,
+      "swap_deposit": {
+       "n": 66,
+       "q0.1": 0.004160189551612721,
+       "q0.5": 0.02590189945802482,
+       "q0.9": 0.28390555646129817
+      },
+      "pair_swap_over_pool_median": {
+       "n": 66,
+       "q0.1": 1.7591195650790592,
+       "q0.5": 12.005104857089535,
+       "q0.9": 60.68273974948363
+      },
+      "removal": {
+       "large_mints_followed": 21,
+       "recovered_within_64": 0.9047619047619048,
+       "unremoved_after_64": 0.09523809523809523,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "hist260930": {
+    "all": {
+     "events": 294912,
+     "mints": 7420,
+     "large_mints": 533,
+     "large_share_of_mints": 0.07183288409703505,
+     "pairs": 574,
+     "pairs_per_1000_events": 1.9463433159722223,
+     "large_mints_paired": 367,
+     "swap_deposit": {
+      "n": 574,
+      "q0.1": 0.00044493115342566174,
+      "q0.5": 0.00832843985703063,
+      "q0.9": 0.17037737413592421
+     },
+     "pair_swap_over_pool_median": {
+      "n": 574,
+      "q0.1": 0.522031537038237,
+      "q0.5": 6.26042063141182,
+      "q0.9": 89.24683494291217
+     },
+     "removal": {
+      "large_mints_followed": 190,
+      "recovered_within_64": 0.9052631578947369,
+      "unremoved_after_64": 0.09473684210526312,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 829,
+      "large_mints": 65,
+      "large_share_of_mints": 0.07840772014475271,
+      "pairs": 58,
+      "pairs_per_1000_events": 1.5733506944444444,
+      "large_mints_paired": 42,
+      "swap_deposit": {
+       "n": 58,
+       "q0.1": 0.00019722004905544464,
+       "q0.5": 0.0038851471996527048,
+       "q0.9": 0.11816514887373372
+      },
+      "pair_swap_over_pool_median": {
+       "n": 58,
+       "q0.1": 0.18058593935853257,
+       "q0.5": 1.377783286681416,
+       "q0.9": 7.210336266444952
+      },
+      "removal": {
+       "large_mints_followed": 21,
+       "recovered_within_64": 0.8571428571428571,
+       "unremoved_after_64": 0.1428571428571429,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 187,
+      "large_mints": 38,
+      "large_share_of_mints": 0.20320855614973263,
+      "pairs": 37,
+      "pairs_per_1000_events": 1.0036892361111112,
+      "large_mints_paired": 31,
+      "swap_deposit": {
+       "n": 37,
+       "q0.1": 0.0011472977038747953,
+       "q0.5": 0.046163920974426245,
+       "q0.9": 0.3328025369145627
+      },
+      "pair_swap_over_pool_median": {
+       "n": 37,
+       "q0.1": 1.3756875053948483,
+       "q0.5": 4.463019806689561,
+       "q0.9": 37.867052562732525
+      },
+      "removal": {
+       "large_mints_followed": 13,
+       "recovered_within_64": 0.9230769230769231,
+       "unremoved_after_64": 0.07692307692307687,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 360,
+      "large_mints": 9,
+      "large_share_of_mints": 0.025,
+      "pairs": 2,
+      "pairs_per_1000_events": 0.054253472222222224,
+      "large_mints_paired": 1,
+      "swap_deposit": {
+       "n": 2,
+       "q0.1": 0.12081322553080182,
+       "q0.5": 0.35089309107882916,
+       "q0.9": 0.5809729566268564
+      },
+      "pair_swap_over_pool_median": {
+       "n": 2,
+       "q0.1": 180.46454402581418,
+       "q0.5": 307.1156544189093,
+       "q0.9": 433.7667648120044
+      },
+      "removal": {
+       "large_mints_followed": 4,
+       "recovered_within_64": 0.25,
+       "unremoved_after_64": 0.75,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2338,
+      "large_mints": 100,
+      "large_share_of_mints": 0.0427715996578272,
+      "pairs": 109,
+      "pairs_per_1000_events": 2.956814236111111,
+      "large_mints_paired": 58,
+      "swap_deposit": {
+       "n": 109,
+       "q0.1": 0.00028675490828023386,
+       "q0.5": 0.002576367838437278,
+       "q0.9": 0.0345877784055005
+      },
+      "pair_swap_over_pool_median": {
+       "n": 109,
+       "q0.1": 0.1781553213553808,
+       "q0.5": 1.7483136627079234,
+       "q0.9": 13.20165542624019
+      },
+      "removal": {
+       "large_mints_followed": 26,
+       "recovered_within_64": 0.9230769230769231,
+       "unremoved_after_64": 0.07692307692307687,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 853,
+      "large_mints": 132,
+      "large_share_of_mints": 0.15474794841735054,
+      "pairs": 119,
+      "pairs_per_1000_events": 3.2280815972222223,
+      "large_mints_paired": 102,
+      "swap_deposit": {
+       "n": 119,
+       "q0.1": 0.0008490753387492882,
+       "q0.5": 0.011254083852936638,
+       "q0.9": 0.11166408592500736
+      },
+      "pair_swap_over_pool_median": {
+       "n": 119,
+       "q0.1": 6.152253673155155,
+       "q0.5": 39.66018133973077,
+       "q0.9": 289.70641889202454
+      },
+      "removal": {
+       "large_mints_followed": 39,
+       "recovered_within_64": 0.8974358974358975,
+       "unremoved_after_64": 0.10256410256410253,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1967,
+      "large_mints": 57,
+      "large_share_of_mints": 0.028978139298423997,
+      "pairs": 75,
+      "pairs_per_1000_events": 2.0345052083333335,
+      "large_mints_paired": 21,
+      "swap_deposit": {
+       "n": 75,
+       "q0.1": 0.0002435914223678164,
+       "q0.5": 0.001579868610414589,
+       "q0.9": 0.06643224379764895
+      },
+      "pair_swap_over_pool_median": {
+       "n": 75,
+       "q0.1": 0.25819146357023753,
+       "q0.5": 4.796797181004479,
+       "q0.9": 55.56709760205032
+      },
+      "removal": {
+       "large_mints_followed": 19,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 347,
+      "large_mints": 79,
+      "large_share_of_mints": 0.2276657060518732,
+      "pairs": 88,
+      "pairs_per_1000_events": 2.3871527777777777,
+      "large_mints_paired": 65,
+      "swap_deposit": {
+       "n": 88,
+       "q0.1": 0.0010926521517810614,
+       "q0.5": 0.0167696662520241,
+       "q0.9": 0.17858267648278844
+      },
+      "pair_swap_over_pool_median": {
+       "n": 88,
+       "q0.1": 1.1133528119248113,
+       "q0.5": 6.616353837980197,
+       "q0.9": 31.66466797939905
+      },
+      "removal": {
+       "large_mints_followed": 44,
+       "recovered_within_64": 0.8863636363636364,
+       "unremoved_after_64": 0.11363636363636365,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 539,
+      "large_mints": 53,
+      "large_share_of_mints": 0.09833024118738404,
+      "pairs": 86,
+      "pairs_per_1000_events": 2.3328993055555554,
+      "large_mints_paired": 47,
+      "swap_deposit": {
+       "n": 86,
+       "q0.1": 0.004397629291138757,
+       "q0.5": 0.03238250040232636,
+       "q0.9": 0.4185485129966501
+      },
+      "pair_swap_over_pool_median": {
+       "n": 86,
+       "q0.1": 2.0604107988642797,
+       "q0.5": 11.463824792499995,
+       "q0.9": 55.327323593186236
+      },
+      "removal": {
+       "large_mints_followed": 24,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "hist260931": {
+    "all": {
+     "events": 294912,
+     "mints": 7417,
+     "large_mints": 554,
+     "large_share_of_mints": 0.07469327221248483,
+     "pairs": 584,
+     "pairs_per_1000_events": 1.9802517361111112,
+     "large_mints_paired": 399,
+     "swap_deposit": {
+      "n": 584,
+      "q0.1": 0.0005472257825473898,
+      "q0.5": 0.009243539211554293,
+      "q0.9": 0.15816065180738567
+     },
+     "pair_swap_over_pool_median": {
+      "n": 584,
+      "q0.1": 0.799735558812939,
+      "q0.5": 6.895485195859061,
+      "q0.9": 68.14375537545627
+     },
+     "removal": {
+      "large_mints_followed": 183,
+      "recovered_within_64": 0.9289617486338798,
+      "unremoved_after_64": 0.07103825136612019,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 893,
+      "large_mints": 58,
+      "large_share_of_mints": 0.06494960806270997,
+      "pairs": 39,
+      "pairs_per_1000_events": 1.0579427083333333,
+      "large_mints_paired": 28,
+      "swap_deposit": {
+       "n": 39,
+       "q0.1": 0.00045913310414132623,
+       "q0.5": 0.0036780246921402702,
+       "q0.9": 0.10628176613882251
+      },
+      "pair_swap_over_pool_median": {
+       "n": 39,
+       "q0.1": 0.43898189578830543,
+       "q0.5": 1.094864042843483,
+       "q0.9": 7.65431059998338
+      },
+      "removal": {
+       "large_mints_followed": 20,
+       "recovered_within_64": 0.9,
+       "unremoved_after_64": 0.09999999999999998,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 143,
+      "large_mints": 53,
+      "large_share_of_mints": 0.3706293706293706,
+      "pairs": 49,
+      "pairs_per_1000_events": 1.3292100694444444,
+      "large_mints_paired": 44,
+      "swap_deposit": {
+       "n": 49,
+       "q0.1": 0.0028719720014521374,
+       "q0.5": 0.030056779230710064,
+       "q0.9": 0.1516372044720932
+      },
+      "pair_swap_over_pool_median": {
+       "n": 49,
+       "q0.1": 0.9513952198295326,
+       "q0.5": 3.2295883117248594,
+       "q0.9": 17.959301667364016
+      },
+      "removal": {
+       "large_mints_followed": 20,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 363,
+      "large_mints": 5,
+      "large_share_of_mints": 0.013774104683195593,
+      "pairs": 4,
+      "pairs_per_1000_events": 0.10850694444444445,
+      "large_mints_paired": 2,
+      "swap_deposit": {
+       "n": 4,
+       "q0.1": 1.2285277702835773,
+       "q0.5": 1.4699135202068874,
+       "q0.9": 1.6692344121746623
+      },
+      "pair_swap_over_pool_median": {
+       "n": 4,
+       "q0.1": 423.5276996952434,
+       "q0.5": 590.3610918286336,
+       "q0.9": 818.428573908654
+      },
+      "removal": {
+       "large_mints_followed": 0,
+       "recovered_within_64": null,
+       "unremoved_after_64": null,
+       "median_events_to_recovery": null
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2176,
+      "large_mints": 107,
+      "large_share_of_mints": 0.04917279411764706,
+      "pairs": 112,
+      "pairs_per_1000_events": 3.0381944444444446,
+      "large_mints_paired": 63,
+      "swap_deposit": {
+       "n": 112,
+       "q0.1": 0.0003134613240236617,
+       "q0.5": 0.004514347584486388,
+       "q0.9": 0.07365908673126226
+      },
+      "pair_swap_over_pool_median": {
+       "n": 112,
+       "q0.1": 0.32016905839156606,
+       "q0.5": 2.589284001406572,
+       "q0.9": 11.062457857421935
+      },
+      "removal": {
+       "large_mints_followed": 23,
+       "recovered_within_64": 0.9130434782608695,
+       "unremoved_after_64": 0.08695652173913049,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 946,
+      "large_mints": 117,
+      "large_share_of_mints": 0.12367864693446089,
+      "pairs": 109,
+      "pairs_per_1000_events": 2.956814236111111,
+      "large_mints_paired": 96,
+      "swap_deposit": {
+       "n": 109,
+       "q0.1": 0.0011125039653135545,
+       "q0.5": 0.007989196845138711,
+       "q0.9": 0.052290824692088476
+      },
+      "pair_swap_over_pool_median": {
+       "n": 109,
+       "q0.1": 5.1801980202580475,
+       "q0.5": 37.6976324940412,
+       "q0.9": 205.01001424506458
+      },
+      "removal": {
+       "large_mints_followed": 38,
+       "recovered_within_64": 0.868421052631579,
+       "unremoved_after_64": 0.13157894736842102,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1977,
+      "large_mints": 51,
+      "large_share_of_mints": 0.025796661608497723,
+      "pairs": 74,
+      "pairs_per_1000_events": 2.0073784722222223,
+      "large_mints_paired": 22,
+      "swap_deposit": {
+       "n": 74,
+       "q0.1": 0.00015355495678650435,
+       "q0.5": 0.0025491116788233844,
+       "q0.9": 0.046267561268601896
+      },
+      "pair_swap_over_pool_median": {
+       "n": 74,
+       "q0.1": 0.5645659898673476,
+       "q0.5": 7.558156926267326,
+       "q0.9": 83.12295665900204
+      },
+      "removal": {
+       "large_mints_followed": 20,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 298,
+      "large_mints": 93,
+      "large_share_of_mints": 0.31208053691275167,
+      "pairs": 100,
+      "pairs_per_1000_events": 2.712673611111111,
+      "large_mints_paired": 81,
+      "swap_deposit": {
+       "n": 100,
+       "q0.1": 0.0009633336128452858,
+       "q0.5": 0.018328563776856842,
+       "q0.9": 0.17399746700320493
+      },
+      "pair_swap_over_pool_median": {
+       "n": 100,
+       "q0.1": 2.2647616407471696,
+       "q0.5": 7.567231299928161,
+       "q0.9": 36.0899872171387
+      },
+      "removal": {
+       "large_mints_followed": 44,
+       "recovered_within_64": 0.9090909090909091,
+       "unremoved_after_64": 0.09090909090909094,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 621,
+      "large_mints": 70,
+      "large_share_of_mints": 0.11272141706924316,
+      "pairs": 97,
+      "pairs_per_1000_events": 2.6312934027777777,
+      "large_mints_paired": 63,
+      "swap_deposit": {
+       "n": 97,
+       "q0.1": 0.0018861601976561263,
+       "q0.5": 0.022680869153517996,
+       "q0.9": 0.4354581249771077
+      },
+      "pair_swap_over_pool_median": {
+       "n": 97,
+       "q0.1": 1.8075327948136384,
+       "q0.5": 8.996359085848315,
+       "q0.9": 37.044208025886306
+      },
+      "removal": {
+       "large_mints_followed": 18,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "hist260932": {
+    "all": {
+     "events": 294912,
+     "mints": 7379,
+     "large_mints": 538,
+     "large_share_of_mints": 0.07290960834801463,
+     "pairs": 532,
+     "pairs_per_1000_events": 1.8039279513888888,
+     "large_mints_paired": 355,
+     "swap_deposit": {
+      "n": 532,
+      "q0.1": 0.0005553323102800166,
+      "q0.5": 0.008725157477590418,
+      "q0.9": 0.15845975799853396
+     },
+     "pair_swap_over_pool_median": {
+      "n": 532,
+      "q0.1": 0.8206800191286502,
+      "q0.5": 8.75348289339977,
+      "q0.9": 91.61483968908196
+     },
+     "removal": {
+      "large_mints_followed": 198,
+      "recovered_within_64": 0.8939393939393939,
+      "unremoved_after_64": 0.10606060606060608,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36864,
+      "mints": 942,
+      "large_mints": 71,
+      "large_share_of_mints": 0.07537154989384288,
+      "pairs": 53,
+      "pairs_per_1000_events": 1.4377170138888888,
+      "large_mints_paired": 39,
+      "swap_deposit": {
+       "n": 53,
+       "q0.1": 0.00035077411936755505,
+       "q0.5": 0.0037185396723996905,
+       "q0.9": 0.06897899479397365
+      },
+      "pair_swap_over_pool_median": {
+       "n": 53,
+       "q0.1": 0.2686010284152568,
+       "q0.5": 1.1431915577440357,
+       "q0.9": 6.1984673738331155
+      },
+      "removal": {
+       "large_mints_followed": 23,
+       "recovered_within_64": 0.9130434782608695,
+       "unremoved_after_64": 0.08695652173913049,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36864,
+      "mints": 118,
+      "large_mints": 40,
+      "large_share_of_mints": 0.3389830508474576,
+      "pairs": 39,
+      "pairs_per_1000_events": 1.0579427083333333,
+      "large_mints_paired": 31,
+      "swap_deposit": {
+       "n": 39,
+       "q0.1": 0.0034644434583319212,
+       "q0.5": 0.04173860758327062,
+       "q0.9": 0.4243952068074141
+      },
+      "pair_swap_over_pool_median": {
+       "n": 39,
+       "q0.1": 0.8787265541037625,
+       "q0.5": 2.899516577917252,
+       "q0.9": 17.227127360920132
+      },
+      "removal": {
+       "large_mints_followed": 14,
+       "recovered_within_64": 0.9285714285714286,
+       "unremoved_after_64": 0.0714285714285714,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 409,
+      "large_mints": 12,
+      "large_share_of_mints": 0.029339853300733496,
+      "pairs": 7,
+      "pairs_per_1000_events": 0.1898871527777778,
+      "large_mints_paired": 5,
+      "swap_deposit": {
+       "n": 7,
+       "q0.1": 0.10943022360843804,
+       "q0.5": 0.5802951345864037,
+       "q0.9": 1.0478121727449967
+      },
+      "pair_swap_over_pool_median": {
+       "n": 7,
+       "q0.1": 74.82963916445294,
+       "q0.5": 409.00396153761375,
+       "q0.9": 1066.0933778748504
+      },
+      "removal": {
+       "large_mints_followed": 3,
+       "recovered_within_64": 0.3333333333333333,
+       "unremoved_after_64": 0.6666666666666667,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 2353,
+      "large_mints": 115,
+      "large_share_of_mints": 0.04887377815554611,
+      "pairs": 111,
+      "pairs_per_1000_events": 3.0110677083333335,
+      "large_mints_paired": 67,
+      "swap_deposit": {
+       "n": 111,
+       "q0.1": 0.0005013199330459642,
+       "q0.5": 0.003540123298323706,
+       "q0.9": 0.03423576434010901
+      },
+      "pair_swap_over_pool_median": {
+       "n": 111,
+       "q0.1": 0.49729374415636124,
+       "q0.5": 4.412932931504073,
+       "q0.9": 42.22151096097703
+      },
+      "removal": {
+       "large_mints_followed": 44,
+       "recovered_within_64": 0.8863636363636364,
+       "unremoved_after_64": 0.11363636363636365,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 799,
+      "large_mints": 127,
+      "large_share_of_mints": 0.15894868585732166,
+      "pairs": 104,
+      "pairs_per_1000_events": 2.8211805555555554,
+      "large_mints_paired": 92,
+      "swap_deposit": {
+       "n": 104,
+       "q0.1": 0.0009099628619752128,
+       "q0.5": 0.008421415144337637,
+       "q0.9": 0.10882126147435733
+      },
+      "pair_swap_over_pool_median": {
+       "n": 104,
+       "q0.1": 4.6707916506803855,
+       "q0.5": 38.034199743546864,
+       "q0.9": 313.1626184478538
+      },
+      "removal": {
+       "large_mints_followed": 41,
+       "recovered_within_64": 0.9024390243902439,
+       "unremoved_after_64": 0.09756097560975607,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 1810,
+      "large_mints": 48,
+      "large_share_of_mints": 0.026519337016574586,
+      "pairs": 78,
+      "pairs_per_1000_events": 2.1158854166666665,
+      "large_mints_paired": 21,
+      "swap_deposit": {
+       "n": 78,
+       "q0.1": 0.00023660713279316284,
+       "q0.5": 0.0026613733943606868,
+       "q0.9": 0.048263220596492615
+      },
+      "pair_swap_over_pool_median": {
+       "n": 78,
+       "q0.1": 0.9503607959317483,
+       "q0.5": 8.438337085346614,
+       "q0.9": 51.069277318641404
+      },
+      "removal": {
+       "large_mints_followed": 20,
+       "recovered_within_64": 1.0,
+       "unremoved_after_64": 0.0,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 280,
+      "large_mints": 69,
+      "large_share_of_mints": 0.24642857142857144,
+      "pairs": 73,
+      "pairs_per_1000_events": 1.9802517361111112,
+      "large_mints_paired": 53,
+      "swap_deposit": {
+       "n": 73,
+       "q0.1": 0.0013780577676297584,
+       "q0.5": 0.017838498456901775,
+       "q0.9": 0.4295192469556563
+      },
+      "pair_swap_over_pool_median": {
+       "n": 73,
+       "q0.1": 2.326865285140822,
+       "q0.5": 11.597217949215132,
+       "q0.9": 46.35091136821028
+      },
+      "removal": {
+       "large_mints_followed": 28,
+       "recovered_within_64": 0.8214285714285714,
+       "unremoved_after_64": 0.1785714285714286,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 668,
+      "large_mints": 56,
+      "large_share_of_mints": 0.08383233532934131,
+      "pairs": 67,
+      "pairs_per_1000_events": 1.8174913194444444,
+      "large_mints_paired": 47,
+      "swap_deposit": {
+       "n": 67,
+       "q0.1": 0.002957622737899121,
+       "q0.5": 0.018855434174803676,
+       "q0.9": 0.1173296824257799
+      },
+      "pair_swap_over_pool_median": {
+       "n": 67,
+       "q0.1": 1.4854497485548932,
+       "q0.5": 12.439518578770068,
+       "q0.9": 47.048364229700546
+      },
+      "removal": {
+       "large_mints_followed": 25,
+       "recovered_within_64": 0.92,
+       "unremoved_after_64": 0.07999999999999996,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "histout260930": {
+    "all": {
+     "events": 294841,
+     "mints": 69897,
+     "large_mints": 45238,
+     "large_share_of_mints": 0.647209465356167,
+     "pairs": 35364,
+     "pairs_per_1000_events": 119.94261313725025,
+     "large_mints_paired": 31430,
+     "swap_deposit": {
+      "n": 35364,
+      "q0.1": 0.0012881839526611065,
+      "q0.5": 0.010905597063408077,
+      "q0.9": 0.1309627196065792
+     },
+     "pair_swap_over_pool_median": {
+      "n": 35364,
+      "q0.1": 0.3684877089055227,
+      "q0.5": 3.047899741585179,
+      "q0.9": 42.20704681007342
+     },
+     "removal": {
+      "large_mints_followed": 10665,
+      "recovered_within_64": 0.9831223628691983,
+      "unremoved_after_64": 0.016877637130801704,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36838,
+      "mints": 9875,
+      "large_mints": 7332,
+      "large_share_of_mints": 0.7424810126582279,
+      "pairs": 4273,
+      "pairs_per_1000_events": 115.9943536565503,
+      "large_mints_paired": 3925,
+      "swap_deposit": {
+       "n": 4273,
+       "q0.1": 0.0013011075322298484,
+       "q0.5": 0.011887827568567393,
+       "q0.9": 0.11323078585106092
+      },
+      "pair_swap_over_pool_median": {
+       "n": 4273,
+       "q0.1": 0.24751590749012345,
+       "q0.5": 2.811933552780562,
+       "q0.9": 44.58217257737123
+      },
+      "removal": {
+       "large_mints_followed": 1975,
+       "recovered_within_64": 0.980253164556962,
+       "unremoved_after_64": 0.019746835443038013,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36838,
+      "mints": 9114,
+      "large_mints": 8504,
+      "large_share_of_mints": 0.9330700021944262,
+      "pairs": 6961,
+      "pairs_per_1000_events": 188.96248439111787,
+      "large_mints_paired": 6780,
+      "swap_deposit": {
+       "n": 6961,
+       "q0.1": 0.0015901478818250601,
+       "q0.5": 0.013762447887796564,
+       "q0.9": 0.1608038350835986
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6961,
+       "q0.1": 0.4489676061146449,
+       "q0.5": 3.3676874807379686,
+       "q0.9": 44.92682305468027
+      },
+      "removal": {
+       "large_mints_followed": 2055,
+       "recovered_within_64": 0.9931873479318735,
+       "unremoved_after_64": 0.0068126520681265346,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 7057,
+      "large_mints": 1127,
+      "large_share_of_mints": 0.1596995890605073,
+      "pairs": 219,
+      "pairs_per_1000_events": 5.940755208333333,
+      "large_mints_paired": 162,
+      "swap_deposit": {
+       "n": 219,
+       "q0.1": 0.008825472516415583,
+       "q0.5": 0.1322524030715488,
+       "q0.9": 1.2881339767560154
+      },
+      "pair_swap_over_pool_median": {
+       "n": 219,
+       "q0.1": 0.09147470065572975,
+       "q0.5": 19.59144915883333,
+       "q0.9": 195.01379859711696
+      },
+      "removal": {
+       "large_mints_followed": 172,
+       "recovered_within_64": 0.7790697674418605,
+       "unremoved_after_64": 0.22093023255813948,
+       "median_events_to_recovery": 6.5
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 8463,
+      "large_mints": 3802,
+      "large_share_of_mints": 0.4492496750561267,
+      "pairs": 2620,
+      "pairs_per_1000_events": 71.07204861111111,
+      "large_mints_paired": 1885,
+      "swap_deposit": {
+       "n": 2620,
+       "q0.1": 0.0005443603472743198,
+       "q0.5": 0.004903636006245684,
+       "q0.9": 0.07384659399797201
+      },
+      "pair_swap_over_pool_median": {
+       "n": 2620,
+       "q0.1": 0.35942650212748356,
+       "q0.5": 2.989955990561164,
+       "q0.9": 32.87739554989178
+      },
+      "removal": {
+       "large_mints_followed": 844,
+       "recovered_within_64": 0.9881516587677726,
+       "unremoved_after_64": 0.011848341232227444,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 8464,
+      "large_mints": 7106,
+      "large_share_of_mints": 0.8395557655954632,
+      "pairs": 5661,
+      "pairs_per_1000_events": 153.564453125,
+      "large_mints_paired": 5348,
+      "swap_deposit": {
+       "n": 5661,
+       "q0.1": 0.0013483441391775998,
+       "q0.5": 0.008348145966640953,
+       "q0.9": 0.09799681508842303
+      },
+      "pair_swap_over_pool_median": {
+       "n": 5661,
+       "q0.1": 0.46814858385376057,
+       "q0.5": 3.7686393529318036,
+       "q0.9": 55.75132359281569
+      },
+      "removal": {
+       "large_mints_followed": 1707,
+       "recovered_within_64": 0.9765670767428236,
+       "unremoved_after_64": 0.023432923257176386,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 9012,
+      "large_mints": 1834,
+      "large_share_of_mints": 0.2035064358632934,
+      "pairs": 1796,
+      "pairs_per_1000_events": 48.71961805555556,
+      "large_mints_paired": 669,
+      "swap_deposit": {
+       "n": 1796,
+       "q0.1": 0.0003692451315430614,
+       "q0.5": 0.0061060699628677755,
+       "q0.9": 0.23379809839112908
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1796,
+       "q0.1": 0.248328248332903,
+       "q0.5": 2.4966270131537436,
+       "q0.9": 32.22619760584216
+      },
+      "removal": {
+       "large_mints_followed": 303,
+       "recovered_within_64": 0.9900990099009901,
+       "unremoved_after_64": 0.00990099009900991,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36845,
+      "mints": 9688,
+      "large_mints": 8837,
+      "large_share_of_mints": 0.9121593724194881,
+      "pairs": 7344,
+      "pairs_per_1000_events": 199.3214818835663,
+      "large_mints_paired": 6990,
+      "swap_deposit": {
+       "n": 7344,
+       "q0.1": 0.0014211662669367437,
+       "q0.5": 0.01208652027954209,
+       "q0.9": 0.1288680505061576
+      },
+      "pair_swap_over_pool_median": {
+       "n": 7344,
+       "q0.1": 0.31786689986448524,
+       "q0.5": 2.7277622323953885,
+       "q0.9": 55.96068562978874
+      },
+      "removal": {
+       "large_mints_followed": 2321,
+       "recovered_within_64": 0.99138302455838,
+       "unremoved_after_64": 0.00861697544161999,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 8224,
+      "large_mints": 6696,
+      "large_share_of_mints": 0.8142023346303502,
+      "pairs": 6490,
+      "pairs_per_1000_events": 176.05251736111111,
+      "large_mints_paired": 5671,
+      "swap_deposit": {
+       "n": 6490,
+       "q0.1": 0.002048891349219133,
+       "q0.5": 0.012528770417328711,
+       "q0.9": 0.13953513604124532
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6490,
+       "q0.1": 0.4863537357895716,
+       "q0.5": 2.886464082229102,
+       "q0.9": 23.914160087680102
+      },
+      "removal": {
+       "large_mints_followed": 1288,
+       "recovered_within_64": 0.9875776397515528,
+       "unremoved_after_64": 0.012422360248447228,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "histout260931": {
+    "all": {
+     "events": 294836,
+     "mints": 69678,
+     "large_mints": 41485,
+     "large_share_of_mints": 0.595381612560636,
+     "pairs": 32678,
+     "pairs_per_1000_events": 110.83449782251829,
+     "large_mints_paired": 27456,
+     "swap_deposit": {
+      "n": 32678,
+      "q0.1": 0.0008719633292189983,
+      "q0.5": 0.00713228266717519,
+      "q0.9": 0.07217171336900866
+     },
+     "pair_swap_over_pool_median": {
+      "n": 32678,
+      "q0.1": 0.3558168259900578,
+      "q0.5": 2.4077187301010023,
+      "q0.9": 19.09907729413093
+     },
+     "removal": {
+      "large_mints_followed": 10162,
+      "recovered_within_64": 0.9825821688643968,
+      "unremoved_after_64": 0.017417831135603246,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36838,
+      "mints": 10707,
+      "large_mints": 6514,
+      "large_share_of_mints": 0.6083870365181657,
+      "pairs": 3642,
+      "pairs_per_1000_events": 98.86530213366632,
+      "large_mints_paired": 2997,
+      "swap_deposit": {
+       "n": 3642,
+       "q0.1": 0.0012984981184550682,
+       "q0.5": 0.010636650592722827,
+       "q0.9": 0.09193116271628624
+      },
+      "pair_swap_over_pool_median": {
+       "n": 3642,
+       "q0.1": 0.27483368149018755,
+       "q0.5": 1.7390401191276155,
+       "q0.9": 12.106959671877604
+      },
+      "removal": {
+       "large_mints_followed": 1836,
+       "recovered_within_64": 0.9869281045751634,
+       "unremoved_after_64": 0.013071895424836555,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36817,
+      "mints": 9545,
+      "large_mints": 8566,
+      "large_share_of_mints": 0.8974332111052907,
+      "pairs": 5800,
+      "pairs_per_1000_events": 157.53592090610317,
+      "large_mints_paired": 5640,
+      "swap_deposit": {
+       "n": 5800,
+       "q0.1": 0.0008957549544052635,
+       "q0.5": 0.005891087008967073,
+       "q0.9": 0.05154221988938483
+      },
+      "pair_swap_over_pool_median": {
+       "n": 5800,
+       "q0.1": 0.34590732670167745,
+       "q0.5": 2.1445761542159687,
+       "q0.9": 21.217428824656988
+      },
+      "removal": {
+       "large_mints_followed": 1972,
+       "recovered_within_64": 0.9847870182555781,
+       "unremoved_after_64": 0.015212981744421872,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36861,
+      "mints": 6277,
+      "large_mints": 903,
+      "large_share_of_mints": 0.14385853114545166,
+      "pairs": 155,
+      "pairs_per_1000_events": 4.204986299883346,
+      "large_mints_paired": 119,
+      "swap_deposit": {
+       "n": 155,
+       "q0.1": 0.003827547468188669,
+       "q0.5": 0.05997149517261596,
+       "q0.9": 0.8481799903953108
+      },
+      "pair_swap_over_pool_median": {
+       "n": 155,
+       "q0.1": 1.4971867974551116,
+       "q0.5": 26.002828180658295,
+       "q0.9": 336.0113159380063
+      },
+      "removal": {
+       "large_mints_followed": 152,
+       "recovered_within_64": 0.7105263157894737,
+       "unremoved_after_64": 0.2894736842105263,
+       "median_events_to_recovery": 7.5
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 8184,
+      "large_mints": 2824,
+      "large_share_of_mints": 0.34506353861192574,
+      "pairs": 2356,
+      "pairs_per_1000_events": 63.91059027777778,
+      "large_mints_paired": 1341,
+      "swap_deposit": {
+       "n": 2356,
+       "q0.1": 0.0005137197165227704,
+       "q0.5": 0.00512236532033928,
+       "q0.9": 0.0641391201118259
+      },
+      "pair_swap_over_pool_median": {
+       "n": 2356,
+       "q0.1": 0.3060793857709425,
+       "q0.5": 2.5266243552837424,
+       "q0.9": 22.400005964262807
+      },
+      "removal": {
+       "large_mints_followed": 656,
+       "recovered_within_64": 0.9740853658536586,
+       "unremoved_after_64": 0.02591463414634143,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 8494,
+      "large_mints": 7037,
+      "large_share_of_mints": 0.8284671532846716,
+      "pairs": 5475,
+      "pairs_per_1000_events": 148.51888020833334,
+      "large_mints_paired": 5105,
+      "swap_deposit": {
+       "n": 5475,
+       "q0.1": 0.0011837126943044553,
+       "q0.5": 0.006438032803711229,
+       "q0.9": 0.047862459146709495
+      },
+      "pair_swap_over_pool_median": {
+       "n": 5475,
+       "q0.1": 0.49661636723632024,
+       "q0.5": 3.3038196291296846,
+       "q0.9": 29.381198694955962
+      },
+      "removal": {
+       "large_mints_followed": 1740,
+       "recovered_within_64": 0.9816091954022989,
+       "unremoved_after_64": 0.01839080459770115,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 8924,
+      "large_mints": 1431,
+      "large_share_of_mints": 0.16035410129986552,
+      "pairs": 1845,
+      "pairs_per_1000_events": 50.048828125,
+      "large_mints_paired": 615,
+      "swap_deposit": {
+       "n": 1845,
+       "q0.1": 0.00031847600044747245,
+       "q0.5": 0.004835168379918613,
+       "q0.9": 0.11355799363756117
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1845,
+       "q0.1": 0.31465984904546296,
+       "q0.5": 3.4019706179403113,
+       "q0.9": 33.63052172746042
+      },
+      "removal": {
+       "large_mints_followed": 281,
+       "recovered_within_64": 0.9893238434163701,
+       "unremoved_after_64": 0.010676156583629859,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36864,
+      "mints": 9809,
+      "large_mints": 8822,
+      "large_share_of_mints": 0.8993781221327353,
+      "pairs": 7333,
+      "pairs_per_1000_events": 198.92035590277777,
+      "large_mints_paired": 6952,
+      "swap_deposit": {
+       "n": 7333,
+       "q0.1": 0.000517979255927468,
+       "q0.5": 0.0046783604048843495,
+       "q0.9": 0.04448977545470308
+      },
+      "pair_swap_over_pool_median": {
+       "n": 7333,
+       "q0.1": 0.26758476099471873,
+       "q0.5": 1.8195917143230802,
+       "q0.9": 13.369497100720784
+      },
+      "removal": {
+       "large_mints_followed": 2404,
+       "recovered_within_64": 0.9937603993344426,
+       "unremoved_after_64": 0.006239600665557399,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 7738,
+      "large_mints": 5388,
+      "large_share_of_mints": 0.6963039545102093,
+      "pairs": 6072,
+      "pairs_per_1000_events": 164.71354166666666,
+      "large_mints_paired": 4687,
+      "swap_deposit": {
+       "n": 6072,
+       "q0.1": 0.002288080290788678,
+       "q0.5": 0.014093127732649851,
+       "q0.9": 0.13978992945564847
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6072,
+       "q0.1": 0.5652682226993845,
+       "q0.5": 2.9978948728039567,
+       "q0.9": 14.247661177550532
+      },
+      "removal": {
+       "large_mints_followed": 1121,
+       "recovered_within_64": 0.9892952720785013,
+       "unremoved_after_64": 0.01070472792149868,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   },
+   "histout260932": {
+    "all": {
+     "events": 294377,
+     "mints": 69176,
+     "large_mints": 44372,
+     "large_share_of_mints": 0.6414363363016075,
+     "pairs": 33127,
+     "pairs_per_1000_events": 112.53256878084905,
+     "large_mints_paired": 28875,
+     "swap_deposit": {
+      "n": 33127,
+      "q0.1": 0.0005615318689617217,
+      "q0.5": 0.004431691236859127,
+      "q0.9": 0.0545615143936589
+     },
+     "pair_swap_over_pool_median": {
+      "n": 33127,
+      "q0.1": 0.34929452286620455,
+      "q0.5": 2.2699170577884873,
+      "q0.9": 25.452828015942767
+     },
+     "removal": {
+      "large_mints_followed": 10384,
+      "recovered_within_64": 0.9826656394453005,
+      "unremoved_after_64": 0.0173343605546995,
+      "median_events_to_recovery": 2.0
+     }
+    },
+    "by_pool": {
+     "DAI-WETH-3000": {
+      "events": 36774,
+      "mints": 10660,
+      "large_mints": 7513,
+      "large_share_of_mints": 0.7047842401500938,
+      "pairs": 3836,
+      "pairs_per_1000_events": 104.31282971664763,
+      "large_mints_paired": 3410,
+      "swap_deposit": {
+       "n": 3836,
+       "q0.1": 0.00047519721273324775,
+       "q0.5": 0.0046163738624838005,
+       "q0.9": 0.048203960394695336
+      },
+      "pair_swap_over_pool_median": {
+       "n": 3836,
+       "q0.1": 0.22203158727712008,
+       "q0.5": 1.5680487849083005,
+       "q0.9": 16.33224994130122
+      },
+      "removal": {
+       "large_mints_followed": 1942,
+       "recovered_within_64": 0.9824922760041195,
+       "unremoved_after_64": 0.01750772399588052,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "DAI-WETH-500": {
+      "events": 36765,
+      "mints": 9069,
+      "large_mints": 8550,
+      "large_share_of_mints": 0.942772080714522,
+      "pairs": 6302,
+      "pairs_per_1000_events": 171.41302869577044,
+      "large_mints_paired": 6183,
+      "swap_deposit": {
+       "n": 6302,
+       "q0.1": 0.00037299620565285185,
+       "q0.5": 0.0026495119104584623,
+       "q0.9": 0.029247893698685704
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6302,
+       "q0.1": 0.3845424701374013,
+       "q0.5": 2.2053237418522587,
+       "q0.9": 43.201142341179825
+      },
+      "removal": {
+       "large_mints_followed": 2189,
+       "recovered_within_64": 0.9922338967565099,
+       "unremoved_after_64": 0.007766103243490141,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-USDT-100": {
+      "events": 36864,
+      "mints": 5702,
+      "large_mints": 722,
+      "large_share_of_mints": 0.12662223781129428,
+      "pairs": 105,
+      "pairs_per_1000_events": 2.8483072916666665,
+      "large_mints_paired": 66,
+      "swap_deposit": {
+       "n": 105,
+       "q0.1": 0.008485354776553248,
+       "q0.5": 0.12068366841773852,
+       "q0.9": 1.4475072146128751
+      },
+      "pair_swap_over_pool_median": {
+       "n": 105,
+       "q0.1": 1.3570076520836591,
+       "q0.5": 41.35883672960245,
+       "q0.9": 433.5512600625403
+      },
+      "removal": {
+       "large_mints_followed": 135,
+       "recovered_within_64": 0.725925925925926,
+       "unremoved_after_64": 0.274074074074074,
+       "median_events_to_recovery": 12.0
+      }
+     },
+     "USDC-WETH-3000": {
+      "events": 36864,
+      "mints": 8337,
+      "large_mints": 3347,
+      "large_share_of_mints": 0.40146335612330575,
+      "pairs": 2360,
+      "pairs_per_1000_events": 64.01909722222223,
+      "large_mints_paired": 1537,
+      "swap_deposit": {
+       "n": 2360,
+       "q0.1": 0.00043578949542280343,
+       "q0.5": 0.0038131825767787515,
+       "q0.9": 0.06266812097382811
+      },
+      "pair_swap_over_pool_median": {
+       "n": 2360,
+       "q0.1": 0.366240708439727,
+       "q0.5": 2.7100902455611617,
+       "q0.9": 29.31165995589061
+      },
+      "removal": {
+       "large_mints_followed": 752,
+       "recovered_within_64": 0.9680851063829787,
+       "unremoved_after_64": 0.03191489361702127,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-3000": {
+      "events": 36864,
+      "mints": 8954,
+      "large_mints": 2078,
+      "large_share_of_mints": 0.23207505025686845,
+      "pairs": 1913,
+      "pairs_per_1000_events": 51.89344618055556,
+      "large_mints_paired": 710,
+      "swap_deposit": {
+       "n": 1913,
+       "q0.1": 0.00041518069410466206,
+       "q0.5": 0.005304188298391834,
+       "q0.9": 0.1193458994364888
+      },
+      "pair_swap_over_pool_median": {
+       "n": 1913,
+       "q0.1": 0.23901841379086344,
+       "q0.5": 2.1053875877934303,
+       "q0.9": 24.012620147338026
+      },
+      "removal": {
+       "large_mints_followed": 347,
+       "recovered_within_64": 0.9740634005763689,
+       "unremoved_after_64": 0.025936599423631135,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDC-WETH-500": {
+      "events": 36864,
+      "mints": 8051,
+      "large_mints": 6749,
+      "large_share_of_mints": 0.8382809588870948,
+      "pairs": 5336,
+      "pairs_per_1000_events": 144.74826388888889,
+      "large_mints_paired": 4982,
+      "swap_deposit": {
+       "n": 5336,
+       "q0.1": 0.0009397524740852925,
+       "q0.5": 0.00512420797308376,
+       "q0.9": 0.04688484594004978
+      },
+      "pair_swap_over_pool_median": {
+       "n": 5336,
+       "q0.1": 0.5213378547828954,
+       "q0.5": 3.3120463240958093,
+       "q0.9": 28.41788035019695
+      },
+      "removal": {
+       "large_mints_followed": 1515,
+       "recovered_within_64": 0.9801980198019802,
+       "unremoved_after_64": 0.01980198019801982,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "USDT-WETH-500": {
+      "events": 36518,
+      "mints": 9830,
+      "large_mints": 8845,
+      "large_share_of_mints": 0.8997965412004069,
+      "pairs": 6740,
+      "pairs_per_1000_events": 184.56651514321703,
+      "large_mints_paired": 6390,
+      "swap_deposit": {
+       "n": 6740,
+       "q0.1": 0.0003989581685102127,
+       "q0.5": 0.0032613948739812076,
+       "q0.9": 0.03610501220029982
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6740,
+       "q0.1": 0.2965108285969952,
+       "q0.5": 1.8208535106665993,
+       "q0.9": 41.07930775245871
+      },
+      "removal": {
+       "large_mints_followed": 2260,
+       "recovered_within_64": 0.9933628318584071,
+       "unremoved_after_64": 0.006637168141592875,
+       "median_events_to_recovery": 2.0
+      }
+     },
+     "WBTC-WETH-500": {
+      "events": 36864,
+      "mints": 8573,
+      "large_mints": 6568,
+      "large_share_of_mints": 0.7661262101947977,
+      "pairs": 6535,
+      "pairs_per_1000_events": 177.27322048611111,
+      "large_mints_paired": 5597,
+      "swap_deposit": {
+       "n": 6535,
+       "q0.1": 0.0014468082613742176,
+       "q0.5": 0.008085624452781139,
+       "q0.9": 0.08945618380493112
+      },
+      "pair_swap_over_pool_median": {
+       "n": 6535,
+       "q0.1": 0.4241168079574365,
+       "q0.5": 2.365552130818272,
+       "q0.9": 13.88577065316007
+      },
+      "removal": {
+       "large_mints_followed": 1244,
+       "recovered_within_64": 0.9887459807073955,
+       "unremoved_after_64": 0.0112540192926045,
+       "median_events_to_recovery": 2.0
+      }
+     }
+    }
+   }
+  }
+ }
+}

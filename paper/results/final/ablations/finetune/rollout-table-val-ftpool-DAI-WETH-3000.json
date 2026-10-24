@@ -1,0 +1,283 @@
+{
+ "method": "Rollout energy for several model families and the history baselines on every anchor.\n\nEach seed's forecast at an anchor is the ensemble of its paths that reached the horizon\n(a path ends early only if it sampled an infeasible event; such failures are rare and\nreported separately, per family). This equals the model's distribution conditioned on\nstaying valid, the same as redrawing failed paths. Each family's score at an anchor is\nthe mean over its seeds of the unbiased ensemble energy; baselines are scored on the\nsame anchors, so differences are paired and bootstrapped over anchors. An anchor is\nskipped only if some seed has fewer than --min-paths completed paths.\n\n  python -m scripts.rollout_table --rollouts depth=eval/final/rollouts-test-depth       --rollouts reference=eval/final/rollouts-test-reference --out results/rollout-table-test.json\n",
+ "families": [
+  "depth",
+  "finetuned",
+  "single"
+ ],
+ "cells": {
+  "seen:32": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.0,
+    "finetuned": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 15.944074536744811,
+    "finetuned": 15.950140741902917,
+    "single": 16.155472023549933,
+    "recent": 16.510432027028696,
+    "expanding": 17.20411308771535
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 15.956450185450507,
+     "depth260931": 15.959999268425449,
+     "depth260932": 15.915774156358488
+    },
+    "finetuned": {
+     "pool-DAI-WETH-3000260930": 16.139969813248662,
+     "pool-DAI-WETH-3000260931": 15.770478401073206,
+     "pool-DAI-WETH-3000260932": 15.939974011386882
+    },
+    "single": {
+     "single260930": 16.308820889910365,
+     "single260931": 16.451509423861047,
+     "single260932": 15.706085756878387
+    }
+   },
+   "differences": {
+    "finetuned-depth": {
+     "mean": 0.006066205158103008,
+     "ci95": [
+      -0.10723105968746545,
+      0.11900272632891537
+     ]
+    },
+    "finetuned-single": {
+     "mean": -0.20533128164701744,
+     "ci95": [
+      -0.7657407706044008,
+      0.2168992227737496
+     ]
+    },
+    "finetuned-recent": {
+     "mean": -0.5602912851257775,
+     "ci95": [
+      -1.3426981420143782,
+      0.2253171315757059
+     ]
+    },
+    "finetuned-expanding": {
+     "mean": -1.2539723458124312,
+     "ci95": [
+      -1.8919768442275833,
+      -0.622116351160404
+     ]
+    },
+    "single-depth": {
+     "mean": 0.21139748680512047,
+     "ci95": [
+      -0.18014703325533926,
+      0.7306650984064889
+     ]
+    },
+    "single-finetuned": {
+     "mean": 0.20533128164701744,
+     "ci95": [
+      -0.22165904737427772,
+      0.7911027121348024
+     ]
+    },
+    "single-recent": {
+     "mean": -0.3549600034787599,
+     "ci95": [
+      -1.2578743134753378,
+      0.670933155639556
+     ]
+    },
+    "single-expanding": {
+     "mean": -1.0486410641654136,
+     "ci95": [
+      -1.6932954285439696,
+      -0.39871474190766626
+     ]
+    }
+   }
+  },
+  "seen:128": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.00016276041666666666,
+    "finetuned": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 30.22655161941244,
+    "finetuned": 30.805970443902265,
+    "single": 31.721807279066823,
+    "recent": 36.4250168392344,
+    "expanding": 38.08134257906115
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 30.24391912003518,
+     "depth260931": 30.671567166248067,
+     "depth260932": 29.76416857195408
+    },
+    "finetuned": {
+     "pool-DAI-WETH-3000260930": 31.297817301518716,
+     "pool-DAI-WETH-3000260931": 29.896714267396405,
+     "pool-DAI-WETH-3000260932": 31.22337976279167
+    },
+    "single": {
+     "single260930": 32.266318130613705,
+     "single260931": 31.987272705395828,
+     "single260932": 30.911831001190933
+    }
+   },
+   "differences": {
+    "finetuned-depth": {
+     "mean": 0.579418824489822,
+     "ci95": [
+      -0.08154518300110784,
+      1.363628494920464
+     ]
+    },
+    "finetuned-single": {
+     "mean": -0.9158368351645575,
+     "ci95": [
+      -3.89705367570006,
+      1.2527303248148451
+     ]
+    },
+    "finetuned-recent": {
+     "mean": -5.619046395332135,
+     "ci95": [
+      -10.227459218204052,
+      -2.0501146162340333
+     ]
+    },
+    "finetuned-expanding": {
+     "mean": -7.275372135158884,
+     "ci95": [
+      -10.326231946174165,
+      -4.423946601885128
+     ]
+    },
+    "single-depth": {
+     "mean": 1.4952556596543793,
+     "ci95": [
+      -0.9761613688907355,
+      4.784787577136896
+     ]
+    },
+    "single-finetuned": {
+     "mean": 0.9158368351645575,
+     "ci95": [
+      -1.2892569382732635,
+      3.7974268186217808
+     ]
+    },
+    "single-recent": {
+     "mean": -4.703209560167577,
+     "ci95": [
+      -10.322539723406424,
+      -0.8505038135451057
+     ]
+    },
+    "single-expanding": {
+     "mean": -6.359535299994326,
+     "ci95": [
+      -10.144072046375769,
+      -3.1010523649978774
+     ]
+    }
+   }
+  },
+  "seen:512": {
+   "anchors": 64,
+   "anchors_in_group": 64,
+   "failed_path_share": {
+    "depth": 0.00016276041666666666,
+    "finetuned": 0.0,
+    "single": 0.0
+   },
+   "energy": {
+    "depth": 90.47322168350884,
+    "finetuned": 90.50663386585147,
+    "single": 104.154026449604,
+    "recent": 105.46006935921832,
+    "expanding": 105.2601522375467
+   },
+   "seed_energy": {
+    "depth": {
+     "depth260930": 90.25806569680874,
+     "depth260931": 86.16492136188688,
+     "depth260932": 94.9966779918309
+    },
+    "finetuned": {
+     "pool-DAI-WETH-3000260930": 90.86245411852707,
+     "pool-DAI-WETH-3000260931": 90.53505667529728,
+     "pool-DAI-WETH-3000260932": 90.12239080373008
+    },
+    "single": {
+     "single260930": 112.83550360163837,
+     "single260931": 98.76138967866098,
+     "single260932": 100.86518606851268
+    }
+   },
+   "differences": {
+    "finetuned-depth": {
+     "mean": 0.03341218234263632,
+     "ci95": [
+      -4.727267160375217,
+      5.2940027338791005
+     ]
+    },
+    "finetuned-single": {
+     "mean": -13.64739258375252,
+     "ci95": [
+      -19.562705708906545,
+      -7.020721890637467
+     ]
+    },
+    "finetuned-recent": {
+     "mean": -14.95343549336684,
+     "ci95": [
+      -23.213001843720942,
+      -6.589629039846602
+     ]
+    },
+    "finetuned-expanding": {
+     "mean": -14.753518371695222,
+     "ci95": [
+      -21.424511755021747,
+      -7.771656925319151
+     ]
+    },
+    "single-depth": {
+     "mean": 13.680804766095157,
+     "ci95": [
+      7.323394695015794,
+      20.71223281661379
+     ]
+    },
+    "single-finetuned": {
+     "mean": 13.64739258375252,
+     "ci95": [
+      6.95589837593608,
+      19.75263960651645
+     ]
+    },
+    "single-recent": {
+     "mean": -1.3060429096143191,
+     "ci95": [
+      -9.145447295668626,
+      6.343520939905616
+     ]
+    },
+    "single-expanding": {
+     "mean": -1.106125787942702,
+     "ci95": [
+      -8.358672143985112,
+      6.568238422375753
+     ]
+    }
+   }
+  }
+ }
+}
