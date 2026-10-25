@@ -1,0 +1,284 @@
+{
+ "method": "History baselines borrowed from a sibling pool: forecasting a pool from another pool's past.\n\nFor a held-out pool there may be no history of its own. A natural fallback is the history of\na seen pool with the same pair at another fee tier (its sibling). At every anchor of the\ntarget pool, sibling windows are built from sibling events in blocks strictly before the\nanchor's last history block (no leakage), with the rules of scripts.prepare_anchors:\n\n  sibling-recent     256 evenly spaced h-event windows within the sibling's last 32h events\n  sibling-expanding  256 h-event windows drawn uniformly from all of the sibling's history\n\nEndpoints are the same relative quantities as for every forecaster (return in bp, change in\nlog1p active liquidity, log1p elapsed blocks, log1p base volume over the initial virtual\nreserve), computed from the sibling's post-event states in its decoded event files. Events\nthe model never sees (Initialize, zero-amount swaps, mints and burns) are dropped, as in\ndexnet.events. Each anchor is scored with the fair energy score (32-window subsamples, as for\nthe other baselines) and compared, paired over anchors, with DEX-Net and the target pool's\nown recent baseline.\n\n  python -m scripts.sibling_baseline --data data/prepared --anchors eval/anchors-test       --rollouts eval/final/rollouts-test-depth --pair WBTC-WETH-3000=WBTC-WETH-500       --pair USDC-USDT-500=USDC-USDT-100 --out results/sibling-test.json\n",
+ "cells": {
+  "USDC-USDT-500:32": {
+   "anchors": 34,
+   "energy": {
+    "dexnet": 1.7960219831290645,
+    "own_recent": 2.287906312354899,
+    "own_expanding": 3.2118577034543203,
+    "sibling_recent": 4.200060665996234,
+    "sibling_expanding": 4.188043049804903
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.5723818949403066,
+    "ci95": [
+     0.38511065057699084,
+     0.8608277863632824
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.4552682700805183,
+    "ci95": [
+     0.33417298519841626,
+     0.5494274028665587
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.21499321303919441,
+    "ci95": [
+     -0.1916319788058231,
+     0.7831317150682499
+    ]
+   }
+  },
+  "USDC-USDT-500:128": {
+   "anchors": 34,
+   "energy": {
+    "dexnet": 4.1062419979159674,
+    "own_recent": 3.7700183176439936,
+    "own_expanding": 4.827304017925981,
+    "sibling_recent": 5.2831699874860005,
+    "sibling_expanding": 5.246075306703522
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.2227692829035917,
+    "ci95": [
+     -0.05873434485821543,
+     0.5291940366794676
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.2864098019609703,
+    "ci95": [
+     0.16569708377055456,
+     0.3845468265368209
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": -0.08918356674778471,
+    "ci95": [
+     -0.3951689383975339,
+     0.25920204564244026
+    ]
+   }
+  },
+  "USDC-USDT-500:512": {
+   "anchors": 34,
+   "energy": {
+    "dexnet": 7.630231111547198,
+    "own_recent": 5.549227505929133,
+    "own_expanding": 7.75449050587546,
+    "sibling_recent": 7.568174399719966,
+    "sibling_expanding": 6.979859435205611
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": -0.008199693684322218,
+    "ci95": [
+     -0.3935210458307793,
+     0.3307777855150008
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.26676801922872406,
+    "ci95": [
+     0.22372282996812007,
+     0.31014061110777724
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": -0.3750078012470375,
+    "ci95": [
+     -0.9003539586320264,
+     0.07189667426484815
+    ]
+   }
+  },
+  "WBTC-WETH-3000:32": {
+   "anchors": 64,
+   "energy": {
+    "dexnet": 3.2626262888881086,
+    "own_recent": 3.6068866017263312,
+    "own_expanding": 3.8218813871796655,
+    "sibling_recent": 4.181712040996508,
+    "sibling_expanding": 4.095633383716546
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.2197869540269396,
+    "ci95": [
+     0.15258818112562691,
+     0.28302486043773095
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.13746174620220733,
+    "ci95": [
+     0.07131085871034024,
+     0.20452886071791274
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.0954452831074458,
+    "ci95": [
+     0.016273301983099366,
+     0.1744266862210592
+    ]
+   }
+  },
+  "WBTC-WETH-3000:128": {
+   "anchors": 64,
+   "energy": {
+    "dexnet": 7.587585676636866,
+    "own_recent": 7.913880910512006,
+    "own_expanding": 8.498836003799257,
+    "sibling_recent": 9.011051086022658,
+    "sibling_expanding": 8.782986798082488
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.15796885355513907,
+    "ci95": [
+     0.09215343857110589,
+     0.2279166601204568
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.1217582904631968,
+    "ci95": [
+     0.03171484192726916,
+     0.20535145112766431
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.041230748549895474,
+    "ci95": [
+     -0.058176356113004195,
+     0.15441911747690312
+    ]
+   }
+  },
+  "WBTC-WETH-3000:512": {
+   "anchors": 64,
+   "energy": {
+    "dexnet": 21.41609262759632,
+    "own_recent": 23.088744584860432,
+    "own_expanding": 23.078408701073673,
+    "sibling_recent": 24.00517147745072,
+    "sibling_expanding": 24.71892177250256
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.10785504499671869,
+    "ci95": [
+     -0.011759196959726997,
+     0.23446720366046545
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.0381762277120633,
+    "ci95": [
+     -0.08247946485243236,
+     0.16874353037463338
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.07244447402137613,
+    "ci95": [
+     -0.043557707833157495,
+     0.19994604821748396
+    ]
+   }
+  },
+  "all:32": {
+   "anchors": 98,
+   "energy": {
+    "dexnet": 2.7538043868900726,
+    "own_recent": 3.1492811952097117,
+    "own_expanding": 3.61024051731577,
+    "sibling_recent": 4.188077890486208,
+    "sibling_expanding": 4.127693880114546
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.34246581393681436,
+    "ci95": [
+     0.2549500371019498,
+     0.4621865325485223
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.24803662263213047,
+    "ci95": [
+     0.18375287979393048,
+     0.312257813721789
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.12557684874922836,
+    "ci95": [
+     -0.0025486811706678467,
+     0.286793200430855
+    ]
+   }
+  },
+  "all:128": {
+   "anchors": 98,
+   "energy": {
+    "dexnet": 6.3797725636112474,
+    "own_recent": 6.476214296659838,
+    "own_expanding": 7.225039192373835,
+    "sibling_recent": 7.7177045824487145,
+    "sibling_expanding": 7.555895056175499
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.1733588017712075,
+    "ci95": [
+     0.09059694634145056,
+     0.26231153598669604
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.1608626337696604,
+    "ci95": [
+     0.08561457406678531,
+     0.23040304278293994
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.014891683417321402,
+    "ci95": [
+     -0.08786749672133762,
+     0.1286015150180745
+    ]
+   }
+  },
+  "all:512": {
+   "anchors": 98,
+   "energy": {
+    "dexnet": 16.63324271386499,
+    "own_recent": 17.003606006455694,
+    "own_expanding": 17.76194728641307,
+    "sibling_recent": 18.302539838238012,
+    "sibling_expanding": 18.56455320650158
+   },
+   "dexnet_vs_sibling_recent": {
+    "relative": 0.09120576374244448,
+    "ci95": [
+     -0.026434926066369057,
+     0.2121898095411517
+    ]
+   },
+   "own_recent_vs_sibling_recent": {
+    "relative": 0.0709701409346781,
+    "ci95": [
+     -0.035740574430953444,
+     0.18213532649084488
+    ]
+   },
+   "dexnet_vs_own_recent": {
+    "relative": 0.021781455795322927,
+    "ci95": [
+     -0.09881550856682733,
+     0.14767739395352483
+    ]
+   }
+  }
+ }
+}
