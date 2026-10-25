@@ -29,6 +29,7 @@ FIGS = {'1': 'fig1_architecture', '2': 'fig2_forecast_cones', '3': 'fig3_jit',
 
 # Exact doc substrings rendered as LaTeX math (applied before escaping).
 MATH = [
+    ('2×10⁻⁵', r'$2\times10^{-5}$'),
     ('learning rate 10^-4', r'learning rate $10^{-4}$'), ('log(L/Lactive)', r'$\log(L/L_{\mathrm{active}})$'),
     ('wᵢ = 0.9·softmaxᵢ(sᵢ) + 0.1/n, with score sᵢ = 2·tanh(cᵀxᵢ/√k).',
      r'\[ w_i = 0.9\,\mathrm{softmax}_i(s_i) + 0.1/n \quad\text{with score}\quad s_i = 2\tanh\bigl(c^{\top} x_i/\sqrt{k}\bigr). \]'),
@@ -54,7 +55,7 @@ MATH = [
     ('between -4% and +4%', r'between $-4\%$ and $+4\%$'),
 ]
 UNI = {'−': r'\ensuremath{-}', '±': r'\ensuremath{\pm}', '×': r'\ensuremath{\times}', '·': r'\ensuremath{\cdot}',
-       '≈': r'\ensuremath{\approx}', 'Δ': r'\ensuremath{\Delta}', '’': "'", '…': r'\dots{}', '–': '--', '—': '---', 'š': r'\v{s}', 'ü': r'\"u'}
+       '≈': r'\ensuremath{\approx}', 'Δ': r'\ensuremath{\Delta}', 'α': r'\ensuremath{\alpha}', '’': "'", '…': r'\dots{}', '–': '--', '—': '---', 'š': r'\v{s}', 'ü': r'\"u'}
 ALLOWED = set()
 
 stash = []
