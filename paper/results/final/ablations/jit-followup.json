@@ -1,0 +1,276 @@
+{
+ "method": "What follows a large mint, simulated against real: the diagnostic behind JIT stickiness.\n\nUses the event records and settings of scripts.jit_analysis (test anchors, 12 per pool,\n32 paths of 96 events per model; real: the full test-period streams). For every large mint\n(minted liquidity > 10x the active liquidity before it) with at least --follow later\nevents it records:\n\n  next          type of the next event and whether it is in the same block\n  removal step  events until burns of the same range return >= 99% of the minted\n                liquidity (None if not within --follow)\n  first burn    for the first same-range burn: events after the mint and the share of the\n                minted liquidity it removes\n\n  python -m scripts.jit_followup --anchors eval/anchors-test --data data/prepared       --model depth=runs/depth/training/best.pt --out results/jit-followup.json\n",
+ "groups": {
+  "heldout": {
+   "real": {
+    "large_mints": 126,
+    "next": {
+     "Burn later block": 0.007936507936507936,
+     "Swap later block": 0.007936507936507936,
+     "Swap same block": 0.9841269841269841
+    },
+    "removed_within": {
+     "1": 0.007936507936507936,
+     "2": 0.9761904761904762,
+     "4": 0.9920634920634921,
+     "8": 0.9920634920634921,
+     "16": 0.9920634920634921
+    },
+    "first_burn_share": {
+     "n": 126,
+     "q0.1": 1.0,
+     "q0.5": 1.0,
+     "q0.9": 1.0
+    },
+    "first_burn_full": 0.9920634920634921,
+    "first_burn_same_block": 0.9841269841269841,
+    "no_same_range_burn": 0.0,
+    "step2_when_not_removed_by_2": {
+     "Swap, same block": 0.3333333333333333,
+     "Mint, same block": 0.3333333333333333,
+     "Mint, later block": 0.3333333333333333
+    },
+    "swap_over_liquidity": {
+     "removed_by_2": {
+      "q0.1": 5.844072778353623e-07,
+      "q0.5": 4.759997722129984e-05,
+      "q0.9": 9.998941356202497
+     },
+     "not_removed_by_2": {
+      "q0.1": 0.0002977234368716159,
+      "q0.5": 0.0014813478142532471,
+      "q0.9": 9.179525922741226
+     }
+    }
+   },
+   "depth": {
+    "large_mints": 154,
+    "next": {
+     "Burn later block": 0.006493506493506494,
+     "Burn same block": 0.006493506493506494,
+     "Mint same block": 0.006493506493506494,
+     "Swap later block": 0.11038961038961038,
+     "Swap same block": 0.8701298701298701
+    },
+    "removed_within": {
+     "1": 0.012987012987012988,
+     "2": 0.7467532467532467,
+     "4": 0.7727272727272727,
+     "8": 0.7857142857142857,
+     "16": 0.7987012987012987
+    },
+    "first_burn_share": {
+     "n": 126,
+     "q0.1": 1.0,
+     "q0.5": 1.0,
+     "q0.9": 1.0005165205056046
+    },
+    "first_burn_full": 0.9761904761904762,
+    "first_burn_same_block": 0.9523809523809523,
+    "no_same_range_burn": 0.18181818181818182,
+    "step2_when_not_removed_by_2": {
+     "Swap, later block": 0.5384615384615384,
+     "Burn other range, same block": 0.3076923076923077,
+     "Swap, same block": 0.05128205128205128,
+     "Burn same range, same block": 0.05128205128205128,
+     "Mint, same block": 0.02564102564102564,
+     "Mint, later block": 0.02564102564102564
+    },
+    "swap_over_liquidity": {
+     "removed_by_2": {
+      "q0.1": 2.9739726990783773e-05,
+      "q0.5": 10.14337280753924,
+      "q0.9": 191.6686116383559
+     },
+     "not_removed_by_2": {
+      "q0.1": 6.850423812015776e-07,
+      "q0.5": 5.1607641244728604e-05,
+      "q0.9": 0.0010603741866454766
+     }
+    }
+   },
+   "hist": {
+    "large_mints": 128,
+    "next": {
+     "Mint same block": 0.0078125,
+     "Swap later block": 0.0703125,
+     "Swap same block": 0.921875
+    },
+    "removed_within": {
+     "1": 0.0,
+     "2": 0.8046875,
+     "4": 0.8046875,
+     "8": 0.8046875,
+     "16": 0.8203125
+    },
+    "first_burn_share": {
+     "n": 106,
+     "q0.1": 0.9999999999971028,
+     "q0.5": 1.0,
+     "q0.9": 1.0006404435853247
+    },
+    "first_burn_full": 0.9905660377358491,
+    "first_burn_same_block": 0.9811320754716981,
+    "no_same_range_burn": 0.171875,
+    "step2_when_not_removed_by_2": {
+     "Swap, later block": 0.48,
+     "Burn other range, same block": 0.44,
+     "Swap, same block": 0.08
+    },
+    "swap_over_liquidity": {
+     "removed_by_2": {
+      "q0.1": 0.00015964139273672332,
+      "q0.5": 23.610950842828746,
+      "q0.9": 302.317409823703
+     },
+     "not_removed_by_2": {
+      "q0.1": 2.670577808554448e-06,
+      "q0.5": 0.00018728466985824363,
+      "q0.9": 80.95557285507803
+     }
+    }
+   }
+  },
+  "seen": {
+   "real": {
+    "large_mints": 11205,
+    "next": {
+     "Burn later block": 0.00071396697902722,
+     "Burn same block": 0.004462293618920125,
+     "Mint later block": 0.0004462293618920125,
+     "Mint same block": 8.92458723784025e-05,
+     "Swap later block": 0.010798750557786702,
+     "Swap same block": 0.9834895136099956
+    },
+    "removed_within": {
+     "1": 0.00035698348951361,
+     "2": 0.9356537260151718,
+     "4": 0.9769745649263721,
+     "8": 0.983132530120482,
+     "16": 0.9884872824631861
+    },
+    "first_burn_share": {
+     "n": 11079,
+     "q0.1": 1.0,
+     "q0.5": 1.0,
+     "q0.9": 1.0
+    },
+    "first_burn_full": 0.9997292174383969,
+    "first_burn_same_block": 0.9942233053524686,
+    "no_same_range_burn": 0.011244979919678716,
+    "step2_when_not_removed_by_2": {
+     "Swap, same block": 0.7933425797503467,
+     "Swap, later block": 0.17059639389736478,
+     "Mint, later block": 0.013869625520110958,
+     "Burn other range, later block": 0.009708737864077669,
+     "Mint, same block": 0.008321775312066574,
+     "Burn other range, same block": 0.004160887656033287
+    },
+    "swap_over_liquidity": {
+     "removed_by_2": {
+      "q0.1": 1.837888782154654e-10,
+      "q0.5": 2.6242924835480065e-09,
+      "q0.9": 3.641880422071721e-08
+     },
+     "not_removed_by_2": {
+      "q0.1": 1.8035587308346574e-11,
+      "q0.5": 2.8654402412218452e-09,
+      "q0.9": 0.0038270019145996577
+     }
+    }
+   },
+   "depth": {
+    "large_mints": 1332,
+    "next": {
+     "Burn same block": 0.006756756756756757,
+     "Mint same block": 0.0007507507507507507,
+     "Swap later block": 0.015015015015015015,
+     "Swap same block": 0.9774774774774775
+    },
+    "removed_within": {
+     "1": 0.0007507507507507507,
+     "2": 0.8828828828828829,
+     "4": 0.8978978978978979,
+     "8": 0.9009009009009009,
+     "16": 0.9039039039039038
+    },
+    "first_burn_share": {
+     "n": 1214,
+     "q0.1": 0.9999998353683702,
+     "q0.5": 1.0,
+     "q0.9": 1.0
+    },
+    "first_burn_full": 0.9909390444810544,
+    "first_burn_same_block": 0.9917627677100495,
+    "no_same_range_burn": 0.08858858858858859,
+    "step2_when_not_removed_by_2": {
+     "Burn other range, same block": 0.47435897435897434,
+     "Swap, same block": 0.23076923076923078,
+     "Swap, later block": 0.20512820512820512,
+     "Burn same range, same block": 0.05128205128205128,
+     "Burn other range, later block": 0.02564102564102564,
+     "Mint, same block": 0.01282051282051282
+    },
+    "swap_over_liquidity": {
+     "removed_by_2": {
+      "q0.1": 9.642883221512874e-10,
+      "q0.5": 1.248116554527222e-08,
+      "q0.9": 0.25538197505740295
+     },
+     "not_removed_by_2": {
+      "q0.1": 2.9411482218965943e-09,
+      "q0.5": 3.1676308996934106e-08,
+      "q0.9": 0.26390393132561285
+     }
+    }
+   },
+   "hist": {
+    "large_mints": 1372,
+    "next": {
+     "Burn later block": 0.002186588921282799,
+     "Burn same block": 0.0007288629737609329,
+     "Mint later block": 0.0014577259475218659,
+     "Mint same block": 0.0007288629737609329,
+     "Swap later block": 0.018221574344023325,
+     "Swap same block": 0.9766763848396501
+    },
+    "removed_within": {
+     "1": 0.0007288629737609329,
+     "2": 0.891399416909621,
+     "4": 0.9096209912536443,
+     "8": 0.9125364431486881,
+     "16": 0.9139941690962099
+    },
+    "first_burn_share": {
+     "n": 1265,
+     "q0.1": 0.999999981114266,
+     "q0.5": 1.0,
+     "q0.9": 1.0
+    },
+    "first_burn_full": 0.991304347826087,
+    "first_burn_same_block": 0.9936758893280633,
+    "no_same_range_burn": 0.07798833819241982,
+    "step2_when_not_removed_by_2": {
+     "Burn other range, same block": 0.3691275167785235,
+     "Swap, same block": 0.2751677852348993,
+     "Swap, later block": 0.24161073825503357,
+     "Burn same range, same block": 0.0738255033557047,
+     "Mint, later block": 0.020134228187919462,
+     "Burn other range, later block": 0.013422818791946308
+    },
+    "swap_over_liquidity": {
+     "removed_by_2": {
+      "q0.1": 1.246431103672899e-09,
+      "q0.5": 1.6224644424116676e-08,
+      "q0.9": 32.624383887800654
+     },
+     "not_removed_by_2": {
+      "q0.1": 2.2774258786212528e-09,
+      "q0.5": 2.875985378722089e-08,
+      "q0.9": 0.05369180589467147
+     }
+    }
+   }
+  }
+ }
+}
